@@ -1,11 +1,54 @@
+import { useToast } from "@chakra-ui/react";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const SignupCard = ({ setAuthScreen }) => {
   const [showPassword, setShowPassword] = useState(false);
-
   const togglePasswordVisibility = () => {
     setShowPassword((prevState) => !prevState);
+  };
+
+  const [inputs, setInputs] = useState({
+    name: "",
+    username: "",
+    email: "",
+    password: "",
+  });
+
+  const toast = useToast();
+  const navigate = useNavigate(); // Used for redirection
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/users/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inputs),
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        toast({
+          title: "Error",
+          description: data.error,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Save the user data in localStorage
+      localStorage.setItem("user-spools", JSON.stringify(data));
+
+      // Redirect to HomePage after successful signup
+      navigate("/");
+
+    } catch (error) {
+      console.log("Error signing up user:", error);
+    }
   };
 
   return (
@@ -33,6 +76,10 @@ const SignupCard = ({ setAuthScreen }) => {
                   type="text"
                   placeholder="Username"
                   required=""
+                  onChange={(e) =>
+                    setInputs({ ...inputs, username: e.target.value })
+                  }
+                  value={inputs.username}
                 />
               </div>
               <div>
@@ -48,6 +95,10 @@ const SignupCard = ({ setAuthScreen }) => {
                   type="text"
                   placeholder="Full Name"
                   required=""
+                  onChange={(e) =>
+                    setInputs({ ...inputs, name: e.target.value })
+                  }
+                  value={inputs.name}
                 />
               </div>
               <div>
@@ -63,6 +114,10 @@ const SignupCard = ({ setAuthScreen }) => {
                   type="email"
                   placeholder="Email"
                   required=""
+                  onChange={(e) =>
+                    setInputs({ ...inputs, email: e.target.value })
+                  }
+                  value={inputs.email}
                 />
               </div>
               <div className="relative">
@@ -78,6 +133,10 @@ const SignupCard = ({ setAuthScreen }) => {
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   required=""
+                  onChange={(e) =>
+                    setInputs({ ...inputs, password: e.target.value })
+                  }
+                  value={inputs.password}
                 />
                 <button
                   type="button"
@@ -90,6 +149,7 @@ const SignupCard = ({ setAuthScreen }) => {
               <button
                 className="w-full p-3 mt-4 text-white bg-gradient-to-r from-gray-400 to-gray-700 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 type="submit"
+                onClick={handleSignup}
               >
                 SIGN UP
               </button>
