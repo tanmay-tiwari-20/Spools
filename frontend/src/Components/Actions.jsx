@@ -1,7 +1,5 @@
 const Actions = () => {
-  return (
-    <div>Actions</div>
-  )
-}
+  return <div>Actions</div>;
+};
 
-export default Actions
+export default Actions;

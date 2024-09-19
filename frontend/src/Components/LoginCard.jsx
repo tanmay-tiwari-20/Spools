@@ -1,11 +1,51 @@
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@chakra-ui/react";
 
 const LoginCard = ({ setAuthScreen }) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const toast = useToast();
 
   const togglePasswordVisibility = () => {
     setShowPassword((prevState) => !prevState);
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await axios.post("/api/users/login", { username, password });
+
+      // Save user details to localStorage
+      localStorage.setItem("user-spools", JSON.stringify(res.data));
+
+      // Show success toast
+      toast({
+        title: "Login successful",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+
+      // Redirect to homepage
+      navigate("/");
+    } catch (error) {
+      console.log("Login error: ", error.response?.data || error.message);
+
+      // Show error toast
+      toast({
+        title: "Login failed",
+        description: error.response?.data?.error || "Something went wrong",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -19,7 +59,7 @@ const LoginCard = ({ setAuthScreen }) => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center cursor-default dark:text-gray-300 text-gray-900 mb-4">
               Log in
             </h1>
-            <form action="#" method="post" className="space-y-4 sm:space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
               <div>
                 <label
                   htmlFor="username"
@@ -32,7 +72,9 @@ const LoginCard = ({ setAuthScreen }) => {
                   className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
                   type="text"
                   placeholder="Username"
-                  required=""
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
               <div className="relative">
@@ -47,7 +89,9 @@ const LoginCard = ({ setAuthScreen }) => {
                   className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
-                  required=""
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"

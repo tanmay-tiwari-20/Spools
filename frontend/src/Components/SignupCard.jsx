@@ -45,7 +45,6 @@ const SignupCard = ({ setAuthScreen }) => {
 
       // Redirect to HomePage after successful signup
       navigate("/");
-
     } catch (error) {
       console.log("Error signing up user:", error);
     }

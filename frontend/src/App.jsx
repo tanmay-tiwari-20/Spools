@@ -6,6 +6,7 @@ import Header from "./Components/Header";
 import HomePage from "./Pages/HomePage";
 import AuthPage from "./Pages/AuthPage";
 import LogoutButton from "./Components/LogoutButton";
+import UpdateProfilePage from "./Pages/UpdateProfilePage";
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -56,6 +57,10 @@ const App = () => {
             element={isAuthenticated ? <HomePage /> : <AuthPage />}
           />
           <Route path="/auth" element={<AuthPage />} />
+          <Route
+            path="/update"
+            element={isAuthenticated ? <UpdateProfilePage /> : <AuthPage />}
+          />
 
           <Route path="/:username" element={<UserPage />} />
           <Route path="/:username/post/:pid" element={<PostPage />} />

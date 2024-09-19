@@ -47,7 +47,9 @@ const PostPage = () => {
           <p className="text-2xl">👋</p>
           <p className="text-[#8e8e8e]">Get the app to like, post and reply.</p>
         </div>
-        <button className="px-3 text-white py-1 bg-[#8e8e8e] rounded-full">Get</button>
+        <button className="px-3 text-white py-1 bg-[#8e8e8e] rounded-full">
+          Get
+        </button>
       </div>
 
       <Divider my={4} />
