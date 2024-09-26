@@ -24,7 +24,7 @@ export default function UpdateProfilePage() {
               <div className="flex justify-center">
                 <img
                   className="rounded-full w-28 h-28 sm:w-32 sm:h-32"
-                  src="https://bit.ly/sage-adebayo"
+                  src="/zuck-avatar.png"
                   alt="User Avatar"
                 />
               </div>
