@@ -1,33 +1,34 @@
-import { Button } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@chakra-ui/button";
+import { useSetRecoilState } from "recoil";
+import userAtom from "../atoms/userAtom";
+import useShowToast from "../hooks/useShowToast";
+import { FiLogOut } from "react-icons/fi";
 
 const LogoutButton = () => {
-  const navigate = useNavigate();
+  const setUser = useSetRecoilState(userAtom);
+  const showToast = useShowToast();
 
   const handleLogout = async () => {
     try {
-      // Make a request to the backend to clear the JWT cookie
       const res = await fetch("/api/users/logout", {
         method: "POST",
-        credentials: "include", // This ensures that cookies are included in the request
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
-
       const data = await res.json();
 
-      if (res.ok) {
-        // Clear the localStorage data (user's authentication info)
-        localStorage.removeItem("user-spools");
-
-        // Redirect the user to the authentication page
-        navigate("/auth");
-      } else {
-        console.log("Error logging out:", data.error);
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
       }
+
+      localStorage.removeItem("user-threads");
+      setUser(null);
     } catch (error) {
-      console.log("Error logging out:", error);
+      showToast("Error", error, "error");
     }
   };
-
   return (
     <Button
       position={"fixed"}
@@ -36,7 +37,7 @@ const LogoutButton = () => {
       size={"sm"}
       onClick={handleLogout}
     >
-      Logout
+      <FiLogOut size={20} />
     </Button>
   );
 };

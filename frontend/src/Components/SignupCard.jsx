@@ -1,14 +1,13 @@
-import { useToast } from "@chakra-ui/react";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import authScreenAtom from "../atoms/authAtom";
+import { useSetRecoilState } from "recoil";
+import useShowToast from "../hooks/useShowToast";
+import userAtom from "../atoms/userAtom";
 
-const SignupCard = ({ setAuthScreen }) => {
+const SignupCard = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const togglePasswordVisibility = () => {
-    setShowPassword((prevState) => !prevState);
-  };
-
+  const setAuthScreen = useSetRecoilState(authScreenAtom);
   const [inputs, setInputs] = useState({
     name: "",
     username: "",
@@ -16,37 +15,31 @@ const SignupCard = ({ setAuthScreen }) => {
     password: "",
   });
 
-  const toast = useToast();
-  const navigate = useNavigate(); // Used for redirection
+  const showToast = useShowToast();
+  const setUser = useSetRecoilState(userAtom);
 
   const handleSignup = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     try {
       const res = await fetch("/api/users/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(inputs),
       });
       const data = await res.json();
 
       if (data.error) {
-        toast({
-          title: "Error",
-          description: data.error,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        showToast("Error", data.error, "error");
         return;
       }
 
-      // Save the user data in localStorage
       localStorage.setItem("user-spools", JSON.stringify(data));
-
-      // Redirect to HomePage after successful signup
-      navigate("/");
+      setUser(data);
+      showToast("Success", "Signup successful!", "success");
     } catch (error) {
-      console.log("Error signing up user:", error);
+      showToast("Error", error.message || "Signup failed", "error");
     }
   };
 
@@ -61,7 +54,7 @@ const SignupCard = ({ setAuthScreen }) => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center cursor-default dark:text-gray-300 text-gray-900 mb-4">
               Sign Up
             </h1>
-            <form action="#" method="post" className="space-y-4 sm:space-y-6">
+            <form onSubmit={handleSignup} className="space-y-4 sm:space-y-6">
               <div>
                 <label
                   htmlFor="username"
@@ -74,30 +67,30 @@ const SignupCard = ({ setAuthScreen }) => {
                   className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
                   type="text"
                   placeholder="Username"
-                  required=""
+                  required
+                  value={inputs.username}
                   onChange={(e) =>
                     setInputs({ ...inputs, username: e.target.value })
                   }
-                  value={inputs.username}
                 />
               </div>
               <div>
                 <label
-                  htmlFor="FullName"
+                  htmlFor="name"
                   className="block mb-2 lg:text-lg text-base dark:text-gray-300"
                 >
-                  Full Name
+                  Name
                 </label>
                 <input
-                  id="FullName"
+                  id="name"
                   className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
                   type="text"
-                  placeholder="Full Name"
-                  required=""
+                  placeholder="Name"
+                  required
+                  value={inputs.name}
                   onChange={(e) =>
                     setInputs({ ...inputs, name: e.target.value })
                   }
-                  value={inputs.name}
                 />
               </div>
               <div>
@@ -112,11 +105,11 @@ const SignupCard = ({ setAuthScreen }) => {
                   className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
                   type="email"
                   placeholder="Email"
-                  required=""
+                  required
+                  value={inputs.email}
                   onChange={(e) =>
                     setInputs({ ...inputs, email: e.target.value })
                   }
-                  value={inputs.email}
                 />
               </div>
               <div className="relative">
@@ -131,24 +124,23 @@ const SignupCard = ({ setAuthScreen }) => {
                   className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
-                  required=""
+                  required
+                  value={inputs.password}
                   onChange={(e) =>
                     setInputs({ ...inputs, password: e.target.value })
                   }
-                  value={inputs.password}
                 />
                 <button
                   type="button"
                   className="absolute right-3 lg:top-16 top-14 transform -translate-y-1/2 text-gray-400"
-                  onClick={togglePasswordVisibility}
+                  onClick={() => setShowPassword((prev) => !prev)}
                 >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  {showPassword ? <FaEye /> : <FaEyeSlash />}
                 </button>
               </div>
               <button
                 className="w-full p-3 mt-4 text-white bg-gradient-to-r from-gray-400 to-gray-700 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 type="submit"
-                onClick={handleSignup}
               >
                 SIGN UP
               </button>

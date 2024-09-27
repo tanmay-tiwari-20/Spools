@@ -1,70 +1,60 @@
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@chakra-ui/react";
+import userAtom from "../atoms/userAtom";
+import authScreenAtom from "../atoms/authAtom";
+import useShowToast from "../hooks/useShowToast";
+import { useSetRecoilState } from "recoil";
 
-const LoginCard = ({ setAuthScreen }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+const LoginCard = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-  const toast = useToast();
+  const setAuthScreen = useSetRecoilState(authScreenAtom);
+  const setUser = useSetRecoilState(userAtom);
+  const [loading, setLoading] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword((prevState) => !prevState);
-  };
+  const [inputs, setInputs] = useState({
+    username: "",
+    password: "",
+  });
+  
+  const showToast = useShowToast();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-
+    e.preventDefault(); // Prevent default form submission
+    setLoading(true);
     try {
-      const res = await axios.post("/api/users/login", { username, password });
-
-      // Save user details to localStorage
-      localStorage.setItem("user-spools", JSON.stringify(res.data));
-
-      // Show success toast
-      toast({
-        title: "Login successful",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
+      const res = await fetch("/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inputs),
       });
-
-      // Redirect to homepage
-      navigate("/");
+      const data = await res.json();
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
+      }
+      localStorage.setItem("user-spools", JSON.stringify(data));
+      setUser(data);
+      showToast("Success", "Login successful!", "success");
     } catch (error) {
-      console.log("Login error: ", error.response?.data || error.message);
-
-      // Show error toast
-      toast({
-        title: "Login failed",
-        description: error.response?.data?.error || "Something went wrong",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showToast("Error", error.message || "Login failed", "error");
+    } finally {
+      setLoading(false); // Set loading back to false
     }
   };
 
   return (
     <div className="flex justify-center items-center px-4">
       <div className="grid gap-8 max-w-lg w-full">
-        <section
-          id="back-div"
-          className="bg-gradient-to-r from-gray-200 to-gray-600 rounded-3xl"
-        >
+        <section id="back-div" className="bg-gradient-to-r from-gray-200 to-gray-600 rounded-3xl">
           <div className="border-8 border-transparent rounded-xl bg-white dark:bg-zinc-900 shadow-xl p-6 sm:p-8 md:p-10 m-2">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center cursor-default dark:text-gray-300 text-gray-900 mb-4">
               Log in
             </h1>
             <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
               <div>
-                <label
-                  htmlFor="username"
-                  className="block mb-2 lg:text-lg text-base dark:text-gray-300"
-                >
+                <label htmlFor="username" className="block mb-2 lg:text-lg text-base dark:text-gray-300">
                   Username
                 </label>
                 <input
@@ -73,15 +63,12 @@ const LoginCard = ({ setAuthScreen }) => {
                   type="text"
                   placeholder="Username"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={inputs.username}
+                  onChange={(e) => setInputs({ ...inputs, username: e.target.value })}
                 />
               </div>
               <div className="relative">
-                <label
-                  htmlFor="password"
-                  className="block mb-2 lg:text-lg text-base dark:text-gray-300"
-                >
+                <label htmlFor="password" className="block mb-2 lg:text-lg text-base dark:text-gray-300">
                   Password
                 </label>
                 <input
@@ -90,34 +77,32 @@ const LoginCard = ({ setAuthScreen }) => {
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={inputs.password}
+                  onChange={(e) => setInputs({ ...inputs, password: e.target.value })}
                 />
                 <button
                   type="button"
                   className="absolute right-3 lg:top-16 top-14 transform -translate-y-1/2 text-gray-400"
-                  onClick={togglePasswordVisibility}
+                  onClick={() => setShowPassword((prev) => !prev)}
                 >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  {showPassword ? <FaEye /> : <FaEyeSlash />}
                 </button>
               </div>
-              <a className="text-gray-400 text-sm transition hover:underline">
-                Forgot your password?
-              </a>
+              <a className="text-gray-400 text-sm transition hover:underline">Forgot your password?</a>
               <button
-                className="w-full p-3 mt-4 text-white bg-gradient-to-r from-gray-400 to-gray-700 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className={`w-full p-3 mt-4 text-white bg-gradient-to-r from-gray-400 to-gray-700 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 type="submit"
+                disabled={loading}
               >
-                LOG IN
+                {loading ? "Logging in..." : "LOG IN"}
               </button>
             </form>
             <div className="flex flex-col mt-4 text-sm text-center dark:text-gray-300">
               <p>
                 Don&apos;t have an account?{" "}
-                <a
-                  className="text-gray-400 transition hover:underline cursor-pointer"
-                  onClick={() => setAuthScreen("signup")}
-                >
+                <a className="text-gray-400 transition hover:underline cursor-pointer" onClick={() => setAuthScreen("signup")}>
                   Sign Up
                 </a>
               </p>
@@ -125,20 +110,9 @@ const LoginCard = ({ setAuthScreen }) => {
             <div className="mt-4 text-center text-sm ">
               <p>
                 By logging in, you agree to our{" "}
-                <a
-                  href="#"
-                  className="text-gray-400 transition hover:underline"
-                >
-                  Terms{" "}
-                </a>
+                <a href="#" className="text-gray-400 transition hover:underline">Terms </a>
                 and{" "}
-                <a
-                  href="#"
-                  className="text-gray-400 transition hover:underline"
-                >
-                  Privacy Policy
-                </a>
-                .
+                <a href="#" className="text-gray-400 transition hover:underline">Privacy Policy</a>.
               </p>
             </div>
           </div>
