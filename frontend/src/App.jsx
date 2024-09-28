@@ -8,6 +8,7 @@ import AuthPage from "./Pages/AuthPage";
 import UpdateProfilePage from "./Pages/UpdateProfilePage";
 import { useRecoilValue } from "recoil";
 import userAtom from "./atoms/userAtom";
+import LogoutButton from "./Components/LogoutButton";
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -51,6 +52,8 @@ const App = () => {
           <Route path="/:username" element={<UserPage />} />
           <Route path="/:username/post/:pid" element={<PostPage />} />
         </Routes>
+
+        {user && <LogoutButton />}
       </div>
     </div>
   );

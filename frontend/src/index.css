@@ -8,8 +8,8 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #fff;
-    border-radius: 20px;
+    background-color: #262626;
+    border-radius: 40px;
 }
 
 .icon-container {

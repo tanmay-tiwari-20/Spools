@@ -1,4 +1,3 @@
-import { Button } from "@chakra-ui/button";
 import { useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
@@ -23,22 +22,20 @@ const LogoutButton = () => {
         return;
       }
 
-      localStorage.removeItem("user-threads");
+      localStorage.removeItem("user-spools");
       setUser(null);
     } catch (error) {
       showToast("Error", error, "error");
     }
   };
+
   return (
-    <Button
-      position={"fixed"}
-      top={"30px"}
-      right={"30px"}
-      size={"sm"}
+    <button
       onClick={handleLogout}
+      className="fixed top-8 right-8 p-2 text-sm rounded-md bg-gray-300 text-ebony dark:bg-gray-500 dark:text-white hover:bg-gray-700 dark:hover:bg-gray-300 transition duration-300"
     >
       <FiLogOut size={20} />
-    </Button>
+    </button>
   );
 };
 

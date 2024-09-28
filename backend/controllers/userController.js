@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
+import { v2 as cloudinary } from "cloudinary";
 
 const getUserProfile = async (req, res) => {
   const { username } = req.params;
@@ -130,46 +131,60 @@ const followUser = async (req, res) => {
 
 // Update user profile
 const updateUser = async (req, res) => {
-  const { name, username, email, password, profilePic, bio } = req.body;
-  const userId = req.user._id;
+  const { name, email, username, password, bio, profilePic } = req.body;
+  const userId = req.user._id; // Assuming req.user._id contains the logged-in user's ID
 
   try {
+    // Check if the user exists
     let user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
 
-    if (req.param.id !== userId.toString())
-      return res
-        .status(400)
-        .json({ error: "You cannot update other user's proile." });
+    // Check if the user trying to update is the owner of the profile
+    if (req.params.id !== userId.toString()) {
+      return res.status(400).json({ error: "You cannot update another user's profile" });
+    }
 
-    // Hash password if provided
+    // Handle password update
     if (password) {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
       user.password = hashedPassword;
     }
 
-    // Update user fields
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        name: name || user.name,
-        username: username || user.username,
-        email: email || user.email,
-        profilePic: profilePic || user.profilePic,
-        bio: bio || user.bio,
-        ...(password && { password: hashedPassword }), // Conditionally update password
-      },
-      { new: true } // Return the updated user
-    );
+    // Handle profile picture update
+    if (profilePic) {
+      // Delete old profile pic from Cloudinary if it exists
+      if (user.profilePic) {
+        await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
+      }
 
-    res
-      .status(200)
-      .json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+      // Upload new profile picture to Cloudinary
+      const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+      user.profilePic = uploadedResponse.secure_url;
+    }
+
+    // Update user fields
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.username = username || user.username;
+    user.bio = bio || user.bio;
+
+    // Save updated user to the database
+    const updatedUser = await user.save();
+
+    // Exclude the password from the response
+    updatedUser.password = null;
+
+    // Send back the updated user data
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error in updateUser:", error);
+    res.status(500).json({ error: "Failed to update user" });
   }
 };
+
 
 export {
   signupUser,
