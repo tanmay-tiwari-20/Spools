@@ -10,9 +10,20 @@ import {
 } from "@chakra-ui/react";
 import { BsInstagram } from "react-icons/bs";
 import { CgMoreO } from "react-icons/cg";
+import { useRecoilValue } from "recoil";
+import userAtom from "../atoms/userAtom";
+import { Link, Link as RouterLink } from "react-router-dom";
+import { useState } from "react";
+import useShowToast from "../hooks/useShowToast";
 
-const UserHeader = () => {
+const UserHeader = ({ user }) => {
+  const showToast = useShowToast();
   const toast = useToast();
+  const currentUser = useRecoilValue(userAtom); // logged in user
+  const [following, setFollowing] = useState(
+    user.followers.includes(currentUser._id)
+  );
+  const [updating, setUpdating] = useState(false);
 
   const copyURL = () => {
     const currentURL = window.location.href;
@@ -27,15 +38,54 @@ const UserHeader = () => {
     });
   };
 
+  const handleFollowUnfollow = async () => {
+    if (!currentUser) {
+      showToast(
+        "Error",
+        "You need to be logged in to follow or unfollow users",
+        "error"
+      );
+      return;
+    }
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/users/follow/${user._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
+      }
+
+      if (following) {
+        showToast("Success", `Unfollowed ${user.name}`, "success");
+        user.followers.pop(); // simulate removing from followers
+      } else {
+        showToast("Success", `Followed ${user.name}`, "success");
+        user.followers.push(currentUser._id); // simulate adding to followers
+      }
+      setFollowing(!following);
+    } catch (error) {
+      showToast("Error", error, "error");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <VStack gap={4} alignItems={"start"} className="w-full">
       {/* Header section */}
       <div className="flex justify-between w-full items-center">
         <Box>
-          <h1 className="font-bold text-lg sm:text-2xl">Mark Zuckerberg</h1>
+          <h1 className="font-bold lg:text-4xl text-2xl mb-2">{user.name}</h1>
           <div className="gap-2 flex items-center">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              markzuckerberg
+            <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">
+              @{user.username}
             </p>
             <p className="rounded-full px-2 py-1 text-xs bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
               spools.net
@@ -44,23 +94,66 @@ const UserHeader = () => {
         </Box>
         <Box>
           <img
-            src="/zuck-avatar.png"
+            src={user.profilePic ? user.profilePic : "defaultdp.png"}
             alt="avatar"
-            className="rounded-full w-16 h-16 sm:w-20 sm:h-20"
+            className="rounded-full object-cover lg:w-24 lg:h-24 w-20 h-20"
           />
         </Box>
       </div>
 
       {/* Bio section */}
       <p className="mt-2 text-sm sm:text-base text-gray-800 dark:text-gray-300">
-        Co-founder, executive chairman and CEO of Meta Platforms.
+        {user.bio}
       </p>
+
+      {currentUser._id === user._id && (
+        <Link as={RouterLink} to="/update">
+          <button className="rounded-full bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 h-8 w-32">
+            Update Profile
+          </button>
+        </Link>
+      )}
+
+      {currentUser._id !== user._id && (
+        <button
+          className="rounded-full bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center justify-center h-8 w-24"
+          onClick={handleFollowUnfollow}
+          disabled={updating}
+        >
+          {updating ? (
+            <svg
+              className="animate-spin h-5 w-5 text-gray-700 dark:text-gray-200"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              ></path>
+            </svg>
+          ) : following ? (
+            "Unfollow"
+          ) : (
+            "Follow"
+          )}
+        </button>
+      )}
 
       {/* Followers and social link section */}
       <div className="flex justify-between w-full mt-2 items-center">
         <div className="gap-2 flex items-center">
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            3.2k followers
+            {user.followers.length} followers
           </p>
           <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full"></div>
           <a
