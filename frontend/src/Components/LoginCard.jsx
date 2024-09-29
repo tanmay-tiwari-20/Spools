@@ -15,7 +15,7 @@ const LoginCard = () => {
     username: "",
     password: "",
   });
-  
+
   const showToast = useShowToast();
 
   const handleLogin = async (e) => {
@@ -30,12 +30,15 @@ const LoginCard = () => {
         body: JSON.stringify(inputs),
       });
       const data = await res.json();
+
       if (data.error) {
         showToast("Error", data.error, "error");
         return;
       }
-      localStorage.setItem("user-spools", JSON.stringify(data));
+
       setUser(data);
+      localStorage.setItem("user-spools", JSON.stringify(data));
+
       showToast("Success", "Login successful!", "success");
     } catch (error) {
       showToast("Error", error.message || "Login failed", "error");
@@ -47,14 +50,20 @@ const LoginCard = () => {
   return (
     <div className="flex justify-center items-center px-4">
       <div className="grid gap-8 max-w-lg w-full">
-        <section id="back-div" className="bg-gradient-to-r from-gray-200 to-gray-600 rounded-3xl">
+        <section
+          id="back-div"
+          className="bg-gradient-to-r from-gray-200 to-gray-600 rounded-3xl"
+        >
           <div className="border-8 border-transparent rounded-xl bg-white dark:bg-zinc-900 shadow-xl p-6 sm:p-8 md:p-10 m-2">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center cursor-default dark:text-gray-300 text-gray-900 mb-4">
               Log in
             </h1>
             <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
               <div>
-                <label htmlFor="username" className="block mb-2 lg:text-lg text-base dark:text-gray-300">
+                <label
+                  htmlFor="username"
+                  className="block mb-2 lg:text-lg text-base dark:text-gray-300"
+                >
                   Username
                 </label>
                 <input
@@ -64,11 +73,16 @@ const LoginCard = () => {
                   placeholder="Username"
                   required
                   value={inputs.username}
-                  onChange={(e) => setInputs({ ...inputs, username: e.target.value })}
+                  onChange={(e) =>
+                    setInputs({ ...inputs, username: e.target.value })
+                  }
                 />
               </div>
               <div className="relative">
-                <label htmlFor="password" className="block mb-2 lg:text-lg text-base dark:text-gray-300">
+                <label
+                  htmlFor="password"
+                  className="block mb-2 lg:text-lg text-base dark:text-gray-300"
+                >
                   Password
                 </label>
                 <input
@@ -78,7 +92,9 @@ const LoginCard = () => {
                   placeholder="Password"
                   required
                   value={inputs.password}
-                  onChange={(e) => setInputs({ ...inputs, password: e.target.value })}
+                  onChange={(e) =>
+                    setInputs({ ...inputs, password: e.target.value })
+                  }
                 />
                 <button
                   type="button"
@@ -88,7 +104,9 @@ const LoginCard = () => {
                   {showPassword ? <FaEye /> : <FaEyeSlash />}
                 </button>
               </div>
-              <a className="text-gray-400 text-sm transition hover:underline">Forgot your password?</a>
+              <a className="text-gray-400 text-sm transition hover:underline">
+                Forgot your password?
+              </a>
               <button
                 className={`w-full p-3 mt-4 text-white bg-gradient-to-r from-gray-400 to-gray-700 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
@@ -102,7 +120,10 @@ const LoginCard = () => {
             <div className="flex flex-col mt-4 text-sm text-center dark:text-gray-300">
               <p>
                 Don&apos;t have an account?{" "}
-                <a className="text-gray-400 transition hover:underline cursor-pointer" onClick={() => setAuthScreen("signup")}>
+                <a
+                  className="text-gray-400 transition hover:underline cursor-pointer"
+                  onClick={() => setAuthScreen("signup")}
+                >
                   Sign Up
                 </a>
               </p>
@@ -110,9 +131,20 @@ const LoginCard = () => {
             <div className="mt-4 text-center text-sm ">
               <p>
                 By logging in, you agree to our{" "}
-                <a href="#" className="text-gray-400 transition hover:underline">Terms </a>
+                <a
+                  href="#"
+                  className="text-gray-400 transition hover:underline"
+                >
+                  Terms{" "}
+                </a>
                 and{" "}
-                <a href="#" className="text-gray-400 transition hover:underline">Privacy Policy</a>.
+                <a
+                  href="#"
+                  className="text-gray-400 transition hover:underline"
+                >
+                  Privacy Policy
+                </a>
+                .
               </p>
             </div>
           </div>

@@ -124,7 +124,7 @@ const UpdateProfilePage = () => {
               <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
                 <div className="flex justify-center">
                   <img
-                    className="rounded-full w-28 h-28 sm:w-32 sm:h-32 shadow-md"
+                    className="rounded-full object-cover w-28 h-28 sm:w-32 sm:h-32 shadow-md"
                     src={imgUrl || user.profilePic || "defaultdp.png"}
                     alt="User Avatar"
                   />
@@ -134,7 +134,7 @@ const UpdateProfilePage = () => {
                   onClick={() => fileRef.current.click()}
                   type="button"
                 >
-                  Change Avatar
+                  Change Picture
                 </button>
                 <input
                   type="file"
@@ -274,7 +274,7 @@ const UpdateProfilePage = () => {
                   Cancel
                 </button>
                 <button
-                  className={`bg-gradient-to-r from-gray-600 to-gray-900 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg ${
+                  className={`bg-gradient-to-r from-gray-400 to-gray-700 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg ${
                     updating ? "opacity-70 cursor-not-allowed" : ""
                   }`}
                   type="submit"

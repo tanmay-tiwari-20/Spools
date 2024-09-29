@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
 
-
 const getUserProfile = async (req, res) => {
   const { username } = req.params;
   try {
@@ -26,30 +25,46 @@ const getUserProfile = async (req, res) => {
 const signupUser = async (req, res) => {
   try {
     const { name, email, username, password } = req.body;
-    const user = await User.findOne({ $or: [{ email }, { username }] });
 
+    // Check if a user with the same email or username already exists
+    const user = await User.findOne({ $or: [{ email }, { username }] });
     if (user) {
       return res.status(400).json({ error: "User already exists" });
     }
 
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create a new user
     const newUser = new User({
       name,
       email,
       username,
       password: hashedPassword,
+      bio: "", // Initialize bio as an empty string (or provide default)
+      profilePic: "", // Initialize profilePic as an empty string (or provide default)
+      followers: [],
+      following: [],
     });
+
+    // Save the new user to the database
     await newUser.save();
 
     if (newUser) {
+      // Generate JWT token and set it as a cookie
       generateTokenAndSetCookie(newUser._id, res);
+
+      // Respond with the newly created user data
       res.status(201).json({
         _id: newUser._id,
         name: newUser.name,
         username: newUser.username,
         email: newUser.email,
+        bio: newUser.bio, // Include bio
+        profilePic: newUser.profilePic, // Include profilePic
+        followers: newUser.followers,
+        following: newUser.following,
       });
     } else {
       res.status(400).json({ error: "Invalid user data" });
@@ -75,12 +90,19 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid username or password" });
     }
 
+    // Generate and set the token in cookies
     generateTokenAndSetCookie(user._id, res);
+
+    // Return the full user data, including bio and profilePic
     res.status(200).json({
       _id: user._id,
       name: user.name,
       username: user.username,
       email: user.email,
+      bio: user.bio, // Include bio
+      profilePic: user.profilePic, // Include profilePic
+      followers: user.followers,
+      following: user.following,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
