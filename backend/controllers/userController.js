@@ -186,8 +186,11 @@ const updateUser = async (req, res) => {
 
       // Delete old profile picture from Cloudinary if it exists
       if (user.profilePic) {
-        const publicId = user.profilePic.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(publicId);
+        // Extract public_id from the Cloudinary URL
+        const publicId = user.profilePic.match(/\/([^\/]+)\.[^\/.]+$/)[1]; 
+
+        // Attempt to delete the old image
+        await cloudinary.uploader.destroy(`spools/profile-pics/${publicId}`);
       }
 
       // Upload new profile picture to Cloudinary
@@ -216,6 +219,7 @@ const updateUser = async (req, res) => {
     res.status(500).json({ error: "Failed to update user" });
   }
 };
+
 
 export {
   signupUser,

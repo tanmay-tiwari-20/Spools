@@ -10,10 +10,8 @@ const protectRoute = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded token:", decoded); // Log decoded token
 
     const user = await User.findById(decoded.userId).select("-password");
-    console.log("Authenticated user:", user); // Log authenticated user
 
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });

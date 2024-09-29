@@ -74,18 +74,12 @@ const UpdateProfilePage = () => {
       if (inputs.password) formData.append("password", inputs.password);
       if (selectedFile) formData.append("profilePic", selectedFile);
 
-      // Log FormData for debugging
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ", " + pair[1]);
-      }
-
       const res = await fetch(`/api/users/update/${user._id}`, {
         method: "PUT",
         body: formData, // Use FormData for file + input fields
       });
 
       const data = await res.json();
-      console.log("Response Data: ", data); // Log response from server
 
       if (!res.ok) {
         // Check if the response status is not OK
