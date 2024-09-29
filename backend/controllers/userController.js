@@ -3,12 +3,14 @@ import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
 
+
 const getUserProfile = async (req, res) => {
   const { username } = req.params;
   try {
-    const user = await User.findOne({ username })
-      .select("-password")
-      .select("-updatedAt");
+    const user = await User.findOne({ username }).select(
+      "-password -updatedAt"
+    );
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -20,7 +22,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-//Signup user
+// Signup user
 const signupUser = async (req, res) => {
   try {
     const { name, email, username, password } = req.body;
@@ -58,18 +60,20 @@ const signupUser = async (req, res) => {
   }
 };
 
-//Login user
+// Login user
 const loginUser = async (req, res) => {
   try {
     const { password, username } = req.body;
     const user = await User.findOne({ username });
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      user?.password || ""
-    );
 
-    if (!user || !isPasswordCorrect)
+    if (!user) {
       return res.status(400).json({ error: "Invalid username or password" });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid username or password" });
+    }
 
     generateTokenAndSetCookie(user._id, res);
     res.status(200).json({
@@ -84,7 +88,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-//Logout user
+// Logout user
 const logoutUser = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 1 });
@@ -95,7 +99,7 @@ const logoutUser = (req, res) => {
   }
 };
 
-//Follow / Unfollow user
+// Follow / Unfollow user
 const followUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,11 +114,11 @@ const followUser = async (req, res) => {
     if (!userToModify)
       return res.status(400).json({ error: "User not found." });
 
-    const isFollowing = await currentUser.following.includes(id);
+    const isFollowing = currentUser.following.includes(id);
 
     if (isFollowing) {
       // Unfollow user
-      await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } }); // Fixed typo here
+      await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
       await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
       res.status(200).json({ message: "User unfollowed" });
     } else {
@@ -131,51 +135,57 @@ const followUser = async (req, res) => {
 
 // Update user profile
 const updateUser = async (req, res) => {
-  const { name, email, username, password, bio, profilePic } = req.body;
-  const userId = req.user._id; // Assuming req.user._id contains the logged-in user's ID
+  const { name, email, username, password, bio } = req.body;
+  const userId = req.user._id; // Get the logged-in user's ID
 
   try {
     // Check if the user exists
     let user = await User.findById(userId);
     if (!user) {
-      return res.status(400).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Check if the user trying to update is the owner of the profile
     if (req.params.id !== userId.toString()) {
-      return res.status(400).json({ error: "You cannot update another user's profile" });
+      return res
+        .status(403)
+        .json({ error: "You cannot update another user's profile" });
     }
 
-    // Handle password update
+    // Handle password update if provided
     if (password) {
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      user.password = hashedPassword;
+      user.password = await bcrypt.hash(password, salt);
     }
 
     // Handle profile picture update
-    if (profilePic) {
-      // Delete old profile pic from Cloudinary if it exists
+    if (req.files && req.files.profilePic) {
+      const profilePic = req.files.profilePic.tempFilePath; // Ensure this is correct
+
+      // Delete old profile picture from Cloudinary if it exists
       if (user.profilePic) {
-        await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
+        const publicId = user.profilePic.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
       }
 
       // Upload new profile picture to Cloudinary
-      const uploadedResponse = await cloudinary.uploader.upload(profilePic);
-      user.profilePic = uploadedResponse.secure_url;
+      const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
+        folder: "spools/profile-pics",
+      });
+      user.profilePic = uploadedResponse.secure_url; // Update profilePic URL
     }
 
-    // Update user fields
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.username = username || user.username;
-    user.bio = bio || user.bio;
+    // Update other user fields if provided
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (username) user.username = username;
+    if (bio) user.bio = bio;
 
     // Save updated user to the database
     const updatedUser = await user.save();
 
     // Exclude the password from the response
-    updatedUser.password = null;
+    updatedUser.password = undefined;
 
     // Send back the updated user data
     res.status(200).json(updatedUser);
@@ -184,7 +194,6 @@ const updateUser = async (req, res) => {
     res.status(500).json({ error: "Failed to update user" });
   }
 };
-
 
 export {
   signupUser,

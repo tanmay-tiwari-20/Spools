@@ -4,7 +4,7 @@ import { useRecoilState } from "recoil";
 import useShowToast from "../hooks/useShowToast";
 import usePreviewImg from "../hooks/usePreviewImg";
 
-export default function UpdateProfilePage() {
+const UpdateProfilePage = () => {
   const [user, setUser] = useRecoilState(userAtom);
   const [inputs, setInputs] = useState({
     name: user.name,
@@ -12,26 +12,58 @@ export default function UpdateProfilePage() {
     email: user.email,
     bio: user.bio,
     password: "",
+    confirmPassword: "",
   });
   const fileRef = useRef(null);
   const [updating, setUpdating] = useState(false);
 
   const showToast = useShowToast();
-
   const { handleImageChange, imgUrl, selectedFile } = usePreviewImg();
+
+  // Helper to reset form to initial values
+  const resetForm = () => {
+    setInputs({
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      bio: user.bio,
+      password: "",
+      confirmPassword: "",
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (updating) return;
 
     // Basic validation
-    if (!inputs.email.includes('@')) {
+    if (!inputs.email.includes("@")) {
       showToast("Error", "Please enter a valid email address.", "error");
+      return;
+    }
+    if (inputs.username.length < 3) {
+      showToast(
+        "Error",
+        "Username must be at least 3 characters long.",
+        "error"
+      );
+      return;
+    }
+    if (inputs.password && inputs.password.length < 6) {
+      showToast(
+        "Error",
+        "Password must be at least 6 characters long.",
+        "error"
+      );
+      return;
+    }
+    if (inputs.password !== inputs.confirmPassword) {
+      showToast("Error", "Passwords do not match.", "error");
       return;
     }
 
     setUpdating(true);
-    
+
     try {
       // Prepare form data for multipart/form-data request
       const formData = new FormData();
@@ -42,25 +74,37 @@ export default function UpdateProfilePage() {
       if (inputs.password) formData.append("password", inputs.password);
       if (selectedFile) formData.append("profilePic", selectedFile);
 
+      // Log FormData for debugging
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ", " + pair[1]);
+      }
+
       const res = await fetch(`/api/users/update/${user._id}`, {
         method: "PUT",
         body: formData, // Use FormData for file + input fields
       });
-      
-      const data = await res.json(); // updated user object
-      
-      if (data.error) {
-        showToast("Error", data.error, "error");
-        return;
+
+      const data = await res.json();
+      console.log("Response Data: ", data); // Log response from server
+
+      if (!res.ok) {
+        // Check if the response status is not OK
+        throw new Error(data.error || "Something went wrong");
       }
 
       showToast("Success", "Profile updated successfully", "success");
       setUser(data);
       localStorage.setItem("user-spools", JSON.stringify(data));
 
+      resetForm(); // Reset form after successful update
     } catch (error) {
       console.error("Update Profile Error:", error);
-      showToast("Error", "An unexpected error occurred. Please try again later.", "error");
+      showToast(
+        "Error",
+        error.message ||
+          "An unexpected error occurred. Please try again later.",
+        "error"
+      );
     } finally {
       setUpdating(false);
     }
@@ -126,7 +170,7 @@ export default function UpdateProfilePage() {
                   htmlFor="username"
                   className="block mb-2 text-base sm:text-lg dark:text-gray-300"
                 >
-                  User Name
+                  Username
                 </label>
                 <input
                   id="username"
@@ -199,29 +243,44 @@ export default function UpdateProfilePage() {
                 />
               </div>
 
-              {/* Buttons */}
-              <div className="flex flex-col justify-between sm:flex-row gap-4 mt-6">
+              {/* Confirm Password */}
+              <div className="mt-4">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block mb-2 text-base sm:text-lg dark:text-gray-300"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={inputs.confirmPassword}
+                  onChange={(e) =>
+                    setInputs({ ...inputs, confirmPassword: e.target.value })
+                  }
+                  className="w-full p-3 border rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex justify-between">
                 <button
-                  className="w-full sm:w-auto bg-gray-300 dark:bg-gray-500 dark:text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg"
+                  className="bg-gray-400 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg"
                   type="button"
-                  onClick={() => {
-                    setInputs({
-                      name: user.name || "",
-                      username: user.username || "",
-                      email: user.email || "",
-                      bio: user.bio || "",
-                      password: "",
-                    });
-                  }}
+                  onClick={resetForm}
+                  disabled={updating}
                 >
                   Cancel
                 </button>
                 <button
-                  className="w-full sm:w-auto bg-gradient-to-r from-gray-400 to-gray-700 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg"
+                  className={`bg-gradient-to-r from-gray-600 to-gray-900 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg ${
+                    updating ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                   type="submit"
                   disabled={updating}
                 >
-                  {updating ? "Saving..." : "Save Changes"}
+                  {updating ? "Updating..." : "Update Profile"}
                 </button>
               </div>
             </div>
@@ -230,4 +289,6 @@ export default function UpdateProfilePage() {
       </div>
     </div>
   );
-}
+};
+
+export default UpdateProfilePage;
