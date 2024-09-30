@@ -156,12 +156,11 @@ const UserHeader = ({ user }) => {
             {user.followers.length} followers
           </p>
           <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full"></div>
-          <a
-            href=""
+          <p
             className="text-sm text-gray-600 dark:text-gray-300 hover:underline"
           >
-            instagram.com
-          </a>
+            {user.following.length} following
+          </p>
         </div>
         <div className="flex">
           <Box className="icon-container">
