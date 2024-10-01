@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import useShowToast from "../hooks/useShowToast";
+import Post from "../Components/Post";
+import { useRecoilState } from "recoil";
+import postsAtom from "../atoms/postsAtom";
 
 const HomePage = () => {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useRecoilState(postsAtom);
   const [loading, setLoading] = useState(true);
   const showToast = useShowToast();
   useEffect(() => {
     const getFeedPosts = async () => {
       setLoading(true);
+      setPosts([]);
       try {
         const res = await fetch("/api/posts/feed");
         const data = await res.json();
@@ -23,7 +27,8 @@ const HomePage = () => {
       }
     };
     getFeedPosts();
-  }, [showToast]);
+  }, [showToast, setPosts]);
+
   return (
     <>
       {!loading && posts.length === 0 && (
@@ -36,6 +41,10 @@ const HomePage = () => {
           </div>
         </div>
       )}
+
+      {posts.map((post) => (
+        <Post key={post._id} post={post} postedBy={post.postedBy} />
+      ))}
     </>
   );
 };

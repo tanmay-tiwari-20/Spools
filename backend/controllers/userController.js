@@ -2,17 +2,29 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
+import mongoose from "mongoose";
 
 const getUserProfile = async (req, res) => {
-  const { username } = req.params;
-  try {
-    const user = await User.findOne({ username }).select(
-      "-password -updatedAt"
-    );
+  // We will fetch user profile either with username or userId
+  // query is either username or userId
+  const { query } = req.params;
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+  try {
+    let user;
+
+    // query is userId
+    if (mongoose.Types.ObjectId.isValid(query)) {
+      user = await User.findOne({ _id: query })
+        .select("-password")
+        .select("-updatedAt");
+    } else {
+      // query is username
+      user = await User.findOne({ username: query })
+        .select("-password")
+        .select("-updatedAt");
     }
+
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     res.status(200).json(user);
   } catch (err) {
@@ -187,7 +199,7 @@ const updateUser = async (req, res) => {
       // Delete old profile picture from Cloudinary if it exists
       if (user.profilePic) {
         // Extract public_id from the Cloudinary URL
-        const publicId = user.profilePic.match(/\/([^\/]+)\.[^\/.]+$/)[1]; 
+        const publicId = user.profilePic.match(/\/([^\/]+)\.[^\/.]+$/)[1];
 
         // Attempt to delete the old image
         await cloudinary.uploader.destroy(`spools/profile-pics/${publicId}`);
@@ -219,7 +231,6 @@ const updateUser = async (req, res) => {
     res.status(500).json({ error: "Failed to update user" });
   }
 };
-
 
 export {
   signupUser,

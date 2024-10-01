@@ -25,16 +25,17 @@ const LogoutButton = () => {
       localStorage.removeItem("user-spools");
       setUser(null);
     } catch (error) {
-      showToast("Error", error, "error");
+      showToast("Error", error.message || "Logout failed", "error");
     }
   };
 
   return (
     <button
       onClick={handleLogout}
-      className="fixed top-8 right-8 p-2 text-sm rounded-md bg-gray-300 text-ebony dark:bg-gray-500 dark:text-white hover:bg-gray-700 dark:hover:bg-gray-300 transition duration-300"
+      className="fixed top-4 right-4 md:top-8 md:right-8 flex items-center gap-2 px-3 py-2 text-xs md:text-sm font-semibold text-white bg-gray-500 rounded-full shadow-md transition duration-300 hover:bg-gray-500/80 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90"
     >
-      <FiLogOut size={20} />
+      <FiLogOut size={18} className="md:w-5 md:h-5" />
+      <span className="hidden md:block">Logout</span>
     </button>
   );
 };
