@@ -7,6 +7,7 @@ import userAtom from "../atoms/userAtom";
 
 const SignupCard = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading state for spinner
   const setAuthScreen = useSetRecoilState(authScreenAtom);
   const [inputs, setInputs] = useState({
     name: "",
@@ -20,6 +21,7 @@ const SignupCard = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault(); // Prevent default form submission
+    setLoading(true); // Start spinner when request is initiated
     try {
       const res = await fetch("/api/users/signup", {
         method: "POST",
@@ -32,6 +34,7 @@ const SignupCard = () => {
 
       if (data.error) {
         showToast("Error", data.error, "error");
+        setLoading(false); // Stop spinner on error
         return;
       }
 
@@ -40,6 +43,8 @@ const SignupCard = () => {
       showToast("Success", "Signup successful!", "success");
     } catch (error) {
       showToast("Error", error.message || "Signup failed", "error");
+    } finally {
+      setLoading(false); // Stop spinner after request completes
     }
   };
 
@@ -139,10 +144,40 @@ const SignupCard = () => {
                 </button>
               </div>
               <button
-                className="w-full p-3 mt-4 text-white bg-gradient-to-r from-gray-400 to-gray-700 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className={`w-full p-3 mt-4 text-white rounded-lg transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-gray-400 to-gray-700 hover:scale-105"
+                }`}
                 type="submit"
+                disabled={loading} // Disable button when loading
               >
-                SIGN UP
+                {loading ? (
+                  <div className="flex justify-center items-center">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      ></path>
+                    </svg>
+                  </div>
+                ) : (
+                  "SIGN UP"
+                )}
               </button>
             </form>
             <div className="flex flex-col mt-4 text-sm text-center dark:text-gray-300">

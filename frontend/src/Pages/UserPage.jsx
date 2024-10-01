@@ -8,6 +8,7 @@ const UserPage = () => {
   const [user, setUser] = useState(null);
   const { username } = useParams();
   const showToast = useShowToast();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getuser = async () => {
@@ -21,12 +22,21 @@ const UserPage = () => {
         setUser(data);
       } catch (error) {
         showToast("Error", error, "error");
+      } finally {
+        setLoading(false);
       }
     };
     getuser();
   }, [username, showToast]);
 
-  if (!user) return null;
+  if (!user && loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="loader w-16 h-16 border-4 border-t-transparent border-gray-500 dark:border-softPurple dark:border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  if (!user && !loading) return <h1>User not found.</h1>;
 
   return (
     <>
@@ -35,19 +45,19 @@ const UserPage = () => {
         likes={1200}
         replies={456}
         postImg="/post1.png"
-        postTitle="Lets talk about spools."
+        postTitle="Let's talk about spools."
       />
       <UserPost
         likes={1200}
         replies={456}
         postImg="/post2.png"
-        postTitle="Lets talk about spools."
+        postTitle="Let's talk about spools."
       />
       <UserPost
         likes={1200}
         replies={456}
         postImg="/post3.png"
-        postTitle="Lets talk about spools."
+        postTitle="Let's talk about spools."
       />
       <UserPost likes={1200} replies={456} postTitle="My first spool." />
     </>

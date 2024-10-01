@@ -114,7 +114,13 @@ const LoginCard = () => {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? "Logging in..." : "LOG IN"}
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  "LOG IN"
+                )}
               </button>
             </form>
             <div className="flex flex-col mt-4 text-sm text-center dark:text-gray-300">

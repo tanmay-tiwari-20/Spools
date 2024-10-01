@@ -9,6 +9,7 @@ import UpdateProfilePage from "./Pages/UpdateProfilePage";
 import { useRecoilValue } from "recoil";
 import userAtom from "./atoms/userAtom";
 import LogoutButton from "./Components/LogoutButton";
+import CreatePost from "./Components/CreatePost";
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -54,6 +55,7 @@ const App = () => {
         </Routes>
 
         {user && <LogoutButton />}
+        {user && <CreatePost />}
       </div>
     </div>
   );

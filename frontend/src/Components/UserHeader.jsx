@@ -87,7 +87,7 @@ const UserHeader = ({ user }) => {
             <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">
               @{user.username}
             </p>
-            <p className="rounded-full px-2 py-1 text-xs bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+            <p className="rounded-full select-none px-2 py-1 text-xs bg-gray-300 dark:bg-softPurple text-gray-700 dark:text-gray-200">
               spools.net
             </p>
           </div>
@@ -108,7 +108,7 @@ const UserHeader = ({ user }) => {
 
       {currentUser._id === user._id && (
         <Link as={RouterLink} to="/update">
-          <button className="rounded-full bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 h-8 w-32">
+          <button className="rounded-full shadow-md bg-gray-300 hover:bg-zinc-50 dark:bg-softPurple dark:hover:bg-softPurple/90 text-gray-700 dark:text-gray-200 h-8 w-32">
             Update Profile
           </button>
         </Link>
@@ -116,7 +116,7 @@ const UserHeader = ({ user }) => {
 
       {currentUser._id !== user._id && (
         <button
-          className="rounded-full bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center justify-center h-8 w-24"
+          className="flex justify-center items-center rounded-full shadow-md bg-gray-300 hover:bg-zinc-50 dark:bg-softPurple dark:hover:bg-softPurple/90 text-gray-700 dark:text-gray-200 h-8 w-24"
           onClick={handleFollowUnfollow}
           disabled={updating}
         >

@@ -23,15 +23,17 @@ cloudinary.config({
 });
 
 // Middleware setup
-app.use(express.json()); // Parse JSON data in the req.body
+app.use(express.json({ limit: "100mb" })); // Parse JSON data in the req.body
 app.use(express.urlencoded({ extended: true })); // Parse form data in the req.body
 app.use(cookieParser()); // Parse cookies in the req.headers
 
 // Setup express-fileupload middleware
-app.use(fileUpload({
-  useTempFiles: true, // Temporarily save files before uploading
-  tempFileDir: '/tmp/', // Directory for storing temp files
-}));
+app.use(
+  fileUpload({
+    useTempFiles: true, // Temporarily save files before uploading
+    tempFileDir: "/tmp/", // Directory for storing temp files
+  })
+);
 
 // Routes
 app.use("/api/users", userRoutes); // User-related routes
