@@ -4,9 +4,12 @@ import { Link } from "@chakra-ui/react";
 import { AiFillHome } from "react-icons/ai";
 import { RxAvatar } from "react-icons/rx";
 import { Link as RouterLink } from "react-router-dom";
+import { FiLogOut } from "react-icons/fi";
+import useLogout from "../hooks/useLogout";
 
 const Header = ({ isDarkMode, toggleColorMode }) => {
   const user = useRecoilValue(userAtom);
+  const logout = useLogout();
 
   return (
     <header
@@ -35,13 +38,21 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
 
       {/* Avatar Icon */}
       {user && (
-        <Link
-          as={RouterLink}
-          to={`/${user.username}`}
-          className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
-        >
-          <RxAvatar size={28} />
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            as={RouterLink}
+            to={`/${user.username}`}
+            className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
+          >
+            <RxAvatar size={28} />
+          </Link>
+          <button
+            className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
+            onClick={logout}
+          >
+            <FiLogOut size={26} className="md:w-5 md:h-5" />
+          </button>
+        </div>
       )}
     </header>
   );

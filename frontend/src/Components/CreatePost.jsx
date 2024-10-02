@@ -3,8 +3,10 @@ import { BsFillImageFill } from "react-icons/bs";
 import { AiOutlineClose } from "react-icons/ai";
 import usePreviewImg from "../hooks/usePreviewImg";
 import userAtom from "../atoms/userAtom";
-import { useRecoilValue } from "recoil";
+import { useRecoilValue, useRecoilState } from "recoil"; // Import useRecoilState
 import useShowToast from "../hooks/useShowToast";
+import postsAtom from "../atoms/postsAtom";
+import { useParams } from "react-router-dom";
 
 const MAX_CHAR = 500;
 
@@ -17,6 +19,8 @@ const CreatePost = () => {
   const imageRef = useRef(null);
   const [remainingChar, setRemainingChar] = useState(MAX_CHAR);
   const [loading, setLoading] = useState(false);
+  const [posts, setPosts] = useRecoilState(postsAtom); // Use Recoil state
+  const { username } = useParams();
 
   const handleTextChange = (e) => {
     const inputText = e.target.value;
@@ -51,6 +55,9 @@ const CreatePost = () => {
         return;
       }
       showToast("Success", "Post created successfully!", "success");
+      if (username === user.username) {
+        setPosts([data, ...posts]); // Prepend new post to the existing posts
+      }
       closeModal();
       setPostText("");
       setImgUrl("");
@@ -68,7 +75,7 @@ const CreatePost = () => {
     <>
       {/* Create Post Button */}
       <button
-        className="fixed bottom-10 right-10 flex items-center justify-center gap-2 px-6 py-2 text-ebony bg-gray-300 rounded-full hover:bg-zinc-50 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90 focus:ring-8 focus:ring-zinc-300/50 dark:focus:ring-softPurple/50 shadow-lg transition-all"
+        className="fixed bottom-7 right-7 flex items-center justify-center gap-2 px-2 py-2 md:px-5 md:py-2 text-ebony bg-gray-300 rounded-full hover:bg-zinc-50 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90 focus:ring-8 focus:ring-zinc-300/50 dark:focus:ring-softPurple/50 shadow-lg transition-all"
         onClick={openModal}
       >
         <svg
@@ -79,7 +86,7 @@ const CreatePost = () => {
         >
           <path d="M12 4.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 1 1 0 1.5H12.75v6.75a.75.75 0 0 1-1.5 0V13.75H4.5a.75.75 0 0 1 0-1.5h6.75V5.5a.75.75 0 0 1 .75-.75z" />
         </svg>
-        Post
+        <span className="hidden md:block">Post</span>
       </button>
 
       {/* Modal */}

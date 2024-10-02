@@ -102,7 +102,7 @@ const UserHeader = ({ user }) => {
       </div>
 
       {/* Bio section */}
-      <p className="mt-2 text-sm sm:text-base text-gray-800 dark:text-gray-300">
+      <p className="text-sm sm:text-base text-gray-800 dark:text-gray-300">
         {user.bio}
       </p>
 

@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import Post from "../models/postModel.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
@@ -199,10 +200,11 @@ const updateUser = async (req, res) => {
       // Delete old profile picture from Cloudinary if it exists
       if (user.profilePic) {
         // Extract public_id from the Cloudinary URL
-        const publicId = user.profilePic.match(/\/([^\/]+)\.[^\/.]+$/)[1];
-
-        // Attempt to delete the old image
-        await cloudinary.uploader.destroy(`spools/profile-pics/${publicId}`);
+        const publicIdMatch = user.profilePic.match(/\/([^\/]+)\.[^\/.]+$/);
+        if (publicIdMatch) {
+          const publicId = publicIdMatch[1];
+          await cloudinary.uploader.destroy(`spools/profile-pics/${publicId}`);
+        }
       }
 
       // Upload new profile picture to Cloudinary
@@ -220,6 +222,18 @@ const updateUser = async (req, res) => {
 
     // Save updated user to the database
     const updatedUser = await user.save();
+
+    // Update user information in replies
+    await Post.updateMany(
+      { "replies.userId": userId },
+      {
+        $set: {
+          "replies.$[reply].username": user.username,
+          "replies.$[reply].profilePic": user.profilePic,
+        },
+      },
+      { arrayFilters: [{ "reply.userId": userId }] }
+    );
 
     // Exclude the password from the response
     updatedUser.password = undefined;
