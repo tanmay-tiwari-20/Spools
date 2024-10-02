@@ -21,7 +21,7 @@ const UserHeader = ({ user }) => {
   const toast = useToast();
   const currentUser = useRecoilValue(userAtom); // logged in user
   const [following, setFollowing] = useState(
-    user.followers.includes(currentUser._id)
+    user.followers.includes(currentUser?._id)
   );
   const [updating, setUpdating] = useState(false);
 
@@ -67,7 +67,7 @@ const UserHeader = ({ user }) => {
         user.followers.pop(); // simulate removing from followers
       } else {
         showToast("Success", `Followed ${user.name}`, "success");
-        user.followers.push(currentUser._id); // simulate adding to followers
+        user.followers.push(currentUser?._id); // simulate adding to followers
       }
       setFollowing(!following);
     } catch (error) {
@@ -106,7 +106,7 @@ const UserHeader = ({ user }) => {
         {user.bio}
       </p>
 
-      {currentUser._id === user._id && (
+      {currentUser?._id === user._id && (
         <Link as={RouterLink} to="/update">
           <button className="rounded-full shadow-md bg-gray-300 hover:bg-zinc-50 dark:bg-softPurple dark:hover:bg-softPurple/90 text-gray-700 dark:text-gray-200 h-8 w-32">
             Update Profile
@@ -114,7 +114,7 @@ const UserHeader = ({ user }) => {
         </Link>
       )}
 
-      {currentUser._id !== user._id && (
+      {currentUser?._id !== user._id && (
         <button
           className="flex justify-center items-center rounded-full shadow-md bg-gray-300 hover:bg-zinc-50 dark:bg-softPurple dark:hover:bg-softPurple/90 text-gray-700 dark:text-gray-200 h-8 w-24"
           onClick={handleFollowUnfollow}
@@ -156,9 +156,7 @@ const UserHeader = ({ user }) => {
             {user.followers.length} followers
           </p>
           <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full"></div>
-          <p
-            className="text-sm text-gray-600 dark:text-gray-300 hover:underline"
-          >
+          <p className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
             {user.following.length} following
           </p>
         </div>

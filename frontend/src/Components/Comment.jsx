@@ -1,28 +1,24 @@
-import { Avatar, Divider } from "@chakra-ui/react";
-import { useState } from "react";
-import { BsThreeDots } from "react-icons/bs";
-import Actions from "./Actions";
+import { Avatar, Divider, Flex, Text } from "@chakra-ui/react";
 
-const Comment = () => {
-  const [liked, setLiked] = useState(false);
+const Comment = ({ reply, lastReply }) => {
   return (
     <>
-      <div className="flex gap-4 py-2 my-2 w-full">
-        <Avatar src="/zuck-avatar.png" size={"sm"} />
-        <div className="flex gap-1 w-full flex-col">
-          <div className="flex w-full items-center justify-between">
-            <p className="text-sm font-bold">markzuckerberg</p>
-            <div className="flex gap-2 items-center">
-              <p className="text-sm text-[#8e8e8e]">1d</p>
-              <BsThreeDots />
-            </div>
-          </div>
-          <p>Hey this looks great!</p>
-          <Actions liked={liked} setLiked={setLiked} />
-          <p className="text-sm text-[#8e8e8e]"></p>
-        </div>
-      </div>
-      <Divider />
+      <Flex gap={4} py={2} my={2} w={"full"}>
+        <Avatar src={reply.userProfilePic} size={"sm"} />
+        <Flex gap={1} w={"full"} flexDirection={"column"}>
+          <Flex
+            w={"full"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+          >
+            <Text fontSize="sm" fontWeight="bold">
+              {reply.username}
+            </Text>
+          </Flex>
+          <Text>{reply.text}</Text>
+        </Flex>
+      </Flex>
+      {!lastReply ? <Divider /> : null}
     </>
   );
 };
