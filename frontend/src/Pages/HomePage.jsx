@@ -8,10 +8,11 @@ const HomePage = () => {
   const [posts, setPosts] = useRecoilState(postsAtom);
   const [loading, setLoading] = useState(true);
   const showToast = useShowToast();
+
   useEffect(() => {
     const getFeedPosts = async () => {
       setLoading(true);
-      setPosts([]);
+      setPosts([]); // Ensure posts are reset to an empty array before fetching
       try {
         const res = await fetch("/api/posts/feed");
         const data = await res.json();
@@ -19,7 +20,11 @@ const HomePage = () => {
           showToast("Error", data.error, "error");
           return;
         }
-        setPosts(data);
+        if (Array.isArray(data)) {
+          setPosts(data); // Set posts only if data is an array
+        } else {
+          setPosts([]); // Default to an empty array if not an array
+        }
       } catch (error) {
         showToast("Error", error.message, "error");
       } finally {
@@ -32,7 +37,7 @@ const HomePage = () => {
   return (
     <>
       {!loading && posts.length === 0 && (
-        <h1>Follow some users to see the feed.</h1>
+        <h1>Login or Follow some users to see the feed.</h1>
       )}
       {loading && (
         <div className="flex justify-center">
@@ -42,9 +47,10 @@ const HomePage = () => {
         </div>
       )}
 
-      {posts.map((post) => (
-        <Post key={post._id} post={post} postedBy={post.postedBy} />
-      ))}
+      {Array.isArray(posts) &&
+        posts.map((post) => (
+          <Post key={post._id} post={post} postedBy={post.postedBy} />
+        ))}
     </>
   );
 };

@@ -49,7 +49,7 @@ const SignupCard = () => {
   };
 
   return (
-    <div className="flex justify-center items-center px-4">
+    <div className="flex justify-center items-center p-4 mt-4">
       <div className="grid gap-8 max-w-lg w-full">
         <section
           id="back-div"
