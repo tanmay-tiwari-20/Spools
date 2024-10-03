@@ -130,14 +130,14 @@ const PostPage = () => {
           <hr className="my-4" />
           <div className="flex justify-between">
             <div className="flex gap-2 items-center">
-              <span className="text-2xl">👋</span>
-              <span className="text-gray-500 font-semibold">
+              <span className="md:text-2xl text-base">👋</span>
+              <span className="text-gray-500 md:text-base text-sm font-semibold">
                 Make an account to like, reply and post.
               </span>
             </div>
             <a
               href="/auth"
-              className="px-4 py-1 bg-gradient-to-r from-electricBlue to-softPurple rounded-full font-semibold text-white cursor-pointer transition-all duration-300 hover:shadow-3xl hover:shadow-electricBlue"
+              className="md:px-4 px-3 py-1 md:text-base text-sm bg-gradient-to-r from-gray-400 to-gray-500 rounded-full font-semibold text-white cursor-pointer transition-all duration-300 hover:shadow-3xl hover:shadow-darkGray dark:hover:shadow-lightGray"
             >
               Login
             </a>

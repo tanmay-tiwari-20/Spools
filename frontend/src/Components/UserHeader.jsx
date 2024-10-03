@@ -14,8 +14,10 @@ import userAtom from "../atoms/userAtom";
 import { Link, Link as RouterLink } from "react-router-dom";
 import { useState } from "react";
 import useShowToast from "../hooks/useShowToast";
+import { motion } from "framer-motion";
 
 const UserHeader = ({ user }) => {
+  const MotionMenuList = motion.create(MenuList);
   const showToast = useShowToast();
   const toast = useToast();
   const currentUser = useRecoilValue(userAtom); // logged in user
@@ -80,17 +82,17 @@ const UserHeader = ({ user }) => {
     <VStack gap={4} alignItems={"start"} className="w-full">
       {/* Header section */}
       <div className="flex justify-between w-full items-center">
-        <Box>
+        <div>
           <h1 className="font-bold lg:text-4xl text-2xl mb-2">{user.name}</h1>
           <div className="gap-2 flex items-center">
             <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">
               @{user.username}
             </p>
-            <p className="rounded-full select-none px-2 py-1 text-xs bg-gray-300 dark:bg-softPurple text-gray-700 dark:text-gray-200">
+            <p className="rounded-full select-none px-2 py-[0.25vw] text-xs bg-gray-300 dark:bg-softPurple text-gray-700 dark:text-gray-200 font-semibold">
               spools.net
             </p>
           </div>
-        </Box>
+        </div>
         <Box>
           <img
             src={user.profilePic ? user.profilePic : "defaultdp.png"}
@@ -101,7 +103,7 @@ const UserHeader = ({ user }) => {
       </div>
 
       {/* Bio section */}
-      <p className="text-sm sm:text-base text-gray-800 dark:text-gray-300">
+      <p className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-300">
         {user.bio}
       </p>
 
@@ -151,17 +153,19 @@ const UserHeader = ({ user }) => {
       {/* Followers and social link section */}
       <div className="flex justify-between w-full mt-2 items-center">
         <div className="gap-2 flex items-center">
-          <p className="text-sm text-gray-600 dark:text-gray-300">
+          <p className="text-sm text-gray-600 dark:text-gray-300 font-semibold">
             {user.followers.length} followers
           </p>
           <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
+          <p className="text-sm text-gray-600 dark:text-gray-300 font-semibold">
             {user.following.length} following
           </p>
         </div>
         <div className="flex">
-          <Box className="icon-container rounded-full p-2 w-10 h-10 transition-all duration-300 ease-linear hover:bg-gradient-to-r hover:from-electricBlue hover:to-softPurple hover:text-white ml-4">
-            <Menu>
+          <Box className="icon-container rounded-full p-2 w-10 h-10 transition-all duration-300 ease-linear dark:hover:shadow-softPurple hover:shadow-electricBlue">
+            <Menu placement="bottom">
+              {" "}
+              {/* Set placement to bottom */}
               <MenuButton>
                 <CgMoreO
                   size={24}
@@ -169,7 +173,14 @@ const UserHeader = ({ user }) => {
                 />
               </MenuButton>
               <Portal>
-                <MenuList border={"none"} bg={""}>
+                <MotionMenuList
+                  border={"none"}
+                  bg={""}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ duration: 0.3 }}
+                >
                   <MenuItem
                     display={"flex"}
                     alignItems={"center"}
@@ -183,7 +194,7 @@ const UserHeader = ({ user }) => {
                   >
                     Copy Link
                   </MenuItem>
-                </MenuList>
+                </MotionMenuList>
               </Portal>
             </Menu>
           </Box>
