@@ -30,7 +30,7 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
           as={RouterLink}
           to="/auth"
           onClick={() => setAuthScreen("login")}
-          className="px-4 py-2 shadow-md text-white rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold"
+          className="px-4 py-2 shadow-md text-white rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold hover:shadow-3xl hover:shadow-darkGray dark:hover:shadow-lightGray"
           style={{ textDecoration: "none", color: "white" }}
         >
           Login
@@ -70,7 +70,7 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
           as={RouterLink}
           to="/auth"
           onClick={() => setAuthScreen("signup")}
-          className="px-4 py-2 shadow-md rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold"
+          className="px-4 py-2 shadow-md rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold hover:shadow-3xl hover:shadow-darkGray dark:hover:shadow-lightGray"
           style={{ textDecoration: "none", color: "white" }}
         >
           Signup

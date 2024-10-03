@@ -171,78 +171,66 @@ const followUser = async (req, res) => {
 // Update user profile
 const updateUser = async (req, res) => {
   const { name, email, username, password, bio } = req.body;
-  const userId = req.user._id; // Get the logged-in user's ID
+  let profilePic = req.files?.profilePic
+    ? req.files.profilePic.tempFilePath
+    : null; // Get profilePic from files
+
+  const userId = req.user._id;
 
   try {
-    // Check if the user exists
     let user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!user) return res.status(404).json({ error: "User not found" }); // 404 for not found
 
-    // Check if the user trying to update is the owner of the profile
-    if (req.params.id !== userId.toString()) {
+    if (req.params.id !== userId.toString())
       return res
         .status(403)
-        .json({ error: "You cannot update another user's profile" });
-    }
+        .json({ error: "You cannot update another user's profile" }); // 403 for forbidden access
 
-    // Handle password update if provided
     if (password) {
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.password = hashedPassword;
     }
 
-    // Handle profile picture update
-    if (req.files && req.files.profilePic) {
-      const profilePic = req.files.profilePic.tempFilePath; // Ensure this is correct
-
-      // Delete old profile picture from Cloudinary if it exists
+    if (profilePic) {
       if (user.profilePic) {
-        // Extract public_id from the Cloudinary URL
-        const publicIdMatch = user.profilePic.match(/\/([^\/]+)\.[^\/.]+$/);
-        if (publicIdMatch) {
-          const publicId = publicIdMatch[1];
-          await cloudinary.uploader.destroy(`spools/profile-pics/${publicId}`);
-        }
+        // Extract public id from the existing profilePic URL
+        const publicId = user.profilePic.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`spools/profile-pics/${publicId}`);
       }
 
-      // Upload new profile picture to Cloudinary
       const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
         folder: "spools/profile-pics",
       });
-      user.profilePic = uploadedResponse.secure_url; // Update profilePic URL
+      profilePic = uploadedResponse.secure_url; // Update profilePic URL
     }
 
-    // Update other user fields if provided
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (username) user.username = username;
-    if (bio) user.bio = bio;
+    user.name = name !== undefined ? name : user.name; // Check for undefined
+    user.email = email !== undefined ? email : user.email; // Check for undefined
+    user.username = username !== undefined ? username : user.username; // Check for undefined
+    user.profilePic = profilePic || user.profilePic; // Fallback to existing profilePic
+    user.bio = bio !== undefined ? bio : user.bio; // Check for undefined
 
-    // Save updated user to the database
-    const updatedUser = await user.save();
+    user = await user.save();
 
-    // Update user information in replies
+    // Update username and userProfilePic fields in replies
     await Post.updateMany(
       { "replies.userId": userId },
       {
         $set: {
           "replies.$[reply].username": user.username,
-          "replies.$[reply].profilePic": user.profilePic,
+          "replies.$[reply].userProfilePic": user.profilePic,
         },
       },
       { arrayFilters: [{ "reply.userId": userId }] }
     );
 
-    // Exclude the password from the response
-    updatedUser.password = undefined;
+    user.password = null; // Do not send password in response
 
-    // Send back the updated user data
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    console.error("Error in updateUser:", error);
-    res.status(500).json({ error: "Failed to update user" });
+    res.status(200).json(user);
+  } catch (err) {
+    console.log("Error in updateUser: ", err.message);
+    res.status(500).json({ error: err.message });
   }
 };
 

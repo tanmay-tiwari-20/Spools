@@ -24,6 +24,14 @@ export default {
         redAccent: "#ff3040", // Important actions or errors
         softPurple: "#9b51e0", // Reactions or accents
         softGreen: "#27ae60", // Success indicators or positive actions
+        softRed: "#F08080"
+      },
+      boxShadow: {
+        electricBlue: "0 0 20px rgba(0, 0, 255, 0.5)",
+        darkGray: "0 0 20px rgba(0, 0, 255, 0.5)",
+        softPurple: "0 0 20px rgba(0, 0, 255, 0.5)",
+        lightGray: "0 0 20px rgba(0, 0, 255, 0.5)",
+        softRed: "0 0 20px rgba(0, 0, 255, 0.5)"
       },
     },
   },

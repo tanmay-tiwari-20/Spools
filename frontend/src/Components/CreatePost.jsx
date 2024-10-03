@@ -75,7 +75,7 @@ const CreatePost = () => {
     <>
       {/* Create Post Button */}
       <button
-        className="fixed bottom-7 right-7 flex items-center justify-center gap-2 px-2 py-2 md:px-5 md:py-2 text-ebony bg-gray-300 rounded-full hover:bg-zinc-50 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90 focus:ring-8 focus:ring-zinc-300/50 dark:focus:ring-softPurple/50 shadow-lg transition-all"
+        className="fixed bottom-7 right-7 flex items-center justify-center gap-2 px-2 py-2 md:px-5 md:py-2 text-ebony bg-gray-300 rounded-full hover:bg-zinc-100 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90 focus:ring-8 focus:ring-zinc-300/50 dark:focus:ring-softPurple/50 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple"
         onClick={openModal}
       >
         <svg
@@ -162,7 +162,7 @@ const CreatePost = () => {
                 Cancel
               </button>
               <button
-                className={`px-4 py-2 text-white rounded-full bg-gradient-to-r from-electricBlue to-softPurple hover:scale-105 transition duration-300 ${
+                className={`px-4 py-2 text-white rounded-full bg-gradient-to-r from-electricBlue to-softPurple hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 onClick={handleCreatePost}

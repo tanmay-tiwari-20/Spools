@@ -132,12 +132,15 @@ const PostPage = () => {
             <div className="flex gap-2 items-center">
               <span className="text-2xl">👋</span>
               <span className="text-gray-500 font-semibold">
-                Login to like, reply and post.
+                Make an account to like, reply and post.
               </span>
             </div>
-            <button className="px-4 py-1 bg-gradient-to-r from-electricBlue to-softPurple rounded-full font-semibold text-white">
-              Get
-            </button>
+            <a
+              href="/auth"
+              className="px-4 py-1 bg-gradient-to-r from-electricBlue to-softPurple rounded-full font-semibold text-white cursor-pointer transition-all duration-300 hover:shadow-3xl hover:shadow-electricBlue"
+            >
+              Login
+            </a>
           </div>
         </>
       )}

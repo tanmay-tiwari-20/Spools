@@ -108,7 +108,7 @@ const UserHeader = ({ user }) => {
 
       {currentUser?._id === user._id && (
         <Link as={RouterLink} to="/update">
-          <button className="rounded-full shadow-md bg-gray-300 hover:bg-zinc-50 dark:bg-softPurple dark:hover:bg-softPurple/90 text-gray-700 dark:text-gray-200 h-8 w-32">
+          <button className="rounded-full bg-gray-300 hover:bg-zinc-50 dark:bg-softPurple dark:hover:bg-softPurple/90 text-gray-700 dark:text-gray-200 h-8 w-32 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple">
             Update Profile
           </button>
         </Link>

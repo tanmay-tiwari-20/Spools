@@ -122,7 +122,7 @@ const Post = ({ post, postedBy }) => {
               {currentUser?._id === user._id && (
                 <button
                   onClick={handleDeletePost}
-                  className="text-white hover:text-red-500"
+                  className="text-gray-500 dark:text-white hover:text-red-400 dark:hover:text-red-400"
                 >
                   <DeleteSVG />
                 </button>
@@ -130,7 +130,9 @@ const Post = ({ post, postedBy }) => {
             </div>
           </div>
 
-          <p className="md:text-base text-sm text-ebony dark:text-white">{post.text}</p>
+          <p className="md:text-base text-sm text-ebony dark:text-white">
+            {post.text}
+          </p>
           {post.img && (
             <div className="rounded-lg overflow-hidden border border-light-gray dark:border-dark-gray">
               <img src={post.img} className="w-full" alt="post content" />
@@ -148,20 +150,19 @@ const Post = ({ post, postedBy }) => {
 
 export default Post;
 
-
 const DeleteSVG = () => (
-	<svg
-	  xmlns="http://www.w3.org/2000/svg"
-	  className="h-6 w-6 cursor-pointer"
-	  fill="none"
-	  viewBox="0 0 24 24"
-	  stroke="currentColor"
-	  strokeWidth={2}
-	>
-	  <path
-		strokeLinecap="round"
-		strokeLinejoin="round"
-		d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M4 7h16"
-	  />
-	</svg>
-  );
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-6 w-6 cursor-pointer"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M4 7h16"
+    />
+  </svg>
+);
