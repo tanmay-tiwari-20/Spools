@@ -5,6 +5,7 @@ import { AiFillHome } from "react-icons/ai";
 import { RxAvatar } from "react-icons/rx";
 import { Link as RouterLink } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
+import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 import useLogout from "../hooks/useLogout";
 import authScreenAtom from "../atoms/authAtom";
 
@@ -56,6 +57,13 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
             className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
           >
             <RxAvatar className="text-2xl md:text-3xl" />
+          </Link>
+          <Link
+            as={RouterLink}
+            to={`/chat`}
+            className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
+          >
+            <IoChatbubbleEllipsesSharp className="text-2xl md:text-3xl" />
           </Link>
           <button
             className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"

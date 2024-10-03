@@ -260,7 +260,7 @@ const UpdateProfilePage = () => {
               {/* Action Buttons */}
               <div className="mt-8 flex justify-between">
                 <button
-                  className="bg-gradient-to-r from-red-300 to-red-500 font-semibold text-white md:text-base text-sm md:px-6 md:py-3 px-4 py-2  rounded-full hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-softRed"
+                  className="bg-gradient-to-r from-red-400 to-red-500 font-semibold text-white md:text-base text-sm md:px-6 md:py-3 px-4 py-2  rounded-full hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-softRed"
                   type="button"
                   onClick={resetForm}
                   disabled={updating}

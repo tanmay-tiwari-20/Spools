@@ -8,7 +8,6 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { BsInstagram } from "react-icons/bs";
 import { CgMoreO } from "react-icons/cg";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
@@ -156,18 +155,12 @@ const UserHeader = ({ user }) => {
             {user.followers.length} followers
           </p>
           <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {user.following.length} following
           </p>
         </div>
         <div className="flex">
-          <Box className="icon-container">
-            <BsInstagram
-              size={24}
-              className="cursor-pointer dark:text-gray-200 transition-transform duration-200 hover:scale-110"
-            />
-          </Box>
-          <Box className="icon-container ml-4">
+          <Box className="icon-container rounded-full p-2 w-10 h-10 transition-all duration-300 ease-linear hover:bg-gradient-to-r hover:from-electricBlue hover:to-softPurple hover:text-white ml-4">
             <Menu>
               <MenuButton>
                 <CgMoreO
@@ -176,9 +169,16 @@ const UserHeader = ({ user }) => {
                 />
               </MenuButton>
               <Portal>
-                <MenuList className="border-none rounded-lg bg-gray-300 dark:bg-ebony">
+                <MenuList border={"none"} bg={""}>
                   <MenuItem
-                    className="duration-300 rounded-md bg-gray-300 dark:bg-gray-600 dark:text-white hover:bg-gray-400 dark:hover:bg-gray-600"
+                    display={"flex"}
+                    alignItems={"center"}
+                    justifyContent={"center"}
+                    w={32}
+                    bgGradient="linear(to-r, #0095f6, #9b51e0)"
+                    color="white"
+                    transitionDuration="300ms"
+                    borderRadius="full"
                     onClick={copyURL}
                   >
                     Copy Link

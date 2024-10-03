@@ -9,6 +9,7 @@ import UpdateProfilePage from "./Pages/UpdateProfilePage";
 import { useRecoilValue } from "recoil";
 import userAtom from "./atoms/userAtom";
 import CreatePost from "./Components/CreatePost";
+import ChatPage from "./Pages/ChatPage";
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -63,8 +64,11 @@ const App = () => {
             }
           />
           <Route path="/:username/post/:pid" element={<PostPage />} />
+          <Route
+            path="/chat"
+            element={user ? <ChatPage /> : <Navigate to={"/auth"} />}
+          />
         </Routes>
-
       </div>
     </div>
   );
