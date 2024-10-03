@@ -14,7 +14,7 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
   const setAuthScreen = useSetRecoilState(authScreenAtom);
 
   return (
-    <header className="flex items-center py-4 bg-white dark:bg-ebony transition duration-500 justify-between px-4 md:px-8">
+    <header className="flex items-center py-4 bg-white dark:bg-ebony transition duration-500 justify-between ">
       {/* Home Icon */}
       {user && (
         <Link
@@ -22,7 +22,7 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
           to="/"
           className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
         >
-          <AiFillHome size={28} />
+          <AiFillHome className="text-2xl md:text-3xl" />
         </Link>
       )}
       {!user && (
@@ -30,8 +30,8 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
           as={RouterLink}
           to="/auth"
           onClick={() => setAuthScreen("login")}
-          className="px-4 py-2 text-white rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold"
-          style={{ textDecoration: "none" }}
+          className="px-4 py-2 shadow-md text-white rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold"
+          style={{ textDecoration: "none", color: "white" }}
         >
           Login
         </Link>
@@ -41,7 +41,9 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
       <img
         src={isDarkMode ? "/dark-mode.svg" : "/light-mode.svg"}
         alt="Toggle Color Mode"
-        className="cursor-pointer w-10 h-10 select-none hover:scale-110 transition duration-300"
+        className={`cursor-pointer w-8 h-8 md:w-10 md:h-10 ${
+          user && "ml-10"
+        } select-none hover:scale-110 transition duration-300`}
         onClick={toggleColorMode}
       />
 
@@ -53,13 +55,13 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
             to={`/${user.username}`}
             className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
           >
-            <RxAvatar size={28} />
+            <RxAvatar className="text-2xl md:text-3xl" />
           </Link>
           <button
             className="text-ebony dark:text-white hover:text-gray-500 dark:hover:text-softPurple transition duration-300"
-            onClick={logout}
+            onClick={logout} // Call logout here
           >
-            <FiLogOut size={26} className="md:w-5 md:h-5" />
+            <FiLogOut className="text-2xl md:text-3xl" />
           </button>
         </div>
       )}
@@ -68,8 +70,8 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
           as={RouterLink}
           to="/auth"
           onClick={() => setAuthScreen("signup")}
-          className="px-4 py-2 text-white rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold"
-          style={{ textDecoration: "none" }}
+          className="px-4 py-2 shadow-md rounded-full bg-gradient-to-r from-gray-400 to-gray-600 hover:scale-105 transition duration-300 text-sm md:text-base font-semibold"
+          style={{ textDecoration: "none", color: "white" }}
         >
           Signup
         </Link>

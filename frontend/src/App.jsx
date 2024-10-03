@@ -58,7 +58,7 @@ const App = () => {
                   <CreatePost />
                 </>
               ) : (
-                <UserPage />
+                <AuthPage />
               )
             }
           />

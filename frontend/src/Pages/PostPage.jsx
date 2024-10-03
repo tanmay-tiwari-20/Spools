@@ -1,24 +1,13 @@
-import {
-  Avatar,
-  Box,
-  Button,
-  Divider,
-  Flex,
-  Image,
-  Spinner,
-  Text,
-} from "@chakra-ui/react";
-import Actions from "../Components/Actions";
 import { useEffect } from "react";
-import Comment from "../components/Comment";
-import useGetUserProfile from "../hooks/useGetUserProfile";
-import useShowToast from "../hooks/useShowToast";
 import { useNavigate, useParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import { DeleteIcon } from "@chakra-ui/icons";
 import postsAtom from "../atoms/postsAtom";
+import useGetUserProfile from "../hooks/useGetUserProfile";
+import useShowToast from "../hooks/useShowToast";
+import Actions from "../Components/Actions";
+import Comment from "../components/Comment";
 
 const PostPage = () => {
   const { user, loading } = useGetUserProfile();
@@ -69,9 +58,12 @@ const PostPage = () => {
 
   if (!user && loading) {
     return (
-      <Flex justifyContent={"center"}>
-        <Spinner size={"xl"} />
-      </Flex>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="w-16 h-16 rounded-full animate-spin bg-gradient-to-r from-[#0095f6] to-[#9b51e0] border-4 border-transparent">
+          {/* Inner spinner with a gradient background */}
+          <div className="absolute top-0 left-0 w-full h-full rounded-full opacity-70"></div>
+        </div>
+      </div>
     );
   }
 
@@ -79,64 +71,78 @@ const PostPage = () => {
 
   return (
     <>
-      <Flex>
-        <Flex w={"full"} alignItems={"center"} gap={3}>
-          <Avatar src={user.profilePic} size={"md"} name="Mark Zuckerberg" />
-          <Flex>
-            <Text fontSize={"sm"} fontWeight={"bold"}>
+      <div className="flex">
+        <div className="flex w-full items-center gap-3">
+          <img
+            src={user.profilePic}
+            alt={user.username}
+            className="w-10 h-10 object-cover rounded-full"
+          />
+          <div className="flex items-center">
+            <h2 className="text-sm font-bold text-gray-900 dark:text-white">
               {user.username}
-            </Text>
-            <Image src="/verified.png" w="4" h={4} ml={4} />
-          </Flex>
-        </Flex>
-        <Flex gap={4} alignItems={"center"}>
-          <Text
-            fontSize={"xs"}
-            width={36}
-            textAlign={"right"}
-            color={"gray.light"}
-          >
+            </h2>
+            <img src="/verified.png" alt="Verified" className="w-4 h-4 ml-4" />
+          </div>
+        </div>
+        <div className="flex gap-4 items-center">
+          <span className="text-xs w-36 text-right text-gray-500">
             {formatDistanceToNow(new Date(currentPost.createdAt))} ago
-          </Text>
+          </span>
 
           {currentUser?._id === user._id && (
-            <DeleteIcon
-              size={20}
-              cursor={"pointer"}
+            <button
+              className="text-gray-600 dark:text-gray-200 cursor-pointer"
               onClick={handleDeletePost}
-            />
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 9a1 1 0 011 1v7a1 1 0 11-2 0v-7a1 1 0 011-1zm0-5a1 1 0 100 2 1 1 0 000-2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
           )}
-        </Flex>
-      </Flex>
+        </div>
+      </div>
 
-      <Text my={3}>{currentPost.text}</Text>
+      <p className="my-3">{currentPost.text}</p>
 
       {currentPost.img && (
-        <Box
-          borderRadius={6}
-          overflow={"hidden"}
-          border={"1px solid"}
-          borderColor={"gray.light"}
-        >
-          <Image src={currentPost.img} w={"full"} />
-        </Box>
+        <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+          <img src={currentPost.img} alt="Post" className="w-full" />
+        </div>
       )}
 
-      <Flex gap={3} my={3}>
+      <div className="flex gap-3 my-3">
         <Actions post={currentPost} />
-      </Flex>
+      </div>
 
-      <Divider my={4} />
+      {!currentUser && (
+        <>
+          <hr className="my-4" />
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+              <span className="text-2xl">👋</span>
+              <span className="text-gray-500 font-semibold">
+                Login to like, reply and post.
+              </span>
+            </div>
+            <button className="px-4 py-1 bg-gradient-to-r from-electricBlue to-softPurple rounded-full font-semibold text-white">
+              Get
+            </button>
+          </div>
+        </>
+      )}
 
-      <Flex justifyContent={"space-between"}>
-        <Flex gap={2} alignItems={"center"}>
-          <Text fontSize={"2xl"}>👋</Text>
-          <Text color={"gray.light"}>Login to like, reply and post.</Text>
-        </Flex>
-        <Button>Get</Button>
-      </Flex>
-
-      <Divider my={4} />
+      <hr className="my-4" />
       {currentPost.replies.map((reply) => (
         <Comment
           key={reply._id}

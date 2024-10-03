@@ -101,7 +101,7 @@ const Post = ({ post, postedBy }) => {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <p
-                className="text-sm font-bold text-ebony dark:text-white cursor-pointer"
+                className="md:text-sm text-xs font-bold text-ebony dark:text-white cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
                   navigate(`/${user.username}`);
@@ -111,12 +111,12 @@ const Post = ({ post, postedBy }) => {
               </p>
               <img
                 src="/verified.png"
-                className="w-4 h-4 ml-1 object-cover"
+                className="md:w-4 md:h-4 w-3 h-3 ml-1 object-cover"
                 alt="verified"
               />
             </div>
             <div className="flex gap-3 items-center">
-              <p className="text-xs font-semibold text-light-gray dark:text-dark-gray">
+              <p className="md:text-xs text-[2.5vw] font-semibold text-gray-500 dark:text-gray-300">
                 {formatDistanceToNow(new Date(post.createdAt))} ago
               </p>
               {currentUser?._id === user._id && (
@@ -130,7 +130,7 @@ const Post = ({ post, postedBy }) => {
             </div>
           </div>
 
-          <p className="text-base text-ebony dark:text-white">{post.text}</p>
+          <p className="md:text-base text-sm text-ebony dark:text-white">{post.text}</p>
           {post.img && (
             <div className="rounded-lg overflow-hidden border border-light-gray dark:border-dark-gray">
               <img src={post.img} className="w-full" alt="post content" />
