@@ -82,7 +82,7 @@ const PostPage = () => {
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">
               {user.username}
             </h2>
-            <img src="/verified.png" alt="Verified" className="w-4 h-4 ml-4" />
+            <img src="/verified.png" alt="Verified" className="md:w-4 md:h-4 w-3 h-3 ml-1 object-cover" />
           </div>
         </div>
         <div className="flex gap-4 items-center">

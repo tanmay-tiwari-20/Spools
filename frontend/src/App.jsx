@@ -31,9 +31,9 @@ const App = () => {
 
   return (
     <div
-      className={`w-full min-h-screen p-2 bg-white dark:bg-ebony transition duration-500`}
+      className={`w-full min-h-screen relative p-2 bg-white dark:bg-ebony transition duration-500`}
     >
-      <div className="max-w-[720px] mx-auto px-4 text-ebony dark:text-white">
+      <div className="max-w-[750px] mx-auto px-3 md:px-0  text-ebony dark:text-white">
         <Header isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} />
         <Routes>
           {/* If authenticated, show HomePage, otherwise AuthPage */}

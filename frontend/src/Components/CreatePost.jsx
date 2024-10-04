@@ -7,6 +7,7 @@ import { useRecoilValue, useRecoilState } from "recoil"; // Import useRecoilStat
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
 import { useParams } from "react-router-dom";
+import { IoAddOutline } from "react-icons/io5";
 
 const MAX_CHAR = 500;
 
@@ -78,14 +79,7 @@ const CreatePost = () => {
         className="fixed bottom-7 right-7 flex items-center justify-center gap-2 px-2 py-2 md:px-5 md:py-2 text-ebony bg-gray-300 rounded-full hover:bg-zinc-100 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90 focus:ring-8 focus:ring-zinc-300/50 dark:focus:ring-softPurple/50 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple"
         onClick={openModal}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 4.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 1 1 0 1.5H12.75v6.75a.75.75 0 0 1-1.5 0V13.75H4.5a.75.75 0 0 1 0-1.5h6.75V5.5a.75.75 0 0 1 .75-.75z" />
-        </svg>
+        <IoAddOutline className="text-sm md:text-base" />
         <span className="hidden md:block">Post</span>
       </button>
 
@@ -101,7 +95,7 @@ const CreatePost = () => {
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
-                <AiOutlineClose size={20} />
+                <AiOutlineClose size={28} />
               </button>
             </div>
 
@@ -128,11 +122,13 @@ const CreatePost = () => {
                 onChange={handleImageChange}
               />
               <div
-                className="flex items-center gap-2 text-gray-500 dark:text-gray-300 cursor-pointer"
+                className="flex items-center gap-2 text-xs md:text-base text-gray-500 dark:text-gray-300 cursor-pointer"
                 onClick={() => imageRef.current.click()}
               >
-                <BsFillImageFill size={24} />
-                <span>Add an image</span>
+                <button className="flex items-center gap-2 px-4 py-2 w-42 text-white rounded-full bg-gradient-to-r from-electricBlue to-softPurple hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple">
+                  <BsFillImageFill className="text-sm md:text-base" />
+                  <span>Add an image</span>
+                </button>
               </div>
 
               {/* Image Preview */}
