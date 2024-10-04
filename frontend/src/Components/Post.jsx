@@ -6,6 +6,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
 import Actions from "./Actions";
+import { MdDelete } from "react-icons/md";
 
 const Post = ({ post, postedBy }) => {
   const [user, setUser] = useState(null);
@@ -116,15 +117,15 @@ const Post = ({ post, postedBy }) => {
               />
             </div>
             <div className="flex gap-3 items-center">
-              <p className="md:text-xs text-[2.5vw] font-semibold text-gray-500 dark:text-gray-300">
+              <span className="md:text-xs text-[2.5vw] font-semibold text-gray-500 dark:text-gray-300">
                 {formatDistanceToNow(new Date(post.createdAt))} ago
-              </p>
+              </span>
               {currentUser?._id === user._id && (
                 <button
                   onClick={handleDeletePost}
-                  className="text-gray-500 dark:text-white hover:text-red-400 dark:hover:text-red-400"
+                  className="text-gray-500 dark:text-white hover:text-red-400 dark:hover:text-red-400 cursor-pointer"
                 >
-                  <DeleteSVG />
+                  <MdDelete className="md:text-2xl text-lg" />
                 </button>
               )}
             </div>
@@ -149,20 +150,3 @@ const Post = ({ post, postedBy }) => {
 };
 
 export default Post;
-
-const DeleteSVG = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6 cursor-pointer"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M4 7h16"
-    />
-  </svg>
-);

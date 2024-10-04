@@ -173,7 +173,7 @@ const Actions = ({ post }) => {
 
       <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }}>
         <ModalOverlay />
-        <ModalContent bg="#101010" rounded="lg" boxShadow="lg">
+        <ModalContent bg="#101010" rounded="3xl" boxShadow="lg">
           <ModalHeader fontSize="xl" fontWeight="semibold" color="white">
             Reply
           </ModalHeader>

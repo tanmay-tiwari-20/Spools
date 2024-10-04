@@ -79,14 +79,14 @@ const CreatePost = () => {
         className="fixed bottom-7 right-7 flex items-center justify-center gap-2 px-2 py-2 md:px-5 md:py-2 text-ebony bg-gray-300 rounded-full hover:bg-zinc-100 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90 focus:ring-8 focus:ring-zinc-300/50 dark:focus:ring-softPurple/50 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple"
         onClick={openModal}
       >
-        <IoAddOutline className="text-sm md:text-base" />
+        <IoAddOutline className="text-lg md:text-xl font-semibold" />
         <span className="hidden md:block">Post</span>
       </button>
 
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-ebony p-6 rounded-lg shadow-xl w-full max-w-lg mx-4 sm:mx-0">
+          <div className="bg-white dark:bg-ebony p-6 rounded-3xl shadow-xl w-full max-w-lg mx-4 sm:mx-0">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Create Post
@@ -95,7 +95,7 @@ const CreatePost = () => {
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
-                <AiOutlineClose size={28} />
+                <AiOutlineClose size={20} />
               </button>
             </div>
 

@@ -8,6 +8,7 @@ import useGetUserProfile from "../hooks/useGetUserProfile";
 import useShowToast from "../hooks/useShowToast";
 import Actions from "../Components/Actions";
 import Comment from "../components/Comment";
+import { MdDelete } from "react-icons/md";
 
 const PostPage = () => {
   const { user, loading } = useGetUserProfile();
@@ -82,32 +83,24 @@ const PostPage = () => {
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">
               {user.username}
             </h2>
-            <img src="/verified.png" alt="Verified" className="md:w-4 md:h-4 w-3 h-3 ml-1 object-cover" />
+            <img
+              src="/verified.png"
+              alt="Verified"
+              className="md:w-4 md:h-4 w-3 h-3 ml-1 object-cover"
+            />
           </div>
         </div>
-        <div className="flex gap-4 items-center">
-          <span className="text-xs w-36 text-right text-gray-500">
+        <div className="flex gap-3 items-center">
+          <span className="text-xs w-36 text-right text-gray-500 dark:text-gray-300 font-semibold">
             {formatDistanceToNow(new Date(currentPost.createdAt))} ago
           </span>
 
           {currentUser?._id === user._id && (
             <button
-              className="text-gray-600 dark:text-gray-200 cursor-pointer"
+              className="text-gray-500 dark:text-white hover:text-red-400 dark:hover:text-red-400 cursor-pointer"
               onClick={handleDeletePost}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 9a1 1 0 011 1v7a1 1 0 11-2 0v-7a1 1 0 011-1zm0-5a1 1 0 100 2 1 1 0 000-2z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <MdDelete className="md:text-2xl text-lg" />
             </button>
           )}
         </div>
