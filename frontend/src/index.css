@@ -9,10 +9,15 @@
 ::-webkit-scrollbar {
     width: 7px;
     background-color: #101010;
+    border-radius: 40px;
 }
 
 ::-webkit-scrollbar-thumb {
     background: linear-gradient(to bottom, #0095f6, #9b51e0);
     border-radius: 40px;
+    cursor: pointer;
 }
 
+:hover::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #12a5ef, #9b69e6);
+}
