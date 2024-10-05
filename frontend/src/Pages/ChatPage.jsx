@@ -3,8 +3,35 @@ import { SearchIcon } from "@chakra-ui/icons";
 import Conversation from "../Components/Conversation";
 import { GiConversation } from "react-icons/gi";
 import MessageContainer from "../Components/MessageContainer";
+import { useEffect, useState } from "react";
+import useShowToast from "../hooks/useShowToast";
+import { useRecoilState } from "recoil";
+import { conversationsAtom } from "../atoms/messagesAtom";
 
 const ChatPage = () => {
+  const showToast = useShowToast();
+  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [conversations, setConversations] = useRecoilState(conversationsAtom);
+
+  useEffect(() => {
+    const getConversations = async () => {
+      try {
+        const res = await fetch("/api/messages/conversations");
+        const data = await res.json();
+        if (data.error) {
+          showToast("Error", data.error, "error");
+          return;
+        }
+        console.log(data);
+        setConversations(data);
+      } catch (error) {
+        showToast("Error", error.message, "error");
+      } finally {
+        setLoadingConversations(false);
+      }
+    };
+    getConversations();
+  }, [showToast, setConversations]);
   return (
     <div className="absolute left-[50%] -translate-x-[50%] md:w-[750px] p-4 w-full">
       <div className="flex gap-4 flex-col md:flex-row max-w-[400px] md:max-w-full mx-auto">
@@ -20,7 +47,7 @@ const ChatPage = () => {
               </Button>
             </div>
           </form>
-          {false &&
+          {loadingConversations &&
             [0, 1, 2, 3, 4].map((_, i) => (
               <div key={i} className="flex gap-4 items-center p-1 rounded-md">
                 <div>
@@ -33,9 +60,10 @@ const ChatPage = () => {
               </div>
             ))}
 
-          <Conversation />
-          <Conversation />
-          <Conversation />
+          {!loadingConversations &&
+            conversations.map((conversation, i) => (
+              <Conversation key={i} conversation={conversation} />
+            ))}
         </div>
 
         {/* <div className="flex flex-[70%] rounded-md p-2 flex-col items-center justify-center h-[400px]">

@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import fileUpload from "express-fileupload"; // Import express-fileupload
 import userRoutes from "./Routes/userRoutes.js";
 import postRoutes from "./Routes/postRoutes.js";
+import messageRoutes from "./Routes/messageRoutes.js"
 import { v2 as cloudinary } from "cloudinary";
 
 dotenv.config(); // Load environment variables
@@ -27,17 +28,10 @@ app.use(express.json({ limit: "100mb" })); // Parse JSON data in the req.body
 app.use(express.urlencoded({ extended: true })); // Parse form data in the req.body
 app.use(cookieParser()); // Parse cookies in the req.headers
 
-// Setup express-fileupload middleware
-app.use(
-  fileUpload({
-    useTempFiles: true, // Temporarily save files before uploading
-    tempFileDir: "/tmp/", // Directory for storing temp files
-  })
-);
-
 // Routes
 app.use("/api/users", userRoutes); // User-related routes
 app.use("/api/posts", postRoutes); // Post-related routes
+app.use("/api/messages", messageRoutes); // Message-related routes
 
 // Start the server
 app.listen(PORT, () => console.log(`Server started at ${PORT}`));
