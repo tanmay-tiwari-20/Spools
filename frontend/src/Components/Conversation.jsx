@@ -6,16 +6,36 @@ import {
   Text,
   WrapItem,
 } from "@chakra-ui/react";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { BsCheck2All } from "react-icons/bs";
+import { selectedConversationAtom } from "../atoms/messagesAtom";
 
 const Conversation = ({ conversation }) => {
-  const user = conversation.participants[0];
+  const user = conversation.participants[0]; // Assuming participants always has at least one user
   const currentUser = useRecoilValue(userAtom);
-  const lastMessage = conversation.lastMessage;
+  const lastMessage = conversation.lastMessage; // Ensure lastMessage is defined
+  const [selectedConversation, setSelectedConversation] = useRecoilState(
+    selectedConversationAtom
+  );
+
+  const handleClick = () => {
+    // Check if user and lastMessage are defined
+    if (user?._id && lastMessage) {
+      setSelectedConversation({
+        _id: conversation._id || conversation.id, // Use _id if available
+        userId: user._id,
+        userProfilePic: user.profilePic,
+        username: user.username,
+      });
+    }
+  };
+
   return (
-    <div className="flex gap-4 items-center p-1 hover:cursor-pointer hover:bg-gray-600 hover:dark:bg-gray-600 rounded-md">
+    <div
+      className="flex gap-4 items-center p-1 hover:cursor-pointer hover:bg-gray-600 hover:dark:bg-gray-600 rounded-md"
+      onClick={handleClick}
+    >
       <WrapItem>
         <Avatar
           size={{
@@ -34,10 +54,10 @@ const Conversation = ({ conversation }) => {
           {user.username} <Image src="/verified.png" w={4} h={4} ml={1} />
         </Text>
         <Text fontSize={"xs"} display={"flex"} alignItems={"center"} gap={1}>
-          {currentUser._id === lastMessage.sender ? <BsCheck2All size={18} /> : ""}
-          {lastMessage.text.length > 18
+          {currentUser._id === lastMessage?.sender && <BsCheck2All size={18} />}
+          {lastMessage?.text?.length > 18
             ? lastMessage.text.substring(0, 18) + "..."
-            : lastMessage.text}
+            : lastMessage?.text}
         </Text>
       </Stack>
     </div>
