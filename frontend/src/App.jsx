@@ -10,6 +10,7 @@ import { useRecoilValue } from "recoil";
 import userAtom from "./atoms/userAtom";
 import CreatePost from "./Components/CreatePost";
 import ChatPage from "./Pages/ChatPage";
+import { SettingsPage } from "./Pages/SettingsPage";
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -33,10 +34,9 @@ const App = () => {
     <div
       className={`w-full min-h-screen relative p-2 bg-white dark:bg-ebony transition duration-500`}
     >
-      <div className="max-w-[750px] mx-auto px-3 md:px-0  text-ebony dark:text-white">
+      <div className="max-w-[1000px] mx-auto px-3 md:px-0  text-ebony dark:text-white">
         <Header isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} />
         <Routes>
-          {/* If authenticated, show HomePage, otherwise AuthPage */}
           <Route
             path="/"
             element={user ? <HomePage /> : <Navigate to="/auth" />}
@@ -59,7 +59,7 @@ const App = () => {
                   <CreatePost />
                 </>
               ) : (
-                <AuthPage />
+                <UserPage />
               )
             }
           />
@@ -67,6 +67,10 @@ const App = () => {
           <Route
             path="/chat"
             element={user ? <ChatPage /> : <Navigate to={"/auth"} />}
+          />
+          <Route
+            path="/settings"
+            element={user ? <SettingsPage /> : <Navigate to={"/auth"} />}
           />
         </Routes>
       </div>

@@ -90,7 +90,7 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
 
           {/* Mobile menu (shown only when hamburger is clicked) */}
           <div
-            className={`absolute top-16 right-2 bg-white dark:bg-ebony rounded-full shadow-xl sm:hidden transition-all duration-500 ease-in-out ${
+            className={`absolute top-16 right-2 bg-white dark:bg-ebony rounded-full shadow-xl sm:hidden transition-all duration-500 ease-in-out z-50 ${
               isMenuOpen
                 ? "opacity-100 visible transform translate-y-0"
                 : "opacity-0 invisible transform -translate-y-5"

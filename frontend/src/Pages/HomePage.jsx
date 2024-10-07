@@ -3,6 +3,7 @@ import useShowToast from "../hooks/useShowToast";
 import Post from "../Components/Post";
 import { useRecoilState } from "recoil";
 import postsAtom from "../atoms/postsAtom";
+import SuggestedUsers from "../Components/SuggestedUsers"; // Import SuggestedUsers component
 
 const HomePage = () => {
   const [posts, setPosts] = useRecoilState(postsAtom);
@@ -35,25 +36,31 @@ const HomePage = () => {
   }, [showToast, setPosts]);
 
   return (
-    <>
-      {loading ? (
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="w-16 h-16 rounded-full animate-spin bg-gradient-to-l from-electricBlue to-softPurple border-4 border-transparent">
-            <div className="absolute top-0 left-0 w-full h-full rounded-full opacity-70"></div>
+    <div className="flex flex-col md:flex-row gap-10 items-start">
+      <div className="flex-[70%]">
+        {loading ? (
+          <div className="flex justify-center items-center min-h-screen">
+            <div className="w-16 h-16 rounded-full animate-spin bg-gradient-to-l from-electricBlue to-softPurple border-4 border-transparent">
+              <div className="absolute top-0 left-0 w-full h-full rounded-full opacity-70"></div>
+            </div>
           </div>
-        </div>
-      ) : (
-        <>
-          {posts.length === 0 ? (
-            <h1>Login or Follow some users to see the feed.</h1>
-          ) : (
-            posts.map((post) => (
-              <Post key={post._id} post={post} postedBy={post.postedBy} />
-            ))
-          )}
-        </>
-      )}
-    </>
+        ) : (
+          <>
+            {posts.length === 0 ? (
+              <h1>Login or Follow some users to see the feed.</h1>
+            ) : (
+              posts.map((post) => (
+                <Post key={post._id} post={post} postedBy={post.postedBy} />
+              ))
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="hidden md:block flex-[30%]">
+        <SuggestedUsers />
+      </div>
+    </div>
   );
 };
 

@@ -18,8 +18,8 @@ const userSchema = mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
       minLength: 6,
+      required: true,
     },
     profilePic: {
       type: String,
@@ -36,6 +36,10 @@ const userSchema = mongoose.Schema(
     bio: {
       type: String,
       default: "",
+    },
+    isFrozen: {
+      type: Boolean,
+      default: false,
     },
   },
   {

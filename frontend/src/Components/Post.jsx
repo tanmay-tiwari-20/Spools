@@ -117,7 +117,7 @@ const Post = ({ post, postedBy }) => {
               />
             </div>
             <div className="flex gap-3 items-center">
-              <span className="md:text-xs text-[2.5vw] font-semibold text-gray-500 dark:text-gray-300">
+              <span className="md:text-xs text-[2vw] font-semibold text-gray-500 dark:text-gray-300">
                 {formatDistanceToNow(new Date(post.createdAt))} ago
               </span>
               {currentUser?._id === user._id && (

@@ -1,33 +1,88 @@
-import {
-  Avatar,
-  Divider,
-  Image,
-  Skeleton,
-  SkeletonCircle,
-} from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
-import { useEffect, useState } from "react";
 import useShowToast from "../hooks/useShowToast";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { selectedConversationAtom } from "../atoms/messagesAtom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  conversationsAtom,
+  selectedConversationAtom,
+} from "../atoms/messagesAtom";
 import userAtom from "../atoms/userAtom";
+import { useSocket } from "../context/SocketContext.jsx";
+import messageSound from "../assets/sounds/message.mp3";
 
 const MessageContainer = () => {
   const showToast = useShowToast();
-  const [selectedConversation] = useRecoilState(selectedConversationAtom);
+  const selectedConversation = useRecoilValue(selectedConversationAtom);
+  const [loadingMessages, setLoadingMessages] = useState(true);
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
   const currentUser = useRecoilValue(userAtom);
+  const { socket } = useSocket();
+  const setConversations = useSetRecoilState(conversationsAtom);
+  const messageEndRef = useRef(null);
+
+  useEffect(() => {
+    socket.on("newMessage", (message) => {
+      if (selectedConversation._id === message.conversationId) {
+        setMessages((prev) => [...prev, message]);
+      }
+
+      if (!document.hasFocus()) {
+        const sound = new Audio(messageSound);
+        sound.play();
+      }
+
+      setConversations((prev) =>
+        prev.map((conversation) =>
+          conversation._id === message.conversationId
+            ? {
+                ...conversation,
+                lastMessage: {
+                  text: message.text,
+                  sender: message.sender,
+                },
+              }
+            : conversation
+        )
+      );
+    });
+
+    return () => socket.off("newMessage");
+  }, [socket, selectedConversation, setConversations]);
+
+  useEffect(() => {
+    const lastMessageIsFromOtherUser =
+      messages.length &&
+      messages[messages.length - 1].sender !== currentUser._id;
+    if (lastMessageIsFromOtherUser) {
+      socket.emit("markMessagesAsSeen", {
+        conversationId: selectedConversation._id,
+        userId: selectedConversation.userId,
+      });
+    }
+
+    socket.on("messagesSeen", ({ conversationId }) => {
+      if (selectedConversation._id === conversationId) {
+        setMessages((prev) =>
+          prev.map((message) => ({
+            ...message,
+            seen: true,
+          }))
+        );
+      }
+    });
+  }, [socket, currentUser._id, messages, selectedConversation]);
+
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     const getMessages = async () => {
-      if (!selectedConversation || !selectedConversation.userId) {
-        return;
-      }
-
-      setLoading(true);
+      setLoadingMessages(true);
+      setMessages([]);
       try {
+        if (selectedConversation.mock) return;
         const res = await fetch(`/api/messages/${selectedConversation.userId}`);
         const data = await res.json();
         if (data.error) {
@@ -38,29 +93,37 @@ const MessageContainer = () => {
       } catch (error) {
         showToast("Error", error.message, "error");
       } finally {
-        setLoading(false);
+        setLoadingMessages(false);
       }
     };
 
     getMessages();
-  }, [showToast, selectedConversation]);
+  }, [showToast, selectedConversation.userId, selectedConversation.mock]);
 
   return (
-    <div className="flex flex-[70%] bg-gray-600 rounded-md flex-col">
-      <div className="flex w-full h-12 items-center gap-2 p-2">
-        <Avatar
+    <div className="flex flex-col h-full bg-white dark:bg-ebony rounded-md p-1">
+      {/* Message header */}
+      <div className="flex items-center gap-2 mb-2">
+        <img
           src={selectedConversation.userProfilePic}
-          size={"sm"}
+          alt={selectedConversation.username}
+          className="md:w-12 md:h-12 w-8 h-8 rounded-full"
         />
-        <p className="flex items-center">
+        <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
           {selectedConversation.username}
-          <Image src="/verified.png" w={4} h={4} ml={1} />
+          <img
+            src="/verified.png"
+            alt="Verified"
+            className="w-4 h-4 ml-1 inline"
+          />
         </p>
       </div>
-      <Divider />
 
-      <div className="flex flex-col gap-4 my-4 h-[400px] overflow-y-auto">
-        {loading &&
+      <hr className="border-gray-300 dark:border-gray-700" />
+
+      {/* Messages */}
+      <div className="flex flex-col gap-4 my-4 p-2 h-96 overflow-y-auto">
+        {loadingMessages &&
           [...Array(5)].map((_, i) => (
             <div
               key={i}
@@ -68,27 +131,43 @@ const MessageContainer = () => {
                 i % 2 === 0 ? "self-start" : "self-end"
               }`}
             >
-              {i % 2 === 0 && <SkeletonCircle size={7} />}
+              {i % 2 === 0 && (
+                <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse" />
+              )}
               <div className="flex flex-col gap-2">
-                <Skeleton h={"8px"} w={"250px"} />
-                <Skeleton h={"8px"} w={"250px"} />
-                <Skeleton h={"8px"} w={"250px"} />
+                <div className="w-60 h-2 bg-gray-300 dark:bg-gray-600 rounded animate-pulse" />
+                <div className="w-60 h-2 bg-gray-300 dark:bg-gray-600 rounded animate-pulse" />
+                <div className="w-60 h-2 bg-gray-300 dark:bg-gray-600 rounded animate-pulse" />
               </div>
-              {i % 2 !== 0 && <SkeletonCircle size={7} />}
+              {i % 2 !== 0 && (
+                <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse" />
+              )}
             </div>
           ))}
 
-        {!loading &&
+        {!loadingMessages &&
           messages.map((message) => (
-            <Message
-              key={message._id} // Ensure unique key
-              message={message}
-              ownMessage={currentUser._id !== message.sender} // Determine if the message is from the current user
-            />
+            <div
+              key={message._id}
+              ref={
+                messages.length - 1 === messages.indexOf(message)
+                  ? messageEndRef
+                  : null
+              }
+              className={`flex ${
+                currentUser._id === message.sender ? "self-end" : "self-start"
+              }`}
+            >
+              <Message
+                message={message}
+                ownMessage={currentUser._id === message.sender}
+              />
+            </div>
           ))}
       </div>
 
-      <MessageInput />
+      {/* Message Input */}
+      <MessageInput setMessages={setMessages} />
     </div>
   );
 };

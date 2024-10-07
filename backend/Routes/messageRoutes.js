@@ -1,10 +1,10 @@
 import express from "express";
 import protectRoute from "../middlewares/protectRoute.js";
 import {
-  getConversations,
   getMessages,
   sendMessage,
-} from "../controllers/messageControllers.js";
+  getConversations,
+} from "../controllers/messageController.js";
 
 const router = express.Router();
 

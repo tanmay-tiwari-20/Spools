@@ -1,65 +1,74 @@
-import {
-  Avatar,
-  AvatarBadge,
-  Image,
-  Stack,
-  Text,
-  WrapItem,
-} from "@chakra-ui/react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import { BsCheck2All } from "react-icons/bs";
+import { BsCheck2All, BsFillImageFill } from "react-icons/bs";
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 
-const Conversation = ({ conversation }) => {
-  const user = conversation.participants[0]; // Assuming participants always has at least one user
+const Conversation = ({ conversation, isOnline }) => {
+  const user = conversation.participants[0];
   const currentUser = useRecoilValue(userAtom);
-  const lastMessage = conversation.lastMessage; // Ensure lastMessage is defined
+  const lastMessage = conversation.lastMessage;
   const [selectedConversation, setSelectedConversation] = useRecoilState(
     selectedConversationAtom
   );
 
-  const handleClick = () => {
-    // Check if user and lastMessage are defined
-    if (user?._id && lastMessage) {
-      setSelectedConversation({
-        _id: conversation._id || conversation.id, // Use _id if available
-        userId: user._id,
-        userProfilePic: user.profilePic,
-        username: user.username,
-      });
-    }
-  };
+  const isSelected = selectedConversation?._id === conversation._id;
 
   return (
     <div
-      className="flex gap-4 items-center p-1 hover:cursor-pointer hover:bg-gray-600 hover:dark:bg-gray-600 rounded-md"
-      onClick={handleClick}
+      className={`flex items-center gap-4 p-2 rounded-full transition-colors cursor-pointer
+        ${
+          isSelected
+            ? "bg-zinc-400 text-white dark:bg-zinc-800 dark:text-white"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+        }
+      `}
+      onClick={() =>
+        setSelectedConversation({
+          _id: conversation._id,
+          userId: user._id,
+          userProfilePic: user.profilePic,
+          username: user.username,
+          mock: conversation.mock,
+        })
+      }
     >
-      <WrapItem>
-        <Avatar
-          size={{
-            base: "xs",
-            sm: "sm",
-            md: "md",
-          }}
+      <div className="relative">
+        <img
+          className="w-10 h-10 rounded-full object-cover"
           src={user.profilePic}
-        >
-          <AvatarBadge boxSize="1em" bg="green.500" />
-        </Avatar>
-      </WrapItem>
+          alt={`${user.username}'s profile`}
+        />
+        {isOnline && (
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-ebony"></span>
+        )}
+      </div>
 
-      <Stack direction={"column"} fontSize={"sm"}>
-        <Text fontWeight="700" display={"flex"} alignItems={"center"}>
-          {user.username} <Image src="/verified.png" w={4} h={4} ml={1} />
-        </Text>
-        <Text fontSize={"xs"} display={"flex"} alignItems={"center"} gap={1}>
-          {currentUser._id === lastMessage?.sender && <BsCheck2All size={18} />}
-          {lastMessage?.text?.length > 18
-            ? lastMessage.text.substring(0, 18) + "..."
-            : lastMessage?.text}
-        </Text>
-      </Stack>
+      <div className="flex flex-col text-sm">
+        <div
+          className={`flex items-center font-semibold ${
+            isSelected ? "text-white" : "text-gray-900 dark:text-white"
+          }`}
+        >
+          {user.username}
+          <img src="/verified.png" alt="Verified" className="w-4 h-4 ml-1" />
+        </div>
+        <div
+          className={`flex items-center gap-1 text-xs ${
+            isSelected ? "text-white" : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
+          {currentUser._id === lastMessage.sender && (
+            <span
+              className={`text-${lastMessage.seen ? "blue-500" : "gray-400"}`}
+            >
+              <BsCheck2All size={16} />
+            </span>
+          )}
+          {lastMessage.text.length > 18
+            ? `${lastMessage.text.substring(0, 18)}...`
+            : lastMessage.text || <BsFillImageFill size={16} />}
+        </div>
+      </div>
     </div>
   );
 };
