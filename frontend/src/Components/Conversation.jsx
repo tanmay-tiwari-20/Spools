@@ -13,6 +13,16 @@ const Conversation = ({ conversation, isOnline }) => {
 
   const isSelected = selectedConversation?._id === conversation._id;
 
+  const handleSelectConversation = () => {
+    setSelectedConversation({
+      _id: conversation._id,
+      userId: user._id,
+      userProfilePic: user.profilePic,
+      username: user.username,
+      mock: conversation.mock,
+    });
+  };
+
   return (
     <div
       className={`flex items-center gap-4 p-2 rounded-full transition-colors cursor-pointer
@@ -22,15 +32,7 @@ const Conversation = ({ conversation, isOnline }) => {
             : "hover:bg-gray-100 dark:hover:bg-gray-800"
         }
       `}
-      onClick={() =>
-        setSelectedConversation({
-          _id: conversation._id,
-          userId: user._id,
-          userProfilePic: user.profilePic,
-          username: user.username,
-          mock: conversation.mock,
-        })
-      }
+      onClick={handleSelectConversation}
     >
       <div className="relative">
         <img
@@ -59,12 +61,12 @@ const Conversation = ({ conversation, isOnline }) => {
         >
           {currentUser._id === lastMessage.sender && (
             <span
-              className={`text-${lastMessage.seen ? "blue-500" : "gray-400"}`}
+              className={lastMessage.seen ? "text-blue-500" : "text-gray-400"}
             >
               <BsCheck2All size={16} />
             </span>
           )}
-          {lastMessage.text.length > 18
+          {lastMessage.text?.length > 18
             ? `${lastMessage.text.substring(0, 18)}...`
             : lastMessage.text || <BsFillImageFill size={16} />}
         </div>

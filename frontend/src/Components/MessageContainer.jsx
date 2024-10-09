@@ -27,24 +27,27 @@ const MessageContainer = () => {
         setMessages((prev) => [...prev, message]);
       }
 
+      // make a sound if the window is not focused
       if (!document.hasFocus()) {
         const sound = new Audio(messageSound);
         sound.play();
       }
 
-      setConversations((prev) =>
-        prev.map((conversation) =>
-          conversation._id === message.conversationId
-            ? {
-                ...conversation,
-                lastMessage: {
-                  text: message.text,
-                  sender: message.sender,
-                },
-              }
-            : conversation
-        )
-      );
+      setConversations((prev) => {
+        const updatedConversations = prev.map((conversation) => {
+          if (conversation._id === message.conversationId) {
+            return {
+              ...conversation,
+              lastMessage: {
+                text: message.text,
+                sender: message.sender,
+              },
+            };
+          }
+          return conversation;
+        });
+        return updatedConversations;
+      });
     });
 
     return () => socket.off("newMessage");
@@ -63,12 +66,18 @@ const MessageContainer = () => {
 
     socket.on("messagesSeen", ({ conversationId }) => {
       if (selectedConversation._id === conversationId) {
-        setMessages((prev) =>
-          prev.map((message) => ({
-            ...message,
-            seen: true,
-          }))
-        );
+        setMessages((prev) => {
+          const updatedMessages = prev.map((message) => {
+            if (!message.seen) {
+              return {
+                ...message,
+                seen: true,
+              };
+            }
+            return message;
+          });
+          return updatedMessages;
+        });
       }
     });
   }, [socket, currentUser._id, messages, selectedConversation]);
@@ -107,7 +116,7 @@ const MessageContainer = () => {
         <img
           src={selectedConversation.userProfilePic}
           alt={selectedConversation.username}
-          className="md:w-12 md:h-12 w-8 h-8 rounded-full"
+          className="md:w-12 md:h-12 w-8 h-8 rounded-full object-cover"
         />
         <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
           {selectedConversation.username}

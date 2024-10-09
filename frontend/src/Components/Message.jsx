@@ -1,7 +1,6 @@
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import { BsCheck2All } from "react-icons/bs";
 import { useState } from "react";
 
 const Message = ({ ownMessage, message }) => {
@@ -16,6 +15,7 @@ const Message = ({ ownMessage, message }) => {
         <img
           src={selectedConversation.userProfilePic}
           className="w-8 h-8 mr-1 rounded-full object-cover"
+          alt="User avatar"
         />
       )}
 
@@ -26,22 +26,16 @@ const Message = ({ ownMessage, message }) => {
         } max-w-[350px]`}
       >
         {message.text && (
-          <div
-            className={`flex items-center px-2 py-1 text-sm rounded-full ${
-              ownMessage
-                ? "dark:bg-softPurple bg-electricBlue text-white"
-                : "border"
-            }`}
-          >
-            <p className="m-0">{message.text}</p>
-            {/* Message seen icon */}
-            <span
-              className={`ml-2 ${
-                message.seen ? "text-blue-400" : "text-gray-400"
+          <div className="flex items-center">
+            <div
+              className={`flex items-center px-2 py-1 text-sm rounded-full ${
+                ownMessage
+                  ? "dark:border-softPurple border border-electricBlue"
+                  : "border"
               }`}
             >
-              <BsCheck2All size={16} />
-            </span>
+              <p className="m-0">{message.text}</p>
+            </div>
           </div>
         )}
 
@@ -71,6 +65,7 @@ const Message = ({ ownMessage, message }) => {
         <img
           src={user.profilePic}
           className="w-8 h-8 ml-1 rounded-full object-cover"
+          alt="Your avatar"
         />
       )}
     </div>
