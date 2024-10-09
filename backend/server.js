@@ -25,14 +25,22 @@ cloudinary.config({
 
 // Middlewares
 app.use(helmet());
-app.use(express.json({ limit: "50mb" })); // To parse JSON data in the req.body
-app.use(express.urlencoded({ extended: true })); // To parse form data in the req.body
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  })
+);
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Logging middleware
-app.use((req, res, next) => {
-  next();
-});
+// Serve static files (for local images, if any)
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Adjust if necessary
 
 // Routes
 app.use("/api/users", userRoutes);
@@ -43,7 +51,7 @@ app.use("/api/messages", messageRoutes);
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
-  // react app
+  // React app
   app.get("*", (req, res) => {
     res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
   });
