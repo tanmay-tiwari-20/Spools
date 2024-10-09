@@ -7,7 +7,7 @@ import postsAtom from "../atoms/postsAtom";
 import useGetUserProfile from "../hooks/useGetUserProfile";
 import useShowToast from "../hooks/useShowToast";
 import Actions from "../Components/Actions";
-import Comment from "../components/Comment";
+import Comment from "../Components/Comment";
 import { MdDelete } from "react-icons/md";
 
 const PostPage = () => {
