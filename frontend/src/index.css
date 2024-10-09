@@ -2,22 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-*{
+* {
     user-select: none;
 }
 
-::-webkit-scrollbar {
-    width: 7px;
-    background-color: #101010;
-    border-radius: 40px;
+@layer base {
+    /* Light mode scrollbar */
+    ::-webkit-scrollbar {
+        width: 7px;
+        background-color: #f0f0f0; /* Light mode background */
+        border-radius: 40px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(to bottom, #0095f6, #9b51e0); /* Light mode thumb */
+        border-radius: 40px;
+        cursor: pointer;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(to bottom, #12a5ef, #9b69e6); /* Light mode hover */
+    }
 }
 
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #0095f6, #9b51e0);
-    border-radius: 40px;
-    cursor: pointer;
-}
+@layer base {
+    /* Dark mode scrollbar */
+    .dark ::-webkit-scrollbar {
+        width: 7px;
+        background-color: #101010; /* Dark mode background */
+        border-radius: 40px;
+    }
 
-:hover::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #12a5ef, #9b69e6);
+    .dark ::-webkit-scrollbar-thumb {
+        background: linear-gradient(to bottom, #6b5ce6, #1e90ff); /* Dark mode thumb */
+        border-radius: 40px;
+        cursor: pointer;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(to bottom, #8c74ff, #3b79d6); /* Dark mode hover */
+    }
 }

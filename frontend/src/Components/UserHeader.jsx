@@ -15,6 +15,7 @@ import { Link, Link as RouterLink } from "react-router-dom";
 import { useState } from "react";
 import useShowToast from "../hooks/useShowToast";
 import { motion } from "framer-motion";
+import { MdOutlineSettings } from "react-icons/md";
 
 const UserHeader = ({ user }) => {
   const MotionMenuList = motion.create(MenuList);
@@ -161,8 +162,8 @@ const UserHeader = ({ user }) => {
             {user.following.length} following
           </p>
         </div>
-        <div className="flex">
-          <Box className="icon-container rounded-full p-2 w-10 h-10 transition-all duration-300 ease-linear dark:hover:shadow-softPurple hover:shadow-electricBlue">
+        <div className="flex items-center gap-4">
+          <Box className="rounded-full p-2 w-10 h-10 transition-all duration-300 ease-linear dark:hover:shadow-softPurple hover:shadow-electricBlue">
             <Menu placement="bottom">
               {" "}
               {/* Set placement to bottom */}
@@ -198,9 +199,13 @@ const UserHeader = ({ user }) => {
               </Portal>
             </Menu>
           </Box>
+          <div className="cursor-pointer dark:text-gray-200 hover:scale-110 p-2 w-10 h-10 transition-all duration-300 ease-linear dark:hover:shadow-softPurple hover:shadow-electricBlue rounded-full">
+            <Link as={RouterLink} to={`/settings`}>
+              <MdOutlineSettings size={24} />
+            </Link>
+          </div>
         </div>
       </div>
-
       {/* Tabs section */}
       <div className="flex w-full">
         <div className="flex flex-1 border-b-2 border-b-gray-800 dark:border-b-gray-200 justify-center pb-3 cursor-pointer">

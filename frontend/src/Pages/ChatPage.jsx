@@ -48,7 +48,13 @@ const ChatPage = () => {
           showToast("Error", data.error, "error");
           return;
         }
-        setConversations(data);
+        // Sort conversations by the timestamp of the last message
+        const sortedConversations = data.sort((a, b) => {
+          const lastMessageA = new Date(a.updatedAt);
+          const lastMessageB = new Date(b.updatedAt);
+          return lastMessageB - lastMessageA; // Most recent first
+        });
+        setConversations(sortedConversations);
       } catch (error) {
         showToast("Error", error.message, "error");
       } finally {
@@ -150,7 +156,12 @@ const ChatPage = () => {
               </div>
             ))}
           {/* Conversations */}
-          {!loadingConversations &&
+          {!loadingConversations && conversations.length === 0 ? (
+            <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+              <p>No conversations found.</p>
+            </div>
+          ) : (
+            !loadingConversations &&
             conversations.map((conversation) => (
               <Conversation
                 key={conversation._id}
@@ -159,7 +170,8 @@ const ChatPage = () => {
                 )}
                 conversation={conversation}
               />
-            ))}
+            ))
+          )}
         </div>
 
         {/* Message Section */}
@@ -170,8 +182,8 @@ const ChatPage = () => {
                 className="text-gray-500 dark:text-gray-400"
                 size={100}
               />
-              <p className="text-xl text-gray-600 dark:text-gray-300 mt-4">
-                Select a conversation to start messaging
+              <p className="text-center text-xl text-gray-600 dark:text-gray-300 mt-4">
+                Select a conversation to start messaging...
               </p>
             </div>
           ) : (

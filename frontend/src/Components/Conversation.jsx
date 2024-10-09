@@ -1,6 +1,6 @@
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import { BsCheck2All, BsFillImageFill } from "react-icons/bs";
+import { BsCheck2All } from "react-icons/bs";
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 
 const Conversation = ({ conversation, isOnline }) => {
@@ -25,13 +25,12 @@ const Conversation = ({ conversation, isOnline }) => {
 
   return (
     <div
-      className={`flex items-center gap-4 p-2 rounded-full transition-colors cursor-pointer
+      className={`flex items-center gap-4 p-2 rounded-full cursor-pointer transition-colors 
         ${
           isSelected
             ? "bg-zinc-400 text-white dark:bg-zinc-800 dark:text-white"
             : "hover:bg-gray-100 dark:hover:bg-gray-800"
-        }
-      `}
+        }`}
       onClick={handleSelectConversation}
     >
       <div className="relative">
@@ -61,14 +60,14 @@ const Conversation = ({ conversation, isOnline }) => {
         >
           {currentUser._id === lastMessage.sender && (
             <span
-              className={lastMessage.seen ? "text-blue-500" : "text-gray-400"}
+              className={lastMessage.seen ? "text-blue-500" : "text-zinc-500"}
             >
               <BsCheck2All size={16} />
             </span>
           )}
           {lastMessage.text?.length > 18
             ? `${lastMessage.text.substring(0, 18)}...`
-            : lastMessage.text || <BsFillImageFill size={16} />}
+            : lastMessage.text || "Start the conversation..."}
         </div>
       </div>
     </div>
