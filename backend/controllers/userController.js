@@ -188,18 +188,6 @@ const updateUser = async (req, res) => {
 
     user = await user.save();
 
-    // Find all posts that this user replied and update username and userProfilePic fields
-    await Post.updateMany(
-      { "replies.userId": userId },
-      {
-        $set: {
-          "replies.$[reply].username": user.username,
-          "replies.$[reply].userProfilePic": user.profilePic,
-        },
-      },
-      { arrayFilters: [{ "reply.userId": userId }] }
-    );
-
     // password should be null in response
     user.password = null;
 

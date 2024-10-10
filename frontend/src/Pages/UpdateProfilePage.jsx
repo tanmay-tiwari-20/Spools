@@ -74,12 +74,18 @@ const UpdateProfilePage = () => {
       if (inputs.password) formData.append("password", inputs.password);
       if (selectedFile) formData.append("profilePic", selectedFile);
 
+      // Log FormData for debugging
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ", " + pair[1]);
+      }
+
       const res = await fetch(`/api/users/update/${user._id}`, {
         method: "PUT",
         body: formData, // Use FormData for file + input fields
       });
 
       const data = await res.json();
+      console.log("Response Data: ", data); // Log response from server
 
       if (!res.ok) {
         // Check if the response status is not OK
@@ -106,11 +112,11 @@ const UpdateProfilePage = () => {
 
   return (
     <div className="flex justify-center items-center px-4 py-8">
-      <div className="grid gap-8 max-w-3xl w-full bg-gradient-to-r from-gray-300 to-gray-600 rounded-3xl">
+      <div className="grid gap-8 max-w-3xl w-full bg-gradient-to-r from-gray-200 to-gray-600 rounded-3xl">
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <section id="update-profile">
             <div className="border-8 border-transparent rounded-xl bg-white dark:bg-zinc-900 shadow-xl p-6 sm:p-8 md:p-10 m-2">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center cursor-default dark:text-white text-gray-900 mb-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center cursor-default dark:text-gray-300 text-gray-900 mb-6">
                 Edit Profile
               </h1>
 
@@ -124,7 +130,7 @@ const UpdateProfilePage = () => {
                   />
                 </div>
                 <button
-                  className="w-full md:text-base text-sm font-semibold sm:w-auto bg-gradient-to-r from-electricBlue to-softPurple text-white px-6 py-3 rounded-full hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple"
+                  className="w-full sm:w-auto bg-gradient-to-r from-gray-400 to-gray-700 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg"
                   onClick={() => fileRef.current.click()}
                   type="button"
                 >
@@ -142,7 +148,7 @@ const UpdateProfilePage = () => {
               <div className="mt-4">
                 <label
                   htmlFor="fullName"
-                  className="block mb-2 md:text-base text-sm dark:text-white"
+                  className="block mb-2 text-base sm:text-lg dark:text-gray-300"
                 >
                   Full Name
                 </label>
@@ -154,7 +160,7 @@ const UpdateProfilePage = () => {
                   onChange={(e) =>
                     setInputs({ ...inputs, name: e.target.value })
                   }
-                  className="w-full p-3 md:text-base text-sm border rounded-full shadow-md dark:bg-gray-700 dark:text-white dark:border-gray-700 border-white focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
+                  className="w-full p-3 border rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
                 />
               </div>
 
@@ -162,7 +168,7 @@ const UpdateProfilePage = () => {
               <div className="mt-4">
                 <label
                   htmlFor="username"
-                  className="block mb-2 md:text-base text-sm dark:text-white"
+                  className="block mb-2 text-base sm:text-lg dark:text-gray-300"
                 >
                   Username
                 </label>
@@ -174,7 +180,7 @@ const UpdateProfilePage = () => {
                   onChange={(e) =>
                     setInputs({ ...inputs, username: e.target.value })
                   }
-                  className="w-full p-3 md:text-base text-sm border rounded-full shadow-md dark:bg-gray-700 dark:text-white dark:border-gray-700 border-white focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
+                  className="w-full p-3 border rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
                 />
               </div>
 
@@ -182,7 +188,7 @@ const UpdateProfilePage = () => {
               <div className="mt-4">
                 <label
                   htmlFor="email"
-                  className="block mb-2 md:text-base text-sm dark:text-white"
+                  className="block mb-2 text-base sm:text-lg dark:text-gray-300"
                 >
                   Email Address
                 </label>
@@ -194,7 +200,7 @@ const UpdateProfilePage = () => {
                   onChange={(e) =>
                     setInputs({ ...inputs, email: e.target.value })
                   }
-                  className="w-full p-3 md:text-base text-sm  border rounded-full shadow-md dark:bg-gray-700 dark:text-white dark:border-gray-700 border-white focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
+                  className="w-full p-3 border rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
                 />
               </div>
 
@@ -202,18 +208,18 @@ const UpdateProfilePage = () => {
               <div className="mt-4">
                 <label
                   htmlFor="bio"
-                  className="block mb-2 md:text-base text-sm dark:text-white"
+                  className="block mb-2 text-base sm:text-lg dark:text-gray-300"
                 >
                   Bio
                 </label>
-                <input
+                <textarea
                   id="bio"
                   placeholder="Your bio."
                   value={inputs.bio}
                   onChange={(e) =>
                     setInputs({ ...inputs, bio: e.target.value })
                   }
-                  className="w-full p-3 md:text-base text-sm border rounded-full shadow-md dark:bg-gray-700 dark:text-white dark:border-gray-700 border-white focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
+                  className="w-full p-3 border rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
                 />
               </div>
 
@@ -221,7 +227,7 @@ const UpdateProfilePage = () => {
               <div className="mt-4">
                 <label
                   htmlFor="password"
-                  className="block mb-2 md:text-base text-sm  dark:text-white"
+                  className="block mb-2 text-base sm:text-lg dark:text-gray-300"
                 >
                   Password
                 </label>
@@ -233,7 +239,7 @@ const UpdateProfilePage = () => {
                   onChange={(e) =>
                     setInputs({ ...inputs, password: e.target.value })
                   }
-                  className="w-full p-3 md:text-base text-sm border rounded-full shadow-md dark:bg-gray-700 dark:text-white dark:border-gray-700 border-white focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
+                  className="w-full p-3 border rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
                 />
               </div>
 
@@ -241,7 +247,7 @@ const UpdateProfilePage = () => {
               <div className="mt-4">
                 <label
                   htmlFor="confirmPassword"
-                  className="block mb-2 md:text-base text-sm dark:text-white"
+                  className="block mb-2 text-base sm:text-lg dark:text-gray-300"
                 >
                   Confirm Password
                 </label>
@@ -253,14 +259,14 @@ const UpdateProfilePage = () => {
                   onChange={(e) =>
                     setInputs({ ...inputs, confirmPassword: e.target.value })
                   }
-                  className="w-full p-3 md:text-base text-sm border rounded-full shadow-md dark:bg-gray-700 dark:text-white dark:border-gray-700 border-white focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
+                  className="w-full p-3 border rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 focus:ring-2 focus:ring-gray-500 transition-transform duration-300 hover:scale-105"
                 />
               </div>
 
               {/* Action Buttons */}
               <div className="mt-8 flex justify-between">
                 <button
-                  className="bg-gradient-to-r from-red-400 to-red-500 font-semibold text-white md:text-base text-sm md:px-6 md:py-3 px-4 py-2  rounded-full hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-softRed"
+                  className="bg-gray-400 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg"
                   type="button"
                   onClick={resetForm}
                   disabled={updating}
@@ -268,36 +274,13 @@ const UpdateProfilePage = () => {
                   Cancel
                 </button>
                 <button
-                  className={`bg-gradient-to-r from-electricBlue to-softPurple font-semibold text-white md:text-base text-sm md:px-6 md:py-3 px-4 py-2 rounded-full hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple ${
+                  className={`bg-gradient-to-r from-gray-400 to-gray-700 text-white px-6 py-3 rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg ${
                     updating ? "opacity-70 cursor-not-allowed" : ""
                   }`}
                   type="submit"
                   disabled={updating}
                 >
-                  {updating ? (
-                    <svg
-                      className="animate-spin h-5 w-5 text-gray-700 dark:text-gray-200"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    "Update Profile"
-                  )}
+                  {updating ? "Updating..." : "Update Profile"}
                 </button>
               </div>
             </div>
