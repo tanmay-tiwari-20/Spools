@@ -28,7 +28,7 @@ const Message = ({ ownMessage, message }) => {
         {message.text && (
           <div className="flex items-center">
             <div
-              className={`flex items-center px-2 py-1 text-sm rounded-3xl ${
+              className={`flex items-center px-3 py-1 text-sm rounded-3xl ${
                 ownMessage
                   ? "dark:border-softPurple border border-electricBlue"
                   : "border"

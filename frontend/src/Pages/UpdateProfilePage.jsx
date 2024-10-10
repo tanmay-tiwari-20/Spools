@@ -20,18 +20,6 @@ const UpdateProfilePage = () => {
   const showToast = useShowToast();
   const { handleImageChange, imgUrl, selectedFile } = usePreviewImg();
 
-  // Helper to reset form to initial values
-  const resetForm = () => {
-    setInputs({
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      bio: user.bio,
-      password: "",
-      confirmPassword: "",
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (updating) return;
@@ -86,7 +74,6 @@ const UpdateProfilePage = () => {
       setUser(data);
       localStorage.setItem("user-spools", JSON.stringify(data));
 
-      resetForm();
     } catch (error) {
       console.error("Update Profile Error:", error);
       showToast(
@@ -202,7 +189,6 @@ const UpdateProfilePage = () => {
                 <button
                   className="bg-gradient-to-r from-red-400 to-red-500 font-semibold text-white md:text-base text-sm md:px-6 md:py-3 px-4 py-2 rounded-full hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-softRed"
                   type="button"
-                  onClick={resetForm}
                   disabled={updating}
                 >
                   Cancel
