@@ -149,65 +149,64 @@ const followUnFollowUser = async (req, res) => {
   }
 };
 
-// Update user profile
 const updateUser = async (req, res) => {
   const { name, email, username, password, bio } = req.body;
-  const userId = req.user._id; // Get the logged-in user's ID
+  let { profilePic } = req.body;
 
+  const userId = req.user._id;
   try {
-    // Check if the user exists
     let user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!user) return res.status(400).json({ error: "User not found" });
 
-    // Check if the user trying to update is the owner of the profile
-    if (req.params.id !== userId.toString()) {
+    if (req.params.id !== userId.toString())
       return res
-        .status(403)
-        .json({ error: "You cannot update another user's profile" });
-    }
+        .status(400)
+        .json({ error: "You cannot update other user's profile" });
 
-    // Handle password update if provided
     if (password) {
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.password = hashedPassword;
     }
 
-    // Handle profile picture update
-    if (req.files && req.files.profilePic) {
-      const profilePic = req.files.profilePic.tempFilePath; // Ensure this is correct
-
-      // Delete old profile picture from Cloudinary if it exists
+    if (profilePic) {
       if (user.profilePic) {
-        const publicId = user.profilePic.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(publicId);
+        await cloudinary.uploader.destroy(
+          user.profilePic.split("/").pop().split(".")[0]
+        );
       }
 
-      // Upload new profile picture to Cloudinary
-      const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
-        folder: "spools/profile-pics",
-      });
-      user.profilePic = uploadedResponse.secure_url; // Update profilePic URL
+      const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+      profilePic = uploadedResponse.secure_url;
     }
 
-    // Update other user fields if provided
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (username) user.username = username;
-    if (bio) user.bio = bio;
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.username = username || user.username;
+    user.profilePic = profilePic || user.profilePic;
+    user.bio = bio || user.bio;
 
-    // Save updated user to the database
-    const updatedUser = await user.save();
+    user = await user.save();
 
-    // Exclude the password from the response
-    updatedUser.password = undefined;
+    // Find all posts that this user replied and update username and userProfilePic fields
+    await Post.updateMany(
+      { "replies.userId": userId },
+      {
+        $set: {
+          "replies.$[reply].username": user.username,
+          "replies.$[reply].userProfilePic": user.profilePic,
+        },
+      },
+      { arrayFilters: [{ "reply.userId": userId }] }
+    );
 
-    // Send back the updated user data
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    console.error("Error in updateUser:", error);
-    res.status(500).json({ error: "Failed to update user" });
+    // password should be null in response
+    user.password = null;
+
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+    console.log("Error in updateUser: ", err.message);
   }
 };
 
