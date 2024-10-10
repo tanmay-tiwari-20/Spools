@@ -92,9 +92,10 @@ const UpdateProfilePage = () => {
         throw new Error(data.error || "Something went wrong");
       }
 
-      showToast("Success", "Profile updated successfully", "success");
+      // Update user state with the new data from the server
       setUser(data);
       localStorage.setItem("user-spools", JSON.stringify(data));
+      showToast("Success", "Profile updated successfully", "success");
 
       resetForm(); // Reset form after successful update
     } catch (error) {
