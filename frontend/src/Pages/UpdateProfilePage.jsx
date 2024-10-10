@@ -23,10 +23,12 @@ const UpdateProfilePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (updating) return;
+    setUpdating(true);
 
     // Basic validation
     if (!inputs.email.includes("@")) {
       showToast("Error", "Please enter a valid email address.", "error");
+      setUpdating(false);
       return;
     }
     if (inputs.username.length < 3) {
@@ -35,6 +37,7 @@ const UpdateProfilePage = () => {
         "Username must be at least 3 characters long.",
         "error"
       );
+      setUpdating(false);
       return;
     }
     if (inputs.password && inputs.password.length < 6) {
@@ -43,14 +46,14 @@ const UpdateProfilePage = () => {
         "Password must be at least 6 characters long.",
         "error"
       );
+      setUpdating(false);
       return;
     }
     if (inputs.password !== inputs.confirmPassword) {
       showToast("Error", "Passwords do not match.", "error");
+      setUpdating(false);
       return;
     }
-
-    setUpdating(true);
 
     try {
       // Prepare form data for multipart/form-data request
@@ -73,7 +76,6 @@ const UpdateProfilePage = () => {
       showToast("Success", "Profile updated successfully", "success");
       setUser(data);
       localStorage.setItem("user-spools", JSON.stringify(data));
-
     } catch (error) {
       console.error("Update Profile Error:", error);
       showToast(

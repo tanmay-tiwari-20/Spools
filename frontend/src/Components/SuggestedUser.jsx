@@ -10,7 +10,7 @@ const SuggestedUser = ({ user }) => {
         {/* Left side: Avatar and user info */}
         <Link to={`${user.username}`} className="flex items-center gap-3">
           <img
-            src={user.profilePic}
+            src={user.profilePic || "defaultdp.png"}
             alt={`${user.username}'s profile`}
             className="w-10 h-10 rounded-full object-cover"
           />

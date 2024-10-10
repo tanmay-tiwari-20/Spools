@@ -13,7 +13,7 @@ const Message = ({ ownMessage, message }) => {
       {/* Show Avatar only for other users' messages */}
       {!ownMessage && (
         <img
-          src={selectedConversation.userProfilePic}
+          src={selectedConversation.userProfilePic || "defaultdp.png"}
           className="w-8 h-8 mr-1 rounded-full object-cover"
           alt="User avatar"
         />
@@ -28,7 +28,7 @@ const Message = ({ ownMessage, message }) => {
         {message.text && (
           <div className="flex items-center">
             <div
-              className={`flex items-center px-3 py-1 text-sm rounded-3xl ${
+              className={`flex items-center px-3 py-2 text-sm rounded-3xl ${
                 ownMessage
                   ? "dark:border-softPurple border border-electricBlue"
                   : "border"

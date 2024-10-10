@@ -36,7 +36,7 @@ const Conversation = ({ conversation, isOnline }) => {
       <div className="relative">
         <img
           className="w-10 h-10 rounded-full object-cover"
-          src={user.profilePic}
+          src={user.profilePic || "defaultdp.png"}
           alt={`${user.username}'s profile`}
         />
         {isOnline && (

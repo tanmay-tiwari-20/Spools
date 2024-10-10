@@ -114,7 +114,7 @@ const MessageContainer = () => {
       {/* Message header */}
       <div className="flex items-center gap-2 mb-2">
         <img
-          src={selectedConversation.userProfilePic}
+          src={selectedConversation.userProfilePic || "defaultdp.png"}
           alt={selectedConversation.username}
           className="md:w-12 md:h-12 w-8 h-8 rounded-full object-cover"
         />
