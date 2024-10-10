@@ -20,6 +20,18 @@ const UpdateProfilePage = () => {
   const showToast = useShowToast();
   const { handleImageChange, imgUrl, selectedFile } = usePreviewImg();
 
+  // Helper to reset form to initial values
+  const resetForm = () => {
+    setInputs({
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      bio: user.bio,
+      password: "",
+      confirmPassword: "",
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (updating) return;
@@ -55,24 +67,36 @@ const UpdateProfilePage = () => {
     try {
       // Prepare form data for multipart/form-data request
       const formData = new FormData();
-      Object.entries(inputs).forEach(([key, value]) => {
-        if (value) formData.append(key, value);
-      });
+      formData.append("name", inputs.name);
+      formData.append("username", inputs.username);
+      formData.append("email", inputs.email);
+      formData.append("bio", inputs.bio);
+      if (inputs.password) formData.append("password", inputs.password);
       if (selectedFile) formData.append("profilePic", selectedFile);
+
+      // Log FormData for debugging
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ", " + pair[1]);
+      }
 
       const res = await fetch(`/api/users/update/${user._id}`, {
         method: "PUT",
-        body: formData,
+        body: formData, // Use FormData for file + input fields
       });
 
       const data = await res.json();
+      console.log("Response Data: ", data); // Log response from server
+
       if (!res.ok) {
+        // Check if the response status is not OK
         throw new Error(data.error || "Something went wrong");
       }
 
       showToast("Success", "Profile updated successfully", "success");
       setUser(data);
       localStorage.setItem("user-spools", JSON.stringify(data));
+
+      resetForm(); // Reset form after successful update
     } catch (error) {
       console.error("Update Profile Error:", error);
       showToast(

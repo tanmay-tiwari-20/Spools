@@ -15,18 +15,25 @@ export const SocketContextProvider = ({ children }) => {
   const user = useRecoilValue(userAtom);
 
   useEffect(() => {
-    const socket = io("/", {
-      query: {
-        userId: user?._id,
-      },
+    if (!user?._id) return;
+
+    // Establish socket connection only if a user is logged in
+    const newSocket = io("/", {
+      query: { userId: user._id },
+      withCredentials: true, // If you're using cookies for authentication
     });
 
-    setSocket(socket);
+    setSocket(newSocket);
 
-    socket.on("getOnlineUsers", (users) => {
+    // Listen for online users list
+    newSocket.on("getOnlineUsers", (users) => {
       setOnlineUsers(users);
     });
-    return () => socket && socket.close();
+
+    // Clean up on component unmount or when user changes
+    return () => {
+      if (newSocket) newSocket.disconnect();
+    };
   }, [user?._id]);
 
   return (

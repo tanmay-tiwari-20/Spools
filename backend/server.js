@@ -1,6 +1,7 @@
 import path from "path";
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import connectDB from "./db/connectDB.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./Routes/userRoutes.js";
@@ -25,18 +26,28 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Middlewares
+// Enable CORS for your frontend domain
+app.use(
+  cors({
+    origin: "http://your-frontend-domain.com", // Replace with your frontend domain
+    credentials: true,
+  })
+);
+
+// Helmet Security Headers with relaxed CSP for API and Cloudinary
 app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      defaultSrc: ["'self'"],
+      defaultSrc: ["'self'", "https:"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      connectSrc: ["'self'", "https://spools.onrender.com"], // Allow API requests from frontend
     },
   })
 );
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -59,10 +70,12 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Error handling middleware
+// Error handling middleware with detailed logging
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+  console.error("Error details:", err);
+  res
+    .status(err.status || 500)
+    .json({ message: err.message || "Something went wrong!" });
 });
 
 server.listen(PORT, () => console.log(`Server started at ${PORT}`));
