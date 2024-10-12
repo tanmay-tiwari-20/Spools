@@ -23,7 +23,11 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.6.2",
     "multer": "^1.4.5-lts.1",
-    "socket.io": "^4.8.0"
+    "socket.io": "^4.8.0",
+    "workbox-core": "^7.1.0",
+    "workbox-precaching": "^7.1.0",
+    "workbox-routing": "^7.1.0",
+    "workbox-strategies": "^7.1.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

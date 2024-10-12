@@ -89,7 +89,7 @@ const UserHeader = ({ user }) => {
             <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">
               @{user.username}
             </p>
-            <p className="rounded-full select-none px-2 py-[0.25vw] text-xs bg-gray-300 dark:bg-softPurple text-gray-700 dark:text-gray-200 font-semibold">
+            <p className="rounded-full select-none px-2 py-1 text-xs bg-gray-300 dark:bg-softPurple text-gray-700 dark:text-gray-200 font-semibold">
               spools.net
             </p>
           </div>

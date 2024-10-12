@@ -1,0 +1,21 @@
+{
+    "short_name": "Spools",
+    "name": "Spools - Social Media Platform",
+    "icons": [
+      {
+        "src": "spoolsDark.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "spoolsDark.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+  }
+  
