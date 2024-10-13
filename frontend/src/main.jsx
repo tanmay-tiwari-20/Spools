@@ -6,7 +6,6 @@ import { BrowserRouter } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
 import { RecoilRoot } from "recoil";
 import { SocketContextProvider } from "./context/SocketContext.jsx";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration.js"
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -21,6 +20,3 @@ createRoot(document.getElementById("root")).render(
     </RecoilRoot>
   </StrictMode>
 );
-
-// Register service worker for PWA capabilities.
-serviceWorkerRegistration.register();

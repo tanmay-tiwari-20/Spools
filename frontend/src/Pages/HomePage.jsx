@@ -40,7 +40,8 @@ const HomePage = () => {
       <div className="flex-[70%]">
         {loading ? (
           <div className="flex justify-center items-center min-h-screen">
-            <div className="w-16 h-16 rounded-full animate-spin bg-gradient-to-l from-electricBlue to-softPurple border-4 border-transparent">
+            <div className="absolute translate-x-[250%] w-16 h-16 rounded-full animate-spin bg-gradient-to-r from-[#0095f6] to-[#9b51e0] border-4 border-transparent">
+              {/* Inner spinner with a gradient background */}
               <div className="absolute top-0 left-0 w-full h-full rounded-full opacity-70"></div>
             </div>
           </div>
