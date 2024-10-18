@@ -17,8 +17,13 @@ const Post = ({ post, postedBy }) => {
 
   useEffect(() => {
     const getUser = async () => {
+      if (!postedBy) {
+        showToast("Error", "User not found", "error");
+        return;
+      }
+
       try {
-        const res = await fetch("/api/users/profile/" + postedBy);
+        const res = await fetch(`/api/users/profile/${postedBy}`);
         const data = await res.json();
         if (data.error) {
           showToast("Error", data.error, "error");
@@ -35,11 +40,11 @@ const Post = ({ post, postedBy }) => {
   }, [postedBy, showToast]);
 
   const handleDeletePost = async (e) => {
-    try {
-      e.preventDefault();
-      if (!window.confirm("Are you sure you want to delete this post?")) return;
+    e.preventDefault();
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
 
-      const res = await fetch(`/api/posts/${post._id}`, {
+    try {
+      const res = await fetch(`/api/posts/${post?._id}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -54,15 +59,15 @@ const Post = ({ post, postedBy }) => {
     }
   };
 
-  if (!user) return null;
+  if (!user) return null; // Ensure user is loaded before rendering
 
   return (
-    <Link to={`/${user.username}/post/${post._id}`}>
+    <Link to={`/${user.username}/post/${post?._id}`}>
       <div className="flex gap-4 mb-5 py-6 bg-white dark:bg-ebony border-b border-light-gray dark:border-dark-gray">
         <div className="flex flex-col items-center py-2">
           <img
             className="w-12 h-12 rounded-full object-cover cursor-pointer"
-            src={user?.profilePic || "defaultdp.png"}
+            src={user.profilePic || "defaultdp.png"}
             alt={user.name}
             onClick={(e) => {
               e.preventDefault();
@@ -70,7 +75,7 @@ const Post = ({ post, postedBy }) => {
             }}
           />
           <div className="w-px h-full bg-gray-400 dark:bg-gray-400 my-2 mb-7"></div>
-          <div className="relative w-full ">
+          <div className="relative w-full">
             {post.replies.length === 0 && (
               <p className="text-center text-ebony dark:text-white">🥱</p>
             )}
@@ -108,7 +113,7 @@ const Post = ({ post, postedBy }) => {
                   navigate(`/${user.username}`);
                 }}
               >
-                {user?.username}
+                {user.username}
               </p>
               <img
                 src="/verified.png"
