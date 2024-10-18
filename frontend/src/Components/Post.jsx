@@ -82,21 +82,21 @@ const Post = ({ post, postedBy }) => {
             {post.replies[0] && (
               <img
                 className="w-6 h-6 rounded-full object-cover absolute top-0 left-3"
-                src={post.replies[0].userProfilePic}
+                src={post.replies[0].userProfilePic || "defaultdp.png"}
                 alt="reply avatar 1"
               />
             )}
             {post.replies[1] && (
               <img
                 className="w-6 h-6 rounded-full object-cover absolute bottom-0 right-7"
-                src={post.replies[1].userProfilePic}
+                src={post.replies[1].userProfilePic || "defaultdp.png"}
                 alt="reply avatar 2"
               />
             )}
             {post.replies[2] && (
               <img
                 className="w-6 h-6 rounded-full object-cover absolute bottom-0 left-7"
-                src={post.replies[2].userProfilePic}
+                src={post.replies[2].userProfilePic || "defaultdp.png"}
                 alt="reply avatar 3"
               />
             )}
