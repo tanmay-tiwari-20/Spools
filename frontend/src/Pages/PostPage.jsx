@@ -75,7 +75,7 @@ const PostPage = () => {
       <div className="flex">
         <div className="flex w-full items-center gap-3">
           <img
-            src={user.profilePic}
+            src={user.profilePic || "defaultdp.png"}
             alt={user.username}
             className="w-10 h-10 object-cover rounded-full"
           />
