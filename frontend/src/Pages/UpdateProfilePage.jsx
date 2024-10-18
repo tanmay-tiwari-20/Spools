@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
-import userAtom from "../atoms/userAtom";
 import { useRecoilState } from "recoil";
-import useShowToast from "../hooks/useShowToast";
+import userAtom from "../atoms/userAtom";
 import usePreviewImg from "../hooks/usePreviewImg";
+import useShowToast from "../hooks/useShowToast";
 
-const UpdateProfilePage = () => {
+export default function UpdateProfilePage() {
   const [user, setUser] = useRecoilState(userAtom);
   const [inputs, setInputs] = useState({
     name: user.name,
@@ -12,93 +12,35 @@ const UpdateProfilePage = () => {
     email: user.email,
     bio: user.bio,
     password: "",
-    confirmPassword: "",
   });
   const fileRef = useRef(null);
   const [updating, setUpdating] = useState(false);
 
   const showToast = useShowToast();
-  const { handleImageChange, imgUrl, selectedFile } = usePreviewImg();
-
-  // Helper to reset form to initial values
-  const resetForm = () => {
-    setInputs({
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      bio: user.bio,
-      password: "",
-      confirmPassword: "",
-    });
-  };
+  const { handleImageChange, imgUrl } = usePreviewImg();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (updating) return;
-
-    // Basic validation
-    if (!inputs.email.includes("@")) {
-      showToast("Error", "Please enter a valid email address.", "error");
-      return;
-    }
-    if (inputs.username.length < 3) {
-      showToast(
-        "Error",
-        "Username must be at least 3 characters long.",
-        "error"
-      );
-      return;
-    }
-    if (inputs.password && inputs.password.length < 6) {
-      showToast(
-        "Error",
-        "Password must be at least 6 characters long.",
-        "error"
-      );
-      return;
-    }
-    if (inputs.password !== inputs.confirmPassword) {
-      showToast("Error", "Passwords do not match.", "error");
-      return;
-    }
-
     setUpdating(true);
-
     try {
-      // Prepare form data for multipart/form-data request
-      const formData = new FormData();
-      formData.append("name", inputs.name);
-      formData.append("username", inputs.username);
-      formData.append("email", inputs.email);
-      formData.append("bio", inputs.bio);
-      if (inputs.password) formData.append("password", inputs.password);
-      if (selectedFile) formData.append("profilePic", selectedFile);
-
       const res = await fetch(`/api/users/update/${user._id}`, {
         method: "PUT",
-        body: formData, // Use FormData for file + input fields
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...inputs, profilePic: imgUrl }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        // Check if the response status is not OK
-        throw new Error(data.error || "Something went wrong");
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
       }
-
       showToast("Success", "Profile updated successfully", "success");
       setUser(data);
-      localStorage.setItem("user-spools", JSON.stringify(data));
-
-      resetForm(); // Reset form after successful update
+      localStorage.setItem("user-threads", JSON.stringify(data));
     } catch (error) {
-      console.error("Update Profile Error:", error);
-      showToast(
-        "Error",
-        error.message ||
-          "An unexpected error occurred. Please try again later.",
-        "error"
-      );
+      showToast("Error", error.message, "error");
     } finally {
       setUpdating(false);
     }
@@ -119,7 +61,7 @@ const UpdateProfilePage = () => {
                 <div className="flex justify-center">
                   <img
                     className="rounded-full object-cover w-28 h-28 sm:w-32 sm:h-32 shadow-md"
-                    src={imgUrl || user.profilePic || "defaultdp.png"}
+                    src={ user.profilePic || "defaultdp.png"}
                     alt="User Avatar"
                   />
                 </div>
@@ -262,7 +204,6 @@ const UpdateProfilePage = () => {
                 <button
                   className="bg-gradient-to-r from-red-400 to-red-500 font-semibold text-white md:text-base text-sm md:px-6 md:py-3 px-4 py-2  rounded-full hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-softRed"
                   type="button"
-                  onClick={resetForm}
                   disabled={updating}
                 >
                   Cancel
@@ -306,6 +247,4 @@ const UpdateProfilePage = () => {
       </div>
     </div>
   );
-};
-
-export default UpdateProfilePage;
+}

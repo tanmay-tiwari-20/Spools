@@ -29,7 +29,7 @@ cloudinary.config({
 // Enable CORS for your frontend domain
 app.use(
   cors({
-    origin: "http://your-frontend-domain.com", // Replace with your frontend domain
+    origin: "https://spools.onrender.com/", // Replace with your frontend domain
     credentials: true,
   })
 );
