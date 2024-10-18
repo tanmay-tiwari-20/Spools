@@ -1,11 +1,9 @@
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 import { useRecoilValue } from "recoil";
-import userAtom from "../atoms/userAtom";
 import { useState } from "react";
 
 const Message = ({ ownMessage, message }) => {
   const selectedConversation = useRecoilValue(selectedConversationAtom);
-  const user = useRecoilValue(userAtom);
   const [imgLoaded, setImgLoaded] = useState(false);
 
   return (
@@ -59,15 +57,6 @@ const Message = ({ ownMessage, message }) => {
           </div>
         )}
       </div>
-
-      {/* Show img for own messages */}
-      {ownMessage && (
-        <img
-          src={user.profilePic}
-          className="w-8 h-8 ml-1 rounded-full object-cover"
-          alt="Your avatar"
-        />
-      )}
     </div>
   );
 };
