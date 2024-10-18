@@ -62,7 +62,7 @@ const Post = ({ post, postedBy }) => {
         <div className="flex flex-col items-center py-2">
           <img
             className="w-12 h-12 rounded-full object-cover cursor-pointer"
-            src={user?.profilePic}
+            src={user?.profilePic || "defaultdp.png"}
             alt={user.name}
             onClick={(e) => {
               e.preventDefault();
