@@ -4,22 +4,22 @@ import { BsCheck2All } from "react-icons/bs";
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 
 const Conversation = ({ conversation, isOnline }) => {
-  const user = conversation.participants[0];
+  const user = conversation?.participants?.[0] || {}; // Ensure user exists
   const currentUser = useRecoilValue(userAtom);
-  const lastMessage = conversation.lastMessage;
+  const lastMessage = conversation?.lastMessage || {}; // Ensure lastMessage exists
   const [selectedConversation, setSelectedConversation] = useRecoilState(
     selectedConversationAtom
   );
 
-  const isSelected = selectedConversation?._id === conversation._id;
+  const isSelected = selectedConversation?._id === conversation?._id;
 
   const handleSelectConversation = () => {
     setSelectedConversation({
-      _id: conversation._id,
-      userId: user._id,
-      userProfilePic: user.profilePic,
-      username: user.username,
-      mock: conversation.mock,
+      _id: conversation?._id,
+      userId: user?._id,
+      userProfilePic: user?.profilePic,
+      username: user?.username,
+      mock: conversation?.mock,
     });
   };
 
@@ -36,8 +36,8 @@ const Conversation = ({ conversation, isOnline }) => {
       <div className="relative">
         <img
           className="w-10 h-10 rounded-full object-cover"
-          src={user.profilePic || "defaultdp.png"}
-          alt={`${user.username}'s profile`}
+          src={user?.profilePic || "defaultdp.png"}
+          alt={`${user?.username || "User"}'s profile`}
         />
         {isOnline && (
           <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-ebony"></span>
@@ -50,7 +50,7 @@ const Conversation = ({ conversation, isOnline }) => {
             isSelected ? "text-white" : "text-gray-900 dark:text-white"
           }`}
         >
-          {user.username}
+          {user?.username || "Unknown User"}
           <img src="/verified.png" alt="Verified" className="w-4 h-4 ml-1" />
         </div>
         <div
@@ -58,16 +58,16 @@ const Conversation = ({ conversation, isOnline }) => {
             isSelected ? "text-white" : "text-gray-500 dark:text-gray-400"
           }`}
         >
-          {currentUser._id === lastMessage.sender && (
+          {currentUser?._id === lastMessage?.sender && (
             <span
-              className={lastMessage.seen ? "text-blue-500" : "text-zinc-500"}
+              className={lastMessage?.seen ? "text-blue-500" : "text-zinc-500"}
             >
               <BsCheck2All size={16} />
             </span>
           )}
-          {lastMessage.text?.length > 18
+          {lastMessage?.text?.length > 18
             ? `${lastMessage.text.substring(0, 18)}...`
-            : lastMessage.text || "Start the conversation..."}
+            : lastMessage?.text || "Start the conversation..."}
         </div>
       </div>
     </div>

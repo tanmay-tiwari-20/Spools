@@ -28,7 +28,7 @@ const ChatPage = () => {
     socket?.on("messagesSeen", ({ conversationId }) => {
       setConversations((prev) =>
         prev.map((conversation) =>
-          conversation._id === conversationId
+          conversation?._id === conversationId
             ? {
                 ...conversation,
                 lastMessage: { ...conversation.lastMessage, seen: true },
@@ -48,11 +48,10 @@ const ChatPage = () => {
           showToast("Error", data.error, "error");
           return;
         }
-        // Sort conversations by the timestamp of the last message
         const sortedConversations = data.sort((a, b) => {
           const lastMessageA = new Date(a.updatedAt);
           const lastMessageB = new Date(b.updatedAt);
-          return lastMessageB - lastMessageA; // Most recent first
+          return lastMessageB - lastMessageA;
         });
         setConversations(sortedConversations);
       } catch (error) {
@@ -76,22 +75,23 @@ const ChatPage = () => {
         return;
       }
 
-      const messagingYourself = searchedUser._id === currentUser._id;
+      const messagingYourself = searchedUser?._id === currentUser?._id;
       if (messagingYourself) {
         showToast("Error", "You cannot message yourself", "error");
         return;
       }
 
       const conversationAlreadyExists = conversations.find(
-        (conversation) => conversation.participants[0]._id === searchedUser._id
+        (conversation) =>
+          conversation?.participants?.[0]?._id === searchedUser?._id
       );
 
       if (conversationAlreadyExists) {
         setSelectedConversation({
-          _id: conversationAlreadyExists._id,
-          userId: searchedUser._id,
-          username: searchedUser.username,
-          userProfilePic: searchedUser.profilePic,
+          _id: conversationAlreadyExists?._id,
+          userId: searchedUser?._id,
+          username: searchedUser?.username,
+          userProfilePic: searchedUser?.profilePic,
         });
         return;
       }
@@ -99,12 +99,12 @@ const ChatPage = () => {
       const mockConversation = {
         mock: true,
         lastMessage: { text: "", sender: "" },
-        _id: Date.now(),
+        _id: Date.now().toString(),
         participants: [
           {
-            _id: searchedUser._id,
-            username: searchedUser.username,
-            profilePic: searchedUser.profilePic,
+            _id: searchedUser?._id,
+            username: searchedUser?.username,
+            profilePic: searchedUser?.profilePic,
           },
         ],
       };
@@ -164,9 +164,9 @@ const ChatPage = () => {
             !loadingConversations &&
             conversations.map((conversation) => (
               <Conversation
-                key={conversation._id}
-                isOnline={onlineUsers.includes(
-                  conversation.participants[0]._id
+                key={conversation?._id}
+                isOnline={onlineUsers?.includes(
+                  conversation?.participants?.[0]?._id
                 )}
                 conversation={conversation}
               />
@@ -176,7 +176,7 @@ const ChatPage = () => {
 
         {/* Message Section */}
         <div className="flex-1 rounded-3xl p-3 bg-white dark:bg-ebony border">
-          {!selectedConversation._id ? (
+          {!selectedConversation?._id ? (
             <div className="flex flex-col items-center justify-center h-96">
               <GiConversation
                 className="text-gray-500 dark:text-gray-400"
