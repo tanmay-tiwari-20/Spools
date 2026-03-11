@@ -11,6 +11,7 @@ import userAtom from "./atoms/userAtom";
 import CreatePost from "./Components/CreatePost";
 import ChatPage from "./Pages/ChatPage";
 import { SettingsPage } from "./Pages/SettingsPage";
+import SearchPage from "./Pages/SearchPage";
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -32,7 +33,7 @@ const App = () => {
 
   return (
     <div
-      className={`w-full min-h-screen relative p-2 bg-white dark:bg-ebony transition duration-500`}
+      className={`w-full min-h-screen relative p-2 pb-20 md:pb-2 bg-white dark:bg-ebony transition duration-500`}
     >
       <div className="max-w-[1000px] mx-auto px-3 md:px-0  text-ebony dark:text-white">
         <Header isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} />
@@ -67,6 +68,10 @@ const App = () => {
           <Route
             path="/chat"
             element={user ? <ChatPage /> : <Navigate to={"/auth"} />}
+          />
+          <Route
+            path="/search"
+            element={user ? <SearchPage /> : <Navigate to={"/auth"} />}
           />
           <Route
             path="/settings"

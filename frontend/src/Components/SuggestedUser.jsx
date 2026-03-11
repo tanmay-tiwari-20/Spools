@@ -8,7 +8,7 @@ const SuggestedUser = ({ user }) => {
     <>
       <div className="flex items-center justify-between gap-2 p-2 bg-white dark:bg-ebony rounded-full transition-colors">
         {/* Left side: Avatar and user info */}
-        <Link to={`${user.username}`} className="flex items-center gap-3">
+        <Link to={`/${user.username}`} className="flex items-center gap-3">
           <img
             src={user.profilePic || "defaultdp.png"}
             alt={`${user.username}'s profile`}

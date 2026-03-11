@@ -4,6 +4,13 @@ import Post from "../Components/Post";
 import { useRecoilState } from "recoil";
 import postsAtom from "../atoms/postsAtom";
 import SuggestedUsers from "../Components/SuggestedUsers"; // Import SuggestedUsers component
+import {
+  Box,
+  Flex,
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+} from "@chakra-ui/react";
 
 const HomePage = () => {
   const [posts, setPosts] = useRecoilState(postsAtom);
@@ -39,16 +46,35 @@ const HomePage = () => {
     <div className="flex flex-col md:flex-row gap-10 items-start">
       <div className="flex-[70%]">
         {loading ? (
-          <div className="flex justify-center items-center min-h-screen">
-            <div className="absolute translate-x-[250%] w-16 h-16 rounded-full animate-spin bg-gradient-to-r from-[#0095f6] to-[#9b51e0] border-4 border-transparent">
-              {/* Inner spinner with a gradient background */}
-              <div className="absolute top-0 left-0 w-full h-full rounded-full opacity-70"></div>
-            </div>
-          </div>
+          <Flex flexDir="column" gap={5}>
+            {[...Array(3)].map((_, i) => (
+              <Flex gap={4} py={6} key={i}>
+                <Flex flexDir="column" alignItems="center">
+                  <SkeletonCircle size="12" />
+                  <Box w="1px" h="full" bg="gray.400" my={2}></Box>
+                </Flex>
+                <Flex flex={1} flexDir="column" gap={2}>
+                  <Skeleton height="20px" width="150px" />
+                  <SkeletonText
+                    mt="4"
+                    noOfLines={3}
+                    spacing="4"
+                    skeletonHeight="20px"
+                  />
+                  <Skeleton height="300px" borderRadius="lg" mt={4} />
+                </Flex>
+              </Flex>
+            ))}
+          </Flex>
         ) : (
           <>
             {posts.length === 0 ? (
-              <h1>Login or Follow some users to see the feed.</h1>
+              <Box>
+                <h1 className="text-xl font-bold mb-6 text-ebony dark:text-white">
+                  Welcome! Follow some users to see their posts here.
+                </h1>
+                <SuggestedUsers />
+              </Box>
             ) : (
               posts.map((post) => (
                 <Post key={post._id} post={post} postedBy={post.postedBy} />

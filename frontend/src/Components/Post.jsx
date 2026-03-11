@@ -7,6 +7,7 @@ import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
 import Actions from "./Actions";
 import { MdDelete } from "react-icons/md";
+import { motion } from "framer-motion";
 
 const Post = ({ post, postedBy }) => {
   const [user, setUser] = useState(null);
@@ -63,7 +64,12 @@ const Post = ({ post, postedBy }) => {
 
   return (
     <Link to={`/${user.username}/post/${post?._id}`}>
-      <div className="flex gap-4 mb-5 py-6 bg-white dark:bg-ebony border-b border-light-gray dark:border-dark-gray">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex gap-4 mb-5 py-6 bg-white dark:bg-ebony border-b border-light-gray dark:border-dark-gray"
+      >
         <div className="flex flex-col items-center py-2">
           <img
             className="w-12 h-12 rounded-full object-cover cursor-pointer"
@@ -149,7 +155,7 @@ const Post = ({ post, postedBy }) => {
             <Actions post={post} />
           </div>
         </div>
-      </div>
+      </motion.div>
     </Link>
   );
 };

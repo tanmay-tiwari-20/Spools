@@ -34,6 +34,26 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+const searchUser = async (req, res) => {
+  const { query } = req.params;
+  try {
+    // Search users by matching the query against username or name, case-insensitively
+    const users = await User.find({
+      $or: [
+        { username: { $regex: query, $options: "i" } },
+        { name: { $regex: query, $options: "i" } },
+      ],
+    })
+      .select("-password -updatedAt")
+      .limit(20); // Limit to 20 results for performance
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    console.log("Error in searchUser: ", error.message);
+  }
+};
+
 const signupUser = async (req, res) => {
   try {
     const { name, email, username, password } = req.body;
@@ -79,7 +99,7 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ username });
     const isPasswordCorrect = await bcrypt.compare(
       password,
-      user?.password || ""
+      user?.password || "",
     );
 
     if (!user || !isPasswordCorrect)
@@ -172,7 +192,7 @@ const updateUser = async (req, res) => {
     if (profilePic) {
       if (user.profilePic) {
         await cloudinary.uploader.destroy(
-          user.profilePic.split("/").pop().split(".")[0]
+          user.profilePic.split("/").pop().split(".")[0],
         );
       }
 
@@ -197,7 +217,7 @@ const updateUser = async (req, res) => {
           "replies.$[reply].userProfilePic": user.profilePic,
         },
       },
-      { arrayFilters: [{ "reply.userId": userId }] }
+      { arrayFilters: [{ "reply.userId": userId }] },
     );
 
     // password should be null in response
@@ -228,7 +248,7 @@ const getSuggestedUsers = async (req, res) => {
       },
     ]);
     const filteredUsers = users.filter(
-      (user) => !usersFollowedByYou.following.includes(user._id)
+      (user) => !usersFollowedByYou.following.includes(user._id),
     );
     const suggestedUsers = filteredUsers.slice(0, 4);
 
@@ -263,6 +283,7 @@ export {
   followUnFollowUser,
   updateUser,
   getUserProfile,
+  searchUser,
   getSuggestedUsers,
   freezeAccount,
 };
