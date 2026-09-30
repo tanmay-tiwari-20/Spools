@@ -77,7 +77,7 @@ const CreatePost = () => {
     <>
       {/* Floating Action Button */}
       <button
-        className="fixed bottom-20 md:bottom-8 right-6 z-40 flex items-center justify-center gap-2 p-3.5 md:px-5 md:py-3 text-white bg-zinc-900 dark:bg-white dark:text-zinc-900 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+        className="fixed safe-area-fab z-40 flex items-center justify-center gap-2 p-3.5 md:px-5 md:py-3 text-white bg-zinc-900 dark:bg-white dark:text-zinc-900 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
         onClick={openModal}
         title="Create new spool"
       >
@@ -87,8 +87,8 @@ const CreatePost = () => {
 
       {/* Modern Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-2xl w-full max-w-lg border border-zinc-200 dark:border-zinc-800">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-3xl shadow-2xl w-full max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
             <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-zinc-800/80 mb-4">
               <h2 className="text-lg font-bold text-zinc-900 dark:text-white">
                 New Spool

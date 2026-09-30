@@ -44,8 +44,8 @@ const HomePage = () => {
   }, [showToast, setPosts]);
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-start pt-2">
-      <div className="w-full md:flex-[70%]">
+    <div className="flex min-w-0 flex-col md:flex-row gap-5 lg:gap-8 items-start pt-2">
+      <div className="w-full min-w-0 md:flex-1">
         <CreatePostInline />
 
         {loading ? (
@@ -106,7 +106,7 @@ const HomePage = () => {
         )}
       </div>
 
-      <div className="hidden md:block flex-[30%] sticky top-20">
+      <div className="hidden md:block w-[260px] lg:w-[300px] shrink-0 sticky top-20">
         <SuggestedUsers />
       </div>
     </div>

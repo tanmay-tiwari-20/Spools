@@ -67,9 +67,9 @@ const App = () => {
 
   return (
     <div
-      className={`w-full min-h-screen relative p-2 pb-20 md:pb-2 bg-white dark:bg-ebony transition-colors duration-300`}
+      className="w-full min-h-screen min-h-[100dvh] relative px-2 pt-2 pb-24 sm:px-3 md:pb-2 bg-white dark:bg-ebony transition-colors duration-300"
     >
-      <div className="max-w-[1000px] mx-auto px-3 md:px-0 text-ebony dark:text-white">
+      <div className="w-full max-w-[1000px] mx-auto px-1 sm:px-2 md:px-0 text-ebony dark:text-white">
         <Header isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} />
         <Routes>
           <Route

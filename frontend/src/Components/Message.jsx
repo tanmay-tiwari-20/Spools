@@ -44,9 +44,9 @@ const Message = ({ ownMessage, message }) => {
 
         {/* Image Messages */}
         {message.img && (
-          <div className="mt-1 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 max-w-[280px]">
+          <div className="mt-1 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 w-full max-w-[min(280px,70vw)]">
             {!imgLoaded && (
-              <div className="w-[260px] h-[180px] bg-zinc-200 dark:bg-zinc-800 animate-pulse rounded-2xl" />
+                <div className="w-full aspect-[13/9] max-w-[260px] bg-zinc-200 dark:bg-zinc-800 animate-pulse rounded-2xl" />
             )}
             <img
               src={message.img}

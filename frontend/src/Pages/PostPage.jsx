@@ -139,7 +139,7 @@ const PostPage = () => {
       </div>
 
       {/* Main Post Text */}
-      <p className="text-base md:text-lg text-zinc-900 dark:text-zinc-100 whitespace-pre-line leading-relaxed my-3">
+      <p className="break-words text-base md:text-lg text-zinc-900 dark:text-zinc-100 whitespace-pre-line leading-relaxed my-3">
         {currentPost.text}
       </p>
 

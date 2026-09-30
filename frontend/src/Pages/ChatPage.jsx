@@ -131,10 +131,10 @@ const ChatPage = () => {
   const isConversationActive = Boolean(selectedConversation?._id);
 
   return (
-    <div className="w-full bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm h-[calc(100vh-140px)] min-h-[550px] flex gap-4 overflow-hidden mb-8">
+    <div className="w-full min-w-0 bg-white dark:bg-zinc-900/60 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-2.5 sm:p-4 shadow-sm h-[calc(100dvh-176px)] min-h-[360px] max-h-[900px] flex gap-2 sm:gap-4 overflow-hidden mb-8">
       {/* Conversation List */}
       <div
-        className={`flex flex-col gap-3 w-full md:w-1/3 border-r border-zinc-100 dark:border-zinc-800/80 pr-0 md:pr-3 h-full overflow-hidden ${
+        className={`flex flex-col gap-3 min-w-0 w-full md:w-1/3 border-r border-zinc-100 dark:border-zinc-800/80 pr-0 md:pr-3 h-full overflow-hidden ${
           isConversationActive ? "hidden md:flex" : "flex"
         }`}
       >
@@ -214,7 +214,7 @@ const ChatPage = () => {
 
       {/* Message Active Section */}
       <div
-        className={`flex-1 h-full overflow-hidden flex flex-col ${
+        className={`flex-1 min-w-0 h-full overflow-hidden flex flex-col ${
           !isConversationActive ? "hidden md:flex" : "flex"
         }`}
       >

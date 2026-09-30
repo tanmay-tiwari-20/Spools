@@ -94,9 +94,9 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
   return (
     <VStack gap={4} alignItems={"start"} className="w-full">
       {/* Header section */}
-      <div className="flex justify-between w-full items-center">
-        <div>
-          <h1 className="font-bold lg:text-4xl text-2xl mb-2">{user.name}</h1>
+      <div className="flex justify-between w-full min-w-0 items-center gap-3">
+        <div className="min-w-0">
+          <h1 className="break-words font-bold lg:text-4xl text-2xl mb-2">{user.name}</h1>
           <div className="gap-2 flex items-center">
             <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">
               @{user.username}
@@ -116,13 +116,13 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
       </div>
 
       {/* Bio section */}
-      <p className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-300">
+      <p className="break-words text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-300">
         {user.bio}
       </p>
 
       {/* Action buttons (Update Profile / Share Profile / Follow) */}
       {currentUser?._id === user._id ? (
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <Link as={RouterLink} to="/update">
             <button className="rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 px-5 py-1.5 font-semibold text-xs sm:text-sm transition-all duration-200 shadow-sm active:scale-95 cursor-pointer">
               Update Profile
@@ -138,7 +138,7 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <button
             className="flex justify-center items-center rounded-full shadow-sm bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 px-5 py-1.5 font-semibold text-xs sm:text-sm transition-all duration-200 active:scale-95"
             onClick={handleFollowUnfollow}
@@ -164,8 +164,8 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
       )}
 
       {/* Followers and action link section */}
-      <div className="flex justify-between w-full mt-2 items-center">
-        <div className="gap-2 flex items-center">
+      <div className="flex justify-between w-full mt-2 items-center gap-2">
+        <div className="gap-1.5 sm:gap-2 flex flex-wrap items-center min-w-0">
           <p className="text-sm text-gray-600 dark:text-gray-300 font-semibold">
             {user.followers.length} followers
           </p>

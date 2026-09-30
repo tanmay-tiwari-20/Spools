@@ -147,7 +147,7 @@ const Post = ({ post, postedBy }) => {
 
           {/* Post Text */}
           <Link to={`/${user.username}/post/${post?._id}`} className="block">
-            <p className="text-sm md:text-base text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed mb-2">
+            <p className="break-words text-sm md:text-base text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed mb-2">
               {post.text}
             </p>
 

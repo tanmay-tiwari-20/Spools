@@ -49,8 +49,8 @@ const LoginCard = () => {
   };
 
   return (
-    <div className="flex justify-center items-center py-10 px-4">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900/90 rounded-3xl p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-xl backdrop-blur-md">
+    <div className="flex min-w-0 justify-center items-center py-3 sm:py-10 px-0 min-[400px]:px-1 sm:px-4">
+      <div className="w-full min-w-0 max-w-md bg-white dark:bg-zinc-900/90 rounded-2xl sm:rounded-3xl p-4 min-[400px]:p-5 sm:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-xl backdrop-blur-md">
         {/* Brand Icon & Heading */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">

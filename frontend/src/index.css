@@ -7,10 +7,43 @@
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-width: 320px;
+    min-height: 100%;
+    overflow-x: clip;
+    text-size-adjust: 100%;
   }
 
   body {
     user-select: auto;
+    min-width: 320px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
   }
 
   /* Sleek modern scrollbars */
@@ -39,5 +72,88 @@
 
   .dark ::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  @supports (padding: env(safe-area-inset-bottom)) {
+    body {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}
+
+@layer utilities {
+  .safe-area-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-fab {
+    bottom: max(6rem, calc(env(safe-area-inset-bottom) + 5.25rem));
+    right: max(1.25rem, env(safe-area-inset-right));
+  }
+}
+
+@layer components {
+  .settings-toggle-list > div.flex.items-center.justify-between {
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .settings-toggle-list > div.flex.items-center.justify-between > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .settings-toggle-list button[role="switch"] {
+    width: 3.5rem;
+    height: 2rem;
+    flex: 0 0 3.5rem;
+    border-radius: 9999px;
+    margin-top: 0.125rem;
+    box-shadow: inset 0 0 0 1px rgb(24 24 27 / 8%);
+    outline: none;
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .settings-toggle-list button[role="switch"][aria-checked="true"] {
+    background-color: rgb(99 102 241);
+  }
+
+  .settings-toggle-list button[role="switch"][aria-checked="true"]:disabled {
+    background-color: rgb(113 113 122);
+  }
+
+  .settings-toggle-list button[role="switch"]:focus-visible {
+    box-shadow: 0 0 0 3px rgb(99 102 241 / 35%);
+  }
+
+  .settings-toggle-list button[role="switch"] > div {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 1.5rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
+  }
+
+  .settings-toggle-list button[role="switch"]:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@media (min-width: 768px) {
+  .safe-area-fab {
+    bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1.25rem));
+  }
+}
+
+@media (max-width: 639px) {
+  html {
+    scroll-padding-top: 5rem;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
   }
 }

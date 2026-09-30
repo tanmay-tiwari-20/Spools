@@ -27,14 +27,14 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   return (
     <>
       {/* Top Glass Header */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-ebony/80 border-b border-zinc-200/60 dark:border-zinc-800/60 transition-colors duration-300 py-3 px-4 mb-4 rounded-b-2xl">
+      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-ebony/80 border-b border-zinc-200/60 dark:border-zinc-800/60 transition-colors duration-300 py-2.5 sm:py-3 px-2.5 sm:px-4 mb-4 rounded-b-2xl">
         <div className="flex items-center justify-between max-w-5xl mx-auto">
           {/* Left: Brand Logo (Toggles theme on click) & Home Link */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             <button
               type="button"
               onClick={toggleColorMode}
-              className="relative p-1 rounded-xl transition-transform duration-150 hover:scale-105 active:scale-95 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer focus:outline-none select-none"
+              className="relative shrink-0 p-1 rounded-xl transition-transform duration-150 hover:scale-105 active:scale-95 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer focus:outline-none select-none"
               title={`Spools • Click logo to switch to ${isDarkMode ? "Light" : "Dark"} mode`}
               aria-label="Click Spools logo to toggle theme"
             >
@@ -52,7 +52,7 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
 
             <RouterLink
               to="/"
-              className="font-extrabold text-xl tracking-tight text-zinc-900 dark:text-white hover:opacity-80 transition-opacity hidden sm:inline select-none"
+              className="font-extrabold text-lg sm:text-xl tracking-tight text-zinc-900 dark:text-white hover:opacity-80 transition-opacity hidden sm:inline select-none"
               title="Spools Home"
             >
               Spools
@@ -119,13 +119,13 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
               </RouterLink>
             </nav>
           ) : (
-            <div className="font-semibold text-sm text-zinc-500 dark:text-zinc-400">
+            <div className="hidden sm:block font-semibold text-sm text-zinc-500 dark:text-zinc-400">
               Welcome to the conversation
             </div>
           )}
 
           {/* Right: Settings & User Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {user ? (
               <>
                 <RouterLink
@@ -151,18 +151,18 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
                 </button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <RouterLink
                   to="/auth"
                   onClick={() => setAuthScreen("login")}
-                  className="px-4 py-1.5 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white transition-colors"
+                  className="inline-flex min-h-11 min-w-[76px] items-center justify-center rounded-full border border-zinc-200/90 dark:border-zinc-700 bg-white/70 dark:bg-zinc-900/70 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 whitespace-nowrap transition-colors"
                 >
                   Log in
                 </RouterLink>
                 <RouterLink
                   to="/auth"
                   onClick={() => setAuthScreen("signup")}
-                  className="px-4 py-1.5 text-sm font-semibold rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-sm transition-all"
+                  className="inline-flex min-h-11 min-w-[84px] items-center justify-center px-3.5 sm:px-4 text-xs sm:text-sm font-semibold rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-sm whitespace-nowrap transition-all"
                 >
                   Sign up
                 </RouterLink>
@@ -174,7 +174,7 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
 
       {/* Mobile Floating Bottom Bar */}
       {user && (
-        <div className="md:hidden fixed bottom-3 left-4 right-4 z-50 backdrop-blur-xl bg-white/90 dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-zinc-800/80 rounded-full shadow-lg px-4 py-2.5 flex items-center justify-around">
+        <div className="md:hidden fixed safe-area-bottom bottom-2 left-2 right-2 sm:left-4 sm:right-4 z-50 backdrop-blur-xl bg-white/90 dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-zinc-800/80 rounded-full shadow-lg px-2.5 sm:px-4 py-2.5 flex items-center justify-around">
           <RouterLink
             to="/"
             className={`p-2 transition-colors ${

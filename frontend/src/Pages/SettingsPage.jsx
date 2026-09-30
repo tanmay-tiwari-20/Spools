@@ -122,9 +122,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-4 px-3 sm:px-4 pb-28">
+    <div className="w-full min-w-0 max-w-2xl mx-auto py-3 sm:py-4 px-2 min-[400px]:px-3 sm:px-4 pb-32">
       {/* Top Header & Breadcrumb */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-5 sm:mb-6 min-w-0">
         <button
           onClick={() => navigate(-1)}
           className="p-2.5 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all active:scale-95 cursor-pointer"
@@ -132,11 +132,11 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
         >
           <FiArrowLeft size={20} />
         </button>
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
             Settings
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
             Manage your account preferences, theme, and privacy
           </p>
         </div>
@@ -145,17 +145,17 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
       <div className="space-y-6">
         {/* User Profile Card */}
         {user && (
-          <div className="bg-white dark:bg-zinc-900/80 rounded-3xl p-5 sm:p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-sm backdrop-blur-sm">
+          <div className="bg-white dark:bg-zinc-900/80 rounded-2xl sm:rounded-3xl p-4 min-[400px]:p-5 sm:p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-sm backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
+              <div className="flex items-center gap-3.5 min-w-0">
                 <img
                   src={user.profilePic || "/defaultdp.png"}
                   alt={user.name}
                   className="w-14 h-14 rounded-full object-cover ring-2 ring-zinc-200 dark:ring-zinc-700"
                 />
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h2 className="font-bold text-lg text-zinc-900 dark:text-white leading-snug">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                    <h2 className="break-words font-bold text-lg text-zinc-900 dark:text-white leading-snug">
                       {user.name}
                     </h2>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
@@ -163,13 +163,13 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
                     </span>
                   </div>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">@{user.username}</p>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 flex items-center gap-1">
-                    <FiMail size={12} /> {user.email}
+                  <p className="break-all text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 flex items-start gap-1">
+                    <FiMail className="mt-0.5 shrink-0" size={12} /> {user.email}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex w-full sm:w-auto items-center gap-2">
                 <RouterLink
                   to="/update"
                   className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-sm transition-all duration-200 active:scale-95"
@@ -201,13 +201,13 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
         )}
 
         {/* 1. APPEARANCE & THEME (Primary requested feature!) */}
-        <section className="bg-white dark:bg-zinc-900/80 rounded-3xl p-5 sm:p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-sm space-y-5">
+        <section className="bg-white dark:bg-zinc-900/80 rounded-2xl sm:rounded-3xl p-4 min-[400px]:p-5 sm:p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-sm space-y-4 sm:space-y-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
                 {isDarkMode ? <BsMoonStars size={18} /> : <BsSun size={18} />}
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="font-bold text-base text-zinc-900 dark:text-white">
                   Appearance & Theme
                 </h2>
@@ -327,12 +327,12 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
           </div>
 
           {/* Quick Toggle Easter-Egg Banner */}
-          <div className="p-4 rounded-2xl bg-zinc-100/70 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="p-3 sm:p-4 rounded-2xl bg-zinc-100/70 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 dark:text-amber-400 shrink-0">
                 <FiZap size={18} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">
                   Quick Spools Logo Toggle
                 </p>
@@ -343,7 +343,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
             </div>
             <button
               onClick={toggleColorMode}
-              className="shrink-0 px-3.5 py-1.5 text-xs font-semibold rounded-full border border-zinc-300 dark:border-zinc-600 hover:bg-white dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+              className="w-full sm:w-auto shrink-0 px-3.5 py-2 sm:py-1.5 text-xs font-semibold rounded-full border border-transparent bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-sm transition-colors cursor-pointer"
             >
               Toggle Now
             </button>
@@ -366,7 +366,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
             </div>
           </div>
 
-          <div className="space-y-4 pt-1 divide-y divide-zinc-100 dark:divide-zinc-800/70">
+          <div className="settings-toggle-list space-y-4 pt-1 divide-y divide-zinc-100 dark:divide-zinc-800/70">
             {/* Private Profile Toggle */}
             <div className="flex items-center justify-between gap-4 pt-2">
               <div>
@@ -379,6 +379,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.isPrivate}
+                aria-label="Private profile"
                 onClick={() => updatePreference("isPrivate", !preferences.isPrivate)}
                 className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
                   preferences.isPrivate ? "bg-zinc-900 dark:bg-white" : "bg-zinc-300 dark:bg-zinc-700"
@@ -430,6 +433,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.sensitiveContentShield}
+                aria-label="Sensitive content shield"
                 onClick={() =>
                   updatePreference("sensitiveContentShield", !preferences.sensitiveContentShield)
                 }
@@ -459,6 +465,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.searchEngineIndexing}
+                aria-label="Search engine indexing"
                 onClick={() =>
                   updatePreference("searchEngineIndexing", !preferences.searchEngineIndexing)
                 }
@@ -494,7 +503,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
             </div>
           </div>
 
-          <div className="space-y-4 pt-1 divide-y divide-zinc-100 dark:divide-zinc-800/70">
+          <div className="settings-toggle-list space-y-4 pt-1 divide-y divide-zinc-100 dark:divide-zinc-800/70">
             {/* Pause All */}
             <div className="flex items-center justify-between gap-4 pt-2">
               <div>
@@ -507,6 +516,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.pauseNotifications}
+                aria-label="Pause all notifications"
                 onClick={() =>
                   updatePreference("pauseNotifications", !preferences.pauseNotifications)
                 }
@@ -536,6 +548,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.notifyLikes}
+                aria-label="Likes and reactions notifications"
                 disabled={preferences.pauseNotifications}
                 onClick={() => updatePreference("notifyLikes", !preferences.notifyLikes)}
                 className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
@@ -566,6 +581,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.notifyReplies}
+                aria-label="Replies and mentions notifications"
                 disabled={preferences.pauseNotifications}
                 onClick={() => updatePreference("notifyReplies", !preferences.notifyReplies)}
                 className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
@@ -596,6 +614,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.notifyFollowers}
+                aria-label="New follower notifications"
                 disabled={preferences.pauseNotifications}
                 onClick={() =>
                   updatePreference("notifyFollowers", !preferences.notifyFollowers)
@@ -628,6 +649,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.notifyMessages}
+                aria-label="Direct message notifications"
                 disabled={preferences.pauseNotifications}
                 onClick={() => updatePreference("notifyMessages", !preferences.notifyMessages)}
                 className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
@@ -664,7 +688,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
             </div>
           </div>
 
-          <div className="space-y-4 pt-1 divide-y divide-zinc-100 dark:divide-zinc-800/70">
+          <div className="settings-toggle-list space-y-4 pt-1 divide-y divide-zinc-100 dark:divide-zinc-800/70">
             {/* High Quality Uploads */}
             <div className="flex items-center justify-between gap-4 pt-2">
               <div>
@@ -677,6 +701,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.highQualityUploads}
+                aria-label="High quality media uploads"
                 onClick={() =>
                   updatePreference("highQualityUploads", !preferences.highQualityUploads)
                 }
@@ -706,6 +733,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.dataSaver}
+                aria-label="Data saver mode"
                 onClick={() => updatePreference("dataSaver", !preferences.dataSaver)}
                 className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
                   preferences.dataSaver
@@ -733,6 +763,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={preferences.soundEffects}
+                aria-label="In-app sound effects"
                 onClick={() => updatePreference("soundEffects", !preferences.soundEffects)}
                 className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
                   preferences.soundEffects
@@ -768,9 +801,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
 
           <div className="space-y-3 pt-1">
             <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <FiMail className="text-zinc-500" size={16} />
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">
                     Primary Email
                   </p>
@@ -783,9 +816,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
             </div>
 
             <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <FiSmartphone className="text-zinc-500" size={16} />
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">
                     Current Device
                   </p>
@@ -943,7 +976,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 cursor-default"
+            className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 cursor-default"
           >
             <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-2">
               <FiAlertTriangle size={24} />
@@ -991,7 +1024,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 cursor-default"
+            className="w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 cursor-default"
           >
             <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center mx-auto mb-2">
               <FiLogOut size={22} />
@@ -1035,7 +1068,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 max-h-[85vh] flex flex-col cursor-default"
+            className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 max-h-[calc(100dvh-2rem)] flex flex-col cursor-default"
           >
             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
               <h3 className="font-bold text-lg text-zinc-900 dark:text-white capitalize">
