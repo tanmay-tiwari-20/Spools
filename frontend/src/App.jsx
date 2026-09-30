@@ -12,31 +12,11 @@ import CreatePost from "./Components/CreatePost";
 import ChatPage from "./Pages/ChatPage";
 import { SettingsPage } from "./Pages/SettingsPage";
 import SearchPage from "./Pages/SearchPage";
+import { useTheme } from "./context/ThemeContext";
 
 const App = () => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem("spools-theme");
-    return saved !== null ? saved === "dark" : true; // Default to dark mode
-  });
+  const { isDarkMode, toggleColorMode } = useTheme();
   const [user, setUser] = useRecoilState(userAtom);
-
-  // Toggle function for color mode
-  const toggleColorMode = () => {
-    setIsDarkMode((prevMode) => {
-      const newMode = !prevMode;
-      localStorage.setItem("spools-theme", newMode ? "dark" : "light");
-      return newMode;
-    });
-  };
-
-  // Apply the dark mode class on html root
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkMode]);
 
   // Listen for global unauthorized events (e.g., 401 on expired session)
   useEffect(() => {
@@ -117,7 +97,7 @@ const App = () => {
           />
           <Route
             path="/settings"
-            element={user ? <SettingsPage /> : <Navigate to={"/auth"} />}
+            element={user ? <SettingsPage isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} /> : <Navigate to={"/auth"} />}
           />
         </Routes>
         {user && <CreatePost />}

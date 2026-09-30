@@ -8,6 +8,7 @@ import { RecoilRoot } from "recoil";
 import { SocketContextProvider } from "./context/SocketContext.jsx";
 import ErrorBoundary from "./Components/ErrorBoundary.jsx";
 import { registerSW } from "virtual:pwa-register";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 
 // Global interceptor for expired authentication (HTTP 401)
 const originalFetch = window.fetch;
@@ -34,11 +35,13 @@ createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       <RecoilRoot>
         <ChakraProvider>
-          <BrowserRouter>
-            <SocketContextProvider>
-              <App />
-            </SocketContextProvider>
-          </BrowserRouter>
+          <ThemeProvider>
+            <BrowserRouter>
+              <SocketContextProvider>
+                <App />
+              </SocketContextProvider>
+            </BrowserRouter>
+          </ThemeProvider>
         </ChakraProvider>
       </RecoilRoot>
     </ErrorBoundary>

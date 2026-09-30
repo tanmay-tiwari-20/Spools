@@ -33,8 +33,17 @@ const MessageContainer = () => {
 
       if (!document.hasFocus()) {
         try {
-          const sound = new Audio(messageSound);
-          sound.play();
+          const rawPrefs = localStorage.getItem("spools-preferences");
+          const prefs = rawPrefs ? JSON.parse(rawPrefs) : {};
+          const isMuted =
+            prefs.soundEffects === false ||
+            prefs.pauseNotifications === true ||
+            prefs.notifyMessages === false;
+
+          if (!isMuted) {
+            const sound = new Audio(messageSound);
+            sound.play();
+          }
         } catch (e) {
           // audio autoplay may be restricted
         }

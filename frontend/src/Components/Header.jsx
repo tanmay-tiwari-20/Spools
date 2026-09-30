@@ -2,21 +2,26 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { AiFillHome, AiOutlineHome } from "react-icons/ai";
-import { FiLogOut, FiSearch } from "react-icons/fi";
+import { FiLogOut, FiSearch, FiSettings } from "react-icons/fi";
 import { IoChatbubbleEllipsesSharp, IoChatbubbleEllipsesOutline } from "react-icons/io5";
-import { BsSun, BsMoonStars } from "react-icons/bs";
 import useLogout from "../hooks/useLogout";
 import authScreenAtom from "../atoms/authAtom";
+import { useTheme } from "../context/ThemeContext";
 
-const Header = ({ isDarkMode, toggleColorMode }) => {
+const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   const user = useRecoilValue(userAtom);
   const logout = useLogout();
   const setAuthScreen = useSetRecoilState(authScreenAtom);
   const location = useLocation();
+  const themeContext = useTheme();
+
+  const isDarkMode = propIsDark !== undefined ? propIsDark : themeContext?.isDarkMode;
+  const toggleColorMode = propToggle || themeContext?.toggleColorMode;
 
   const isHome = location.pathname === "/";
   const isSearch = location.pathname === "/search";
   const isChat = location.pathname === "/chat";
+  const isSettings = location.pathname === "/settings";
   const isProfile = user && location.pathname === `/${user.username}`;
 
   return (
@@ -24,25 +29,35 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
       {/* Top Glass Header */}
       <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-ebony/80 border-b border-zinc-200/60 dark:border-zinc-800/60 transition-colors duration-300 py-3 px-4 mb-4 rounded-b-2xl">
         <div className="flex items-center justify-between max-w-5xl mx-auto">
-          {/* Left: Brand Logo / Home */}
-          <RouterLink
-            to="/"
-            className="flex items-center gap-2.5 group transition-transform duration-200 active:scale-95"
-          >
-            <img
-              src="/dark-mode.svg"
-              alt="Spools Logo"
-              className="w-8 h-8 object-contain dark:hidden transition-transform duration-200 group-hover:rotate-6"
-            />
-            <img
-              src="/light-mode.svg"
-              alt="Spools Logo"
-              className="w-8 h-8 object-contain hidden dark:block transition-transform duration-200 group-hover:rotate-6"
-            />
-            <span className="font-extrabold text-xl tracking-tight text-zinc-900 dark:text-white hidden sm:inline">
+          {/* Left: Brand Logo (Toggles theme on click) & Home Link */}
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={toggleColorMode}
+              className="relative p-1 rounded-xl transition-transform duration-150 hover:scale-105 active:scale-95 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer focus:outline-none select-none"
+              title={`Spools • Click logo to switch to ${isDarkMode ? "Light" : "Dark"} mode`}
+              aria-label="Click Spools logo to toggle theme"
+            >
+              <img
+                src="/dark-mode.svg"
+                alt="Spools Logo"
+                className="w-8 h-8 object-contain dark:hidden"
+              />
+              <img
+                src="/light-mode.svg"
+                alt="Spools Logo"
+                className="w-8 h-8 object-contain hidden dark:block"
+              />
+            </button>
+
+            <RouterLink
+              to="/"
+              className="font-extrabold text-xl tracking-tight text-zinc-900 dark:text-white hover:opacity-80 transition-opacity hidden sm:inline select-none"
+              title="Spools Home"
+            >
               Spools
-            </span>
-          </RouterLink>
+            </RouterLink>
+          </div>
 
           {/* Center (Desktop): Quick Nav */}
           {user ? (
@@ -109,25 +124,32 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
             </div>
           )}
 
-          {/* Right: Theme Toggle & User Actions */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleColorMode}
-              className="p-2.5 rounded-full text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all duration-200 active:scale-90"
-              title="Toggle theme"
-            >
-              {isDarkMode ? <BsSun size={18} /> : <BsMoonStars size={18} />}
-            </button>
-
+          {/* Right: Settings & User Actions */}
+          <div className="flex items-center gap-2">
             {user ? (
-              <button
-                onClick={logout}
-                className="hidden sm:flex items-center gap-1.5 p-2 px-3 text-sm font-semibold rounded-full text-zinc-600 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200"
-                title="Log out"
-              >
-                <FiLogOut size={17} />
-                <span>Logout</span>
-              </button>
+              <>
+                <RouterLink
+                  to="/settings"
+                  className={`p-2.5 rounded-full transition-all duration-200 active:scale-95 ${
+                    isSettings
+                      ? "bg-zinc-200/90 dark:bg-zinc-800 text-zinc-950 dark:text-white ring-1 ring-zinc-300 dark:ring-zinc-700 shadow-sm"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80"
+                  }`}
+                  title="Settings"
+                  aria-label="Settings"
+                >
+                  <FiSettings size={19} />
+                </RouterLink>
+
+                <button
+                  onClick={logout}
+                  className="hidden sm:flex items-center gap-1.5 py-2 px-3 text-sm font-semibold rounded-full text-zinc-600 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 active:scale-95"
+                  title="Log out"
+                >
+                  <FiLogOut size={17} />
+                  <span>Logout</span>
+                </button>
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 <RouterLink
@@ -203,13 +225,17 @@ const Header = ({ isDarkMode, toggleColorMode }) => {
             />
           </RouterLink>
 
-          <button
-            onClick={logout}
-            className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
-            title="Log out"
+          <RouterLink
+            to="/settings"
+            className={`p-2 transition-colors ${
+              isSettings
+                ? "text-zinc-900 dark:text-white"
+                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+            }`}
+            title="Settings"
           >
-            <FiLogOut size={22} />
-          </button>
+            <FiSettings size={22} />
+          </RouterLink>
         </div>
       )}
     </>

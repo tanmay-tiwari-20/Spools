@@ -4,11 +4,13 @@ import authScreenAtom from "../atoms/authAtom";
 import { useSetRecoilState } from "recoil";
 import useShowToast from "../hooks/useShowToast";
 import userAtom from "../atoms/userAtom";
+import { useTheme } from "../context/ThemeContext";
 
 const SignupCard = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const setAuthScreen = useSetRecoilState(authScreenAtom);
+  const { toggleColorMode, isDarkMode } = useTheme();
   const [inputs, setInputs] = useState({
     name: "",
     username: "",
@@ -54,16 +56,24 @@ const SignupCard = () => {
         {/* Brand Icon & Heading */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">
-            <img
-              src="/dark-mode.svg"
-              alt="Spools Logo"
-              className="w-12 h-12 object-contain dark:hidden"
-            />
-            <img
-              src="/light-mode.svg"
-              alt="Spools Logo"
-              className="w-12 h-12 object-contain hidden dark:block"
-            />
+            <button
+              type="button"
+              onClick={toggleColorMode}
+              className="p-1 rounded-2xl hover:scale-105 active:scale-95 transition-transform duration-150 cursor-pointer focus:outline-none"
+              title={`Spools • Click to switch to ${isDarkMode ? "Light" : "Dark"} mode`}
+              aria-label="Toggle theme"
+            >
+              <img
+                src="/dark-mode.svg"
+                alt="Spools Logo"
+                className="w-12 h-12 object-contain dark:hidden"
+              />
+              <img
+                src="/light-mode.svg"
+                alt="Spools Logo"
+                className="w-12 h-12 object-contain hidden dark:block"
+              />
+            </button>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
             Create your account
