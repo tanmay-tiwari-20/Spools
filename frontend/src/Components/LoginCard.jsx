@@ -19,7 +19,7 @@ const LoginCard = () => {
   const showToast = useShowToast();
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
     setLoading(true);
     try {
       const res = await fetch("/api/users/login", {
@@ -38,123 +38,118 @@ const LoginCard = () => {
 
       setUser(data);
       localStorage.setItem("user-spools", JSON.stringify(data));
-
-      showToast("Success", "Login successful!", "success");
+      showToast("Success", "Welcome back!", "success");
     } catch (error) {
       showToast("Error", error.message || "Login failed", "error");
     } finally {
-      setLoading(false); // Set loading back to false
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center p-4 mt-4">
-      <div className="grid gap-8 max-w-lg w-full">
-        <section
-          id="back-div"
-          className="bg-gradient-to-r from-gray-200 to-gray-600 rounded-3xl"
-        >
-          <div className="border-8 border-transparent rounded-xl bg-white dark:bg-zinc-900 shadow-xl p-6 sm:p-8 md:p-10 m-2">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center cursor-default dark:text-gray-300 text-gray-900 mb-4">
-              Log in
-            </h1>
-            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
-              <div>
-                <label
-                  htmlFor="username"
-                  className="block mb-2 lg:text-lg text-base dark:text-gray-300"
-                >
-                  Username
-                </label>
-                <input
-                  id="username"
-                  className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
-                  type="text"
-                  placeholder="Username"
-                  required
-                  value={inputs.username}
-                  onChange={(e) =>
-                    setInputs({ ...inputs, username: e.target.value })
-                  }
-                />
-              </div>
-              <div className="relative">
-                <label
-                  htmlFor="password"
-                  className="block mb-2 lg:text-lg text-base dark:text-gray-300"
-                >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  className="border p-3 shadow-md dark:bg-gray-700 dark:text-gray-300 dark:border-gray-700 border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-gray-500 transition transform hover:scale-105 duration-300"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  required
-                  value={inputs.password}
-                  onChange={(e) =>
-                    setInputs({ ...inputs, password: e.target.value })
-                  }
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 lg:top-16 top-14 transform -translate-y-1/2 text-gray-400"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                >
-                  {showPassword ? <FaEye /> : <FaEyeSlash />}
-                </button>
-              </div>
-              <a className="text-gray-400 text-sm transition hover:underline">
-                Forgot your password?
-              </a>
+    <div className="flex justify-center items-center py-10 px-4">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-900/90 rounded-3xl p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-xl backdrop-blur-md">
+        {/* Brand Icon & Heading */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-3">
+            <img
+              src="/dark-mode.svg"
+              alt="Spools Logo"
+              className="w-12 h-12 object-contain dark:hidden"
+            />
+            <img
+              src="/light-mode.svg"
+              alt="Spools Logo"
+              className="w-12 h-12 object-contain hidden dark:block"
+            />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+            Log in with Spools
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            Join the conversation and see what’s happening
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider mb-1.5"
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              className="w-full px-4 py-3 text-sm rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 transition-all"
+              type="text"
+              placeholder="Enter your username"
+              required
+              value={inputs.username}
+              onChange={(e) =>
+                setInputs({ ...inputs, username: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider mb-1.5"
+            >
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                className="w-full px-4 py-3 text-sm rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 transition-all"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                required
+                value={inputs.password}
+                onChange={(e) =>
+                  setInputs({ ...inputs, password: e.target.value })
+                }
+              />
               <button
-                className={`w-full p-3 mt-4 text-white bg-gradient-to-r from-gray-400 to-gray-700 rounded-lg hover:scale-105 transition transform duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                type="submit"
-                disabled={loading}
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1"
+                onClick={() => setShowPassword((prev) => !prev)}
               >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-                  </div>
-                ) : (
-                  "LOG IN"
-                )}
+                {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
               </button>
-            </form>
-            <div className="flex flex-col mt-4 text-sm text-center dark:text-gray-300">
-              <p>
-                Don&apos;t have an account?{" "}
-                <a
-                  className="text-gray-400 transition hover:underline cursor-pointer"
-                  onClick={() => setAuthScreen("signup")}
-                >
-                  Sign Up
-                </a>
-              </p>
-            </div>
-            <div className="mt-4 text-center text-sm ">
-              <p>
-                By logging in, you agree to our{" "}
-                <a
-                  href="#"
-                  className="text-gray-400 transition hover:underline"
-                >
-                  Terms{" "}
-                </a>
-                and{" "}
-                <a
-                  href="#"
-                  className="text-gray-400 transition hover:underline"
-                >
-                  Privacy Policy
-                </a>
-                .
-              </p>
             </div>
           </div>
-        </section>
+
+          <button
+            className={`w-full py-3.5 mt-2 text-sm font-semibold rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-sm transition-all duration-200 active:scale-98 ${
+              loading ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span>Signing in...</span>
+              </div>
+            ) : (
+              "Log In"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/80 text-center text-sm text-zinc-600 dark:text-zinc-400">
+          <p>
+            Don&apos;t have an account?{" "}
+            <button
+              className="font-bold text-zinc-900 dark:text-white hover:underline cursor-pointer ml-1"
+              onClick={() => setAuthScreen("signup")}
+            >
+              Sign Up
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

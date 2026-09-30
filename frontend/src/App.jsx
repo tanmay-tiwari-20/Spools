@@ -6,7 +6,7 @@ import Header from "./Components/Header";
 import HomePage from "./Pages/HomePage";
 import AuthPage from "./Pages/AuthPage";
 import UpdateProfilePage from "./Pages/UpdateProfilePage";
-import { useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import userAtom from "./atoms/userAtom";
 import CreatePost from "./Components/CreatePost";
 import ChatPage from "./Pages/ChatPage";
@@ -14,28 +14,82 @@ import { SettingsPage } from "./Pages/SettingsPage";
 import SearchPage from "./Pages/SearchPage";
 
 const App = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const user = useRecoilValue(userAtom);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem("spools-theme");
+    return saved !== null ? saved === "dark" : true; // Default to dark mode
+  });
+  const [user, setUser] = useRecoilState(userAtom);
 
   // Toggle function for color mode
   const toggleColorMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      localStorage.setItem("spools-theme", newMode ? "dark" : "light");
+      return newMode;
+    });
   };
 
-  // Apply the dark mode class on initial load
+  // Apply the dark mode class on html root
   useEffect(() => {
     if (isDarkMode) {
-      document.documentElement.classList.remove("dark");
-    } else {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   }, [isDarkMode]);
 
+  // Listen for global unauthorized events (e.g., 401 on expired session)
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem("user-spools");
+      setUser(null);
+    };
+
+    window.addEventListener("spools:unauthorized", handleUnauthorized);
+    return () => {
+      window.removeEventListener("spools:unauthorized", handleUnauthorized);
+    };
+  }, [setUser]);
+
+  // Proactive session validation when returning to the app after a long time
+  useEffect(() => {
+    if (!user) return;
+
+    let isMounted = true;
+    const verifySession = async () => {
+      try {
+        const res = await fetch("/api/users/me");
+        if (res.status === 401) {
+          console.warn("Session expired. Automatically signing out.");
+          localStorage.removeItem("user-spools");
+          if (isMounted) setUser(null);
+          return;
+        }
+
+        if (res.ok) {
+          const freshUser = await res.json();
+          if (freshUser && !freshUser.error && isMounted) {
+            localStorage.setItem("user-spools", JSON.stringify(freshUser));
+            setUser(freshUser);
+          }
+        }
+      } catch (err) {
+        // If offline, do not clear local user
+        console.warn("Could not verify session with server:", err.message);
+      }
+    };
+
+    verifySession();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div
-      className={`w-full min-h-screen relative p-2 pb-20 md:pb-2 bg-white dark:bg-ebony transition duration-500`}
+      className={`w-full min-h-screen relative p-2 pb-20 md:pb-2 bg-white dark:bg-ebony transition-colors duration-300`}
     >
-      <div className="max-w-[1000px] mx-auto px-3 md:px-0  text-ebony dark:text-white">
+      <div className="max-w-[1000px] mx-auto px-3 md:px-0 text-ebony dark:text-white">
         <Header isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} />
         <Routes>
           <Route
@@ -51,19 +105,7 @@ const App = () => {
             element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />}
           />
 
-          <Route
-            path="/:username"
-            element={
-              user ? (
-                <>
-                  <UserPage />
-                  <CreatePost />
-                </>
-              ) : (
-                <UserPage />
-              )
-            }
-          />
+          <Route path="/:username" element={<UserPage />} />
           <Route path="/:username/post/:pid" element={<PostPage />} />
           <Route
             path="/chat"
@@ -78,6 +120,7 @@ const App = () => {
             element={user ? <SettingsPage /> : <Navigate to={"/auth"} />}
           />
         </Routes>
+        {user && <CreatePost />}
       </div>
     </div>
   );

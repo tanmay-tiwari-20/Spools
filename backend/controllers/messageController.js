@@ -41,7 +41,7 @@ async function sendMessage(req, res) {
       sender: senderId,
       text: message,
       img: img || "",
-      seen: !!recipientSocketId, // Mark as seen if the recipient is online
+      seen: false,
     });
 
     // Save the new message and update the conversation's last message

@@ -44,11 +44,12 @@ const ChatPage = () => {
       try {
         const res = await fetch("/api/messages/conversations");
         const data = await res.json();
-        if (data.error) {
-          showToast("Error", data.error, "error");
+        if (data.error || data.message || !Array.isArray(data)) {
+          if (data.error) showToast("Error", data.error, "error");
+          setConversations([]);
           return;
         }
-        const sortedConversations = data.sort((a, b) => {
+        const sortedConversations = [...data].sort((a, b) => {
           const lastMessageA = new Date(a.updatedAt);
           const lastMessageB = new Date(b.updatedAt);
           return lastMessageB - lastMessageA;
@@ -56,6 +57,7 @@ const ChatPage = () => {
         setConversations(sortedConversations);
       } catch (error) {
         showToast("Error", error.message, "error");
+        setConversations([]);
       } finally {
         setLoadingConversations(false);
       }
@@ -66,6 +68,7 @@ const ChatPage = () => {
 
   const handleConversationSearch = async (e) => {
     e.preventDefault();
+    if (!searchText.trim()) return;
     setSearchingUser(true);
     try {
       const res = await fetch(`/api/users/profile/${searchText}`);
@@ -93,6 +96,7 @@ const ChatPage = () => {
           username: searchedUser?.username,
           userProfilePic: searchedUser?.profilePic,
         });
+        setSearchText("");
         return;
       }
 
@@ -109,6 +113,14 @@ const ChatPage = () => {
         ],
       };
       setConversations((prevConvs) => [...prevConvs, mockConversation]);
+      setSelectedConversation({
+        _id: mockConversation._id,
+        userId: searchedUser?._id,
+        username: searchedUser?.username,
+        userProfilePic: searchedUser?.profilePic,
+        mock: true,
+      });
+      setSearchText("");
     } catch (error) {
       showToast("Error", error.message, "error");
     } finally {
@@ -116,52 +128,78 @@ const ChatPage = () => {
     }
   };
 
+  const isConversationActive = Boolean(selectedConversation?._id);
+
   return (
-    <div className="absolute left-1/2 w-full max-w-7xl bg-white dark:bg-ebony p-4 transform -translate-x-1/2">
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Conversation List */}
-        <div className="flex flex-col gap-2 w-full md:w-1/3">
-          <form onSubmit={handleConversationSearch} className="flex gap-2">
+    <div className="w-full bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm h-[calc(100vh-140px)] min-h-[550px] flex gap-4 overflow-hidden mb-8">
+      {/* Conversation List */}
+      <div
+        className={`flex flex-col gap-3 w-full md:w-1/3 border-r border-zinc-100 dark:border-zinc-800/80 pr-0 md:pr-3 h-full overflow-hidden ${
+          isConversationActive ? "hidden md:flex" : "flex"
+        }`}
+      >
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+            Messages
+          </h2>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+            {conversations.length}
+          </span>
+        </div>
+
+        <form onSubmit={handleConversationSearch} className="flex gap-2">
+          <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Search for a user..."
+              placeholder="Search user to chat..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="w-full px-3 py-2 border rounded-full focus:outline-none focus:ring-2 dark:bg-ebony dark:text-gray-300 dark:border-gray-600"
+              className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-full focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:text-zinc-100 placeholder-zinc-400"
             />
-            <button
-              type="submit"
-              disabled={searchingUser}
-              className={`flex items-center justify-center px-3 py-2 rounded-full text-white ${
-                searchingUser
-                  ? "bg-blue-300"
-                  : "bg-electricBlue hover:bg-electricBlue/90 dark:bg-softPurple dark:hover:bg-softPurple/90 text-white"
-              }`}
-            >
-              <IoSearchOutline />
-            </button>
-          </form>
-          {/* Loading skeletons */}
+            <IoSearchOutline
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+              size={16}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={searchingUser || !searchText.trim()}
+            className="p-2 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 disabled:opacity-40 transition-all hover:scale-105 active:scale-95"
+            title="Search"
+          >
+            {searchingUser ? (
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin block" />
+            ) : (
+              <IoSearchOutline size={16} />
+            )}
+          </button>
+        </form>
+
+        {/* Conversation List Body */}
+        <div className="flex-1 overflow-y-auto space-y-1 pr-1">
           {loadingConversations &&
             [0, 1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="flex gap-4 items-center p-2 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"
+                className="flex gap-3 items-center p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 animate-pulse"
               >
-                <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+                <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
                 <div className="flex flex-col w-full gap-2">
-                  <div className="w-20 h-2 rounded-full bg-gray-300 dark:bg-gray-700"></div>
-                  <div className="w-3/4 h-2 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+                  <div className="w-24 h-3 rounded bg-zinc-200 dark:bg-zinc-700" />
+                  <div className="w-3/4 h-2.5 rounded bg-zinc-200 dark:bg-zinc-700" />
                 </div>
               </div>
             ))}
-          {/* Conversations */}
-          {!loadingConversations && conversations.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
-              <p>No conversations found.</p>
+
+          {!loadingConversations && conversations.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-48 text-zinc-400 text-center px-4">
+              <span className="text-3xl mb-2">💬</span>
+              <p className="text-sm font-medium">No conversations yet</p>
+              <p className="text-xs mt-1">Search for a user above to message them.</p>
             </div>
-          ) : (
-            !loadingConversations &&
+          )}
+
+          {!loadingConversations &&
             conversations.map((conversation) => (
               <Conversation
                 key={conversation?._id}
@@ -170,26 +208,31 @@ const ChatPage = () => {
                 )}
                 conversation={conversation}
               />
-            ))
-          )}
+            ))}
         </div>
+      </div>
 
-        {/* Message Section */}
-        <div className="flex-1 rounded-3xl p-3 bg-white dark:bg-ebony border">
-          {!selectedConversation?._id ? (
-            <div className="flex flex-col items-center justify-center h-96">
-              <GiConversation
-                className="text-gray-500 dark:text-gray-400"
-                size={100}
-              />
-              <p className="text-center text-xl text-gray-600 dark:text-gray-300 mt-4">
-                Select a conversation to start messaging...
-              </p>
+      {/* Message Active Section */}
+      <div
+        className={`flex-1 h-full overflow-hidden flex flex-col ${
+          !isConversationActive ? "hidden md:flex" : "flex"
+        }`}
+      >
+        {!selectedConversation?._id ? (
+          <div className="flex flex-col items-center justify-center h-full text-zinc-400 dark:text-zinc-500">
+            <div className="w-20 h-20 rounded-3xl bg-zinc-100 dark:bg-zinc-800/60 flex items-center justify-center mb-4">
+              <GiConversation size={42} className="opacity-70" />
             </div>
-          ) : (
-            <MessageContainer />
-          )}
-        </div>
+            <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">
+              Your messages
+            </h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-xs text-center">
+              Send direct messages to other users. Choose a conversation on the left to get started.
+            </p>
+          </div>
+        ) : (
+          <MessageContainer />
+        )}
       </div>
     </div>
   );

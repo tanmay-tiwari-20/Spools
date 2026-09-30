@@ -5,18 +5,34 @@ const protectRoute = async (req, res, next) => {
   try {
     const token = req.cookies.jwt;
 
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized", message: "No token provided" });
+    }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtErr) {
+      // Clear expired or invalid cookie immediately
+      res.cookie("jwt", "", { maxAge: 1, httpOnly: true, sameSite: "strict" });
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Session expired or invalid token",
+      });
+    }
 
     const user = await User.findById(decoded.userId).select("-password");
 
-    req.user = user;
+    if (!user) {
+      res.cookie("jwt", "", { maxAge: 1, httpOnly: true, sameSite: "strict" });
+      return res.status(401).json({ error: "Unauthorized", message: "User not found" });
+    }
 
+    req.user = user;
     next();
   } catch (err) {
-    res.status(500).json({ message: err.message });
-    console.log("Error in signupUser: ", err.message);
+    res.status(500).json({ error: err.message, message: err.message });
+    console.error("Error in protectRoute: ", err.message);
   }
 };
 

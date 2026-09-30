@@ -8,32 +8,19 @@ const useLogout = () => {
 
   const logout = async () => {
     try {
-      const res = await fetch("/api/users/logout", {
+      await fetch("/api/users/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
       });
-      const data = await res.json();
-
-      if (data.error) {
-        showToast("Error", data.error, "error");
-        return;
-      }
-
-      console.log("Logging out and removing user from localStorage...");
-
-      // Remove from localStorage
-      localStorage.removeItem("user-spools");
-      
-      // Update Recoil state
-      setUser(null);
-
-      // Optional: Refresh the page to clear client-side cache
-      window.location.reload();
-      
     } catch (error) {
-      showToast("Error", error.message, "error");
+      console.warn("Logout request failed:", error);
+    } finally {
+      // Unconditionally remove from localStorage and clear user state
+      localStorage.removeItem("user-spools");
+      setUser(null);
+      showToast("Success", "Logged out successfully", "success");
     }
   };
 

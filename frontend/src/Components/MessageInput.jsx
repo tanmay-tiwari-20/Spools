@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
-import { IoSendSharp } from "react-icons/io5";
-import { BsFillImageFill } from "react-icons/bs";
+import { IoSend } from "react-icons/io5";
+import { BsImage } from "react-icons/bs";
+import { IoCloseCircle } from "react-icons/io5";
 import useShowToast from "../hooks/useShowToast";
 import {
   conversationsAtom,
@@ -20,7 +21,7 @@ const MessageInput = ({ setMessages }) => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!messageText && !imgUrl) return;
+    if (!messageText.trim() && !imgUrl) return;
     if (isSending) return;
 
     setIsSending(true);
@@ -69,63 +70,60 @@ const MessageInput = ({ setMessages }) => {
   };
 
   return (
-    <div className="flex items-center gap-2 bg-white dark:bg-ebony rounded-3xl">
-      <form onSubmit={handleSendMessage} className="flex flex-grow">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          onChange={(e) => setMessageText(e.target.value)}
-          value={messageText}
-          className="flex-grow px-3 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-ebony text-gray-800 dark:text-white"
-        />
-        <div className="flex items-center justify-center">
+    <div className="pt-2">
+      {/* Preview if attached */}
+      {imgUrl && (
+        <div className="relative mb-2 w-32 h-32 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
+          <img src={imgUrl} alt="Preview" className="w-full h-full object-cover" />
           <button
-            type="submit"
-            className="p-2 bg-electricBlue hover:bg-electricBlue/90 dark:bg-softPurple rounded-full dark:hover:bg-softPurple/90 text-white ml-2"
+            type="button"
+            onClick={() => setImgUrl("")}
+            className="absolute top-1 right-1 p-1 bg-black/70 text-white rounded-full hover:bg-black"
           >
-            <IoSendSharp size={20} className="-z-10" />
+            <IoCloseCircle size={18} />
           </button>
         </div>
-      </form>
-      <div className="flex items-center justify-center p-2 bg-electricBlue hover:bg-electricBlue/90 dark:bg-softPurple rounded-full dark:hover:bg-softPurple/90 text-white">
-        <BsFillImageFill
-          size={20}
-          className="cursor-pointer"
-          onClick={() => imageRef.current.click()}
-        />
-        <input type="file" hidden ref={imageRef} onChange={handleImageChange} />
-      </div>
-      {imgUrl && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-ebony bg-opacity-80 dark:bg-opacity-80 z-50 p-4 sm:p-8">
-          <div className="relative w-full max-w-md">
-            <img
-              src={imgUrl}
-              alt="Preview"
-              className="rounded-lg shadow-lg w-full h-auto"
-            />
-            <button
-              className="absolute top-2 right-2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              onClick={() => setImgUrl("")}
-            >
-              &times;
-            </button>
-            <div className="flex justify-end mt-2">
-              {!isSending ? (
-                <button
-                  className="flex items-center justify-center p-3 bg-electricBlue hover:bg-electricBlue/90 dark:bg-softPurple rounded-full dark:hover:bg-softPurple/90 text-white"
-                  onClick={handleSendMessage}
-                >
-                  <IoSendSharp size={24} />
-                </button>
-              ) : (
-                <div className="flex items-center">
-                  <span className="loader"></span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       )}
+
+      <form
+        onSubmit={handleSendMessage}
+        className="flex items-center gap-2 p-1.5 pl-3 bg-zinc-100 dark:bg-zinc-800/80 rounded-full border border-zinc-200/80 dark:border-zinc-700/80 focus-within:ring-2 focus-within:ring-zinc-400 dark:focus-within:ring-zinc-500 transition-all"
+      >
+        <button
+          type="button"
+          onClick={() => imageRef.current.click()}
+          className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex-shrink-0"
+          title="Attach image"
+        >
+          <BsImage size={18} />
+        </button>
+        <input type="file" hidden ref={imageRef} accept="image/*" onChange={handleImageChange} />
+
+        <input
+          type="text"
+          placeholder="Message..."
+          value={messageText}
+          onChange={(e) => setMessageText(e.target.value)}
+          className="flex-1 bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none py-1"
+        />
+
+        <button
+          type="submit"
+          disabled={isSending || (!messageText.trim() && !imgUrl)}
+          className={`p-2.5 rounded-full flex-shrink-0 transition-all duration-200 ${
+            messageText.trim() || imgUrl
+              ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:opacity-90 shadow-sm"
+              : "text-zinc-400 dark:text-zinc-600 cursor-not-allowed"
+          }`}
+          title="Send"
+        >
+          {isSending ? (
+            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin block" />
+          ) : (
+            <IoSend size={15} />
+          )}
+        </button>
+      </form>
     </div>
   );
 };

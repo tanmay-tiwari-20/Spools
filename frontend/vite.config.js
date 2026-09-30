@@ -1,9 +1,30 @@
-import { defineConfig } from "vite";
+import { defineConfig, createLogger } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+const customLogger = createLogger();
+const originalLoggerError = customLogger.error;
+let lastRefusalNotice = 0;
+
+customLogger.error = (msg, options) => {
+	if (options?.error?.code === "ECONNREFUSED" || msg.includes("ECONNREFUSED")) {
+		const now = Date.now();
+		// Throttle to log at most once every 3 seconds to avoid cluttering the terminal
+		if (now - lastRefusalNotice > 3000) {
+			lastRefusalNotice = now;
+			customLogger.warn(
+				`[vite proxy] Backend on port 5000 is not reachable yet. Ensure your backend is running ("npm run dev" in root).`,
+				{ timestamp: true }
+			);
+		}
+		return;
+	}
+	originalLoggerError(msg, options);
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
+	customLogger,
 	plugins: [
 		react(),
 		VitePWA({
@@ -35,12 +56,24 @@ export default defineConfig({
 	],
 	server: {
 		port: 3000,
-		// Get rid of the CORS error
+		// Proxy /api requests to backend
 		proxy: {
 			"/api": {
-				target: "http://localhost:5000",
+				target: "http://127.0.0.1:5000",
 				changeOrigin: true,
 				secure: false,
+				configure: (proxy) => {
+					proxy.on("error", (_err, _req, res) => {
+						if (res && !res.headersSent && typeof res.writeHead === "function") {
+							res.writeHead(503, { "Content-Type": "application/json" });
+							res.end(
+								JSON.stringify({
+									error: "Backend server is starting up or temporarily unavailable",
+								})
+							);
+						}
+					});
+				},
 			},
 		},
 	},

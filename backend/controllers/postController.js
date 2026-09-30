@@ -36,6 +36,7 @@ const createPost = async (req, res) => {
 
     const newPost = new Post({ postedBy, text, img });
     await newPost.save();
+    await newPost.populate("postedBy", "name username profilePic isFrozen");
 
     res.status(201).json(newPost);
   } catch (err) {
@@ -46,7 +47,10 @@ const createPost = async (req, res) => {
 
 const getPost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate(
+      "postedBy",
+      "name username profilePic isFrozen"
+    );
 
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
@@ -146,11 +150,14 @@ const getFeedPosts = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const following = user.following;
+    const following = user.following || [];
 
-    const feedPosts = await Post.find({ postedBy: { $in: following } }).sort({
-      createdAt: -1,
-    });
+    // Include posts from people the user follows AND user's own posts
+    const feedPosts = await Post.find({
+      postedBy: { $in: [...following, userId] },
+    })
+      .populate("postedBy", "name username profilePic isFrozen")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(feedPosts);
   } catch (err) {
@@ -166,13 +173,99 @@ const getUserPosts = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const posts = await Post.find({ postedBy: user._id }).sort({
-      createdAt: -1,
-    });
+    const posts = await Post.find({ postedBy: user._id })
+      .populate("postedBy", "name username profilePic isFrozen")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+const getUserReplies = async (req, res) => {
+  const { username } = req.params;
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const posts = await Post.find({ "replies.userId": user._id })
+      .populate("postedBy", "name username profilePic isFrozen")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const saveUnsavePost = async (req, res) => {
+  try {
+    const { id: postId } = req.params;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const isSaved = user.savedPosts?.some((p) => p.toString() === postId);
+
+    if (isSaved) {
+      await User.findByIdAndUpdate(userId, { $pull: { savedPosts: postId } });
+      res.status(200).json({ message: "Post unsaved successfully", saved: false });
+    } else {
+      await User.findByIdAndUpdate(userId, { $addToSet: { savedPosts: postId } });
+      res.status(200).json({ message: "Post saved successfully", saved: true });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const getSavedPosts = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate({
+      path: "savedPosts",
+      populate: {
+        path: "postedBy",
+        select: "name username profilePic isFrozen",
+      },
+    });
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const savedPosts = (user.savedPosts || []).filter(Boolean).reverse();
+    res.status(200).json(savedPosts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const repostPost = async (req, res) => {
+  try {
+    const { id: postId } = req.params;
+    const userId = req.user._id;
+
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const isReposted = post.reposts?.some(
+      (id) => id.toString() === userId.toString()
+    );
+
+    if (isReposted) {
+      await Post.updateOne({ _id: postId }, { $pull: { reposts: userId } });
+      res.status(200).json({ message: "Repost removed", reposted: false });
+    } else {
+      post.reposts.push(userId);
+      await post.save();
+      res
+        .status(200)
+        .json({ message: "Post reposted successfully", reposted: true });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -184,4 +277,8 @@ export {
   replyToPost,
   getFeedPosts,
   getUserPosts,
+  getUserReplies,
+  saveUnsavePost,
+  getSavedPosts,
+  repostPost,
 };

@@ -17,7 +17,7 @@ const SuggestedUsers = () => {
           showToast("Error", data.error, "error");
           return;
         }
-        setSuggestedUsers(data);
+        setSuggestedUsers(Array.isArray(data) ? data : []);
       } catch (error) {
         showToast("Error", error.message, "error");
       } finally {
@@ -29,35 +29,37 @@ const SuggestedUsers = () => {
   }, [showToast]);
 
   return (
-    <div className="bg-white dark:bg-ebony px-3 py-2 rounded-3xl shadow-lg transition-colors border">
-      <h2 className="mb-4 text-lg font-bold text-ebony dark:text-white">
-        Suggested Users
-      </h2>
-      <div className="flex flex-col gap-2">
+    <div className="bg-white dark:bg-zinc-900/60 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-sm transition-colors">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+          Suggested for you
+        </h2>
+      </div>
+
+      <div className="flex flex-col gap-1">
         {!loading && suggestedUsers.length === 0 && (
-          <p className="text-gray-500 dark:text-gray-400 text-center">
-            No suggested users available.
+          <p className="text-zinc-400 text-xs text-center py-4">
+            No suggestions available right now.
           </p>
         )}
+
         {!loading &&
           suggestedUsers.map((user) => (
             <SuggestedUser key={user._id} user={user} />
           ))}
+
         {loading &&
-          [0, 1, 2, 3, 4].map((_, idx) => (
+          [0, 1, 2, 3].map((_, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-3 p-2 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse"
+              className="flex items-center gap-3 p-2 rounded-2xl animate-pulse"
             >
-              {/* Avatar Skeleton */}
-              <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-              {/* Text Skeleton */}
-              <div className="flex-1">
-                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2 w-2/3"></div>
-                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+              <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3" />
+                <div className="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2" />
               </div>
-              {/* Follow Button Skeleton */}
-              <div className="h-6 w-16 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+              <div className="h-7 w-16 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
             </div>
           ))}
       </div>

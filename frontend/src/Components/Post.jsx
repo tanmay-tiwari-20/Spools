@@ -6,39 +6,42 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
 import Actions from "./Actions";
-import { MdDelete } from "react-icons/md";
+import { MdDeleteOutline } from "react-icons/md";
 import { motion } from "framer-motion";
 
 const Post = ({ post, postedBy }) => {
-  const [user, setUser] = useState(null);
+  const initialAuthor =
+    typeof post?.postedBy === "object" && post?.postedBy !== null
+      ? post.postedBy
+      : null;
+  const [user, setUser] = useState(initialAuthor);
   const showToast = useShowToast();
   const currentUser = useRecoilValue(userAtom);
   const [posts, setPosts] = useRecoilState(postsAtom);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getUser = async () => {
-      if (!postedBy) {
-        showToast("Error", "User not found", "error");
-        return;
-      }
+    if (typeof post?.postedBy === "object" && post?.postedBy !== null) {
+      setUser(post.postedBy);
+      return;
+    }
 
+    const userId = postedBy || post?.postedBy;
+    if (!userId) return;
+
+    const getUser = async () => {
       try {
-        const res = await fetch(`/api/users/profile/${postedBy}`);
+        const res = await fetch(`/api/users/profile/${userId}`);
         const data = await res.json();
-        if (data.error) {
-          showToast("Error", data.error, "error");
-          return;
-        }
+        if (data.error) return;
         setUser(data);
       } catch (error) {
-        showToast("Error", error.message, "error");
         setUser(null);
       }
     };
 
     getUser();
-  }, [postedBy, showToast]);
+  }, [postedBy, post?.postedBy]);
 
   const handleDeletePost = async (e) => {
     e.preventDefault();
@@ -60,103 +63,112 @@ const Post = ({ post, postedBy }) => {
     }
   };
 
-  if (!user) return null; // Ensure user is loaded before rendering
+  if (!user) return null;
 
   return (
-    <Link to={`/${user.username}/post/${post?._id}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex gap-4 mb-5 py-6 bg-white dark:bg-ebony border-b border-light-gray dark:border-dark-gray"
-      >
-        <div className="flex flex-col items-center py-2">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="group relative p-3 md:p-4 rounded-2xl hover:bg-zinc-50/70 dark:hover:bg-zinc-900/40 transition-all duration-200 border-b border-zinc-100 dark:border-zinc-800/80 mb-1"
+    >
+      <div className="flex gap-3">
+        {/* Left Column: Avatar & Thread Line */}
+        <div className="flex flex-col items-center">
           <img
-            className="w-12 h-12 rounded-full object-cover cursor-pointer"
-            src={user.profilePic || "defaultdp.png"}
+            className="w-10 h-10 rounded-full object-cover cursor-pointer ring-1 ring-zinc-200 dark:ring-zinc-800 transition-transform hover:scale-105"
+            src={user.profilePic || "/defaultdp.png"}
             alt={user.name}
             onClick={(e) => {
               e.preventDefault();
               navigate(`/${user.username}`);
             }}
           />
-          <div className="w-px h-full bg-gray-400 dark:bg-gray-400 my-2 mb-7"></div>
-          <div className="relative w-full">
-            {post.replies.length === 0 && (
-              <p className="text-center text-ebony dark:text-white">🥱</p>
-            )}
-            {post.replies[0] && (
-              <img
-                className="w-6 h-6 rounded-full object-cover absolute top-0 left-3"
-                src={post.replies[0].userProfilePic || "defaultdp.png"}
-                alt="reply avatar 1"
-              />
-            )}
-            {post.replies[1] && (
-              <img
-                className="w-6 h-6 rounded-full object-cover absolute bottom-0 right-7"
-                src={post.replies[1].userProfilePic || "defaultdp.png"}
-                alt="reply avatar 2"
-              />
-            )}
-            {post.replies[2] && (
-              <img
-                className="w-6 h-6 rounded-full object-cover absolute bottom-0 left-7"
-                src={post.replies[2].userProfilePic || "defaultdp.png"}
-                alt="reply avatar 3"
-              />
-            )}
-          </div>
+          {post.replies?.length > 0 && (
+            <div className="w-0.5 flex-1 bg-zinc-200 dark:bg-zinc-800 my-2 rounded-full min-h-[30px]" />
+          )}
+
+          {/* Reply Avatars preview */}
+          {post.replies?.length > 0 && (
+            <div className="relative w-8 h-8 flex items-center justify-center">
+              {post.replies[0] && (
+                <img
+                  className="w-4 h-4 rounded-full object-cover absolute top-0 left-0 ring-1 ring-white dark:ring-zinc-900"
+                  src={post.replies[0].userProfilePic || "/defaultdp.png"}
+                  alt="reply avatar 1"
+                />
+              )}
+              {post.replies[1] && (
+                <img
+                  className="w-4 h-4 rounded-full object-cover absolute bottom-0 right-0 ring-1 ring-white dark:ring-zinc-900"
+                  src={post.replies[1].userProfilePic || "/defaultdp.png"}
+                  alt="reply avatar 2"
+                />
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="flex-1 flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <p
-                className="md:text-sm text-xs font-bold text-ebony dark:text-white cursor-pointer"
+        {/* Right Column: Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header Row */}
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center gap-1.5 truncate">
+              <span
+                className="font-bold text-sm text-zinc-900 dark:text-zinc-100 hover:underline cursor-pointer truncate"
                 onClick={(e) => {
                   e.preventDefault();
                   navigate(`/${user.username}`);
                 }}
               >
                 {user.username}
-              </p>
+              </span>
               <img
                 src="/verified.png"
-                className="md:w-4 md:h-4 w-3 h-3 ml-1 object-cover"
+                className="w-3.5 h-3.5 object-contain flex-shrink-0"
                 alt="verified"
               />
-            </div>
-            <div className="flex gap-3 items-center">
-              <span className="md:text-xs text-xs font-semibold text-gray-500 dark:text-gray-300">
+              <span className="text-zinc-400 dark:text-zinc-500 text-xs">·</span>
+              <span className="text-xs text-zinc-400 dark:text-zinc-500 flex-shrink-0">
                 {formatDistanceToNow(new Date(post.createdAt))} ago
               </span>
-              {currentUser?._id === user._id && (
-                <button
-                  onClick={handleDeletePost}
-                  className="text-gray-500 dark:text-white hover:text-red-400 dark:hover:text-red-400 cursor-pointer"
-                >
-                  <MdDelete className="md:text-2xl text-lg" />
-                </button>
-              )}
             </div>
+
+            {currentUser?._id === user._id && (
+              <button
+                onClick={handleDeletePost}
+                className="p-1 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all opacity-0 group-hover:opacity-100"
+                title="Delete post"
+              >
+                <MdDeleteOutline size={18} />
+              </button>
+            )}
           </div>
 
-          <p className="md:text-base text-sm text-ebony dark:text-white">
-            {post.text}
-          </p>
-          {post.img && (
-            <div className="rounded-lg overflow-hidden border border-light-gray dark:border-dark-gray">
-              <img src={post.img} className="w-full" alt="post content" />
-            </div>
-          )}
+          {/* Post Text */}
+          <Link to={`/${user.username}/post/${post?._id}`} className="block">
+            <p className="text-sm md:text-base text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed mb-2">
+              {post.text}
+            </p>
 
-          <div className="flex gap-3 my-2">
-            <Actions post={post} />
-          </div>
+            {/* Post Media */}
+            {post.img && (
+              <div className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 my-2 max-h-[460px] bg-black/5 dark:bg-black/30">
+                <img
+                  src={post.img}
+                  className="w-full h-auto object-cover max-h-[460px]"
+                  alt="Post content"
+                  loading="lazy"
+                />
+              </div>
+            )}
+          </Link>
+
+          {/* Actions Bar */}
+          <Actions post={post} />
         </div>
-      </motion.div>
-    </Link>
+      </div>
+    </motion.div>
   );
 };
 

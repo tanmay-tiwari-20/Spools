@@ -17,10 +17,15 @@ export const SocketContextProvider = ({ children }) => {
   useEffect(() => {
     if (!user?._id) return;
 
-    // Establish socket connection only if a user is logged in
-    const newSocket = io("/", {
+    const socketUrl =
+      import.meta.env.MODE === "development"
+        ? "http://localhost:5000"
+        : "/";
+
+    // Establish socket connection directly to backend in development
+    const newSocket = io(socketUrl, {
       query: { userId: user._id },
-      withCredentials: true, // If you're using cookies for authentication
+      withCredentials: true,
     });
 
     setSocket(newSocket);

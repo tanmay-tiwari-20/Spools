@@ -4,9 +4,9 @@ import { BsCheck2All } from "react-icons/bs";
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 
 const Conversation = ({ conversation, isOnline }) => {
-  const user = conversation?.participants?.[0] || {}; // Ensure user exists
+  const user = conversation?.participants?.[0] || {};
   const currentUser = useRecoilValue(userAtom);
-  const lastMessage = conversation?.lastMessage || {}; // Ensure lastMessage exists
+  const lastMessage = conversation?.lastMessage || {};
   const [selectedConversation, setSelectedConversation] = useRecoilState(
     selectedConversationAtom
   );
@@ -25,49 +25,47 @@ const Conversation = ({ conversation, isOnline }) => {
 
   return (
     <div
-      className={`flex items-center gap-4 p-2 rounded-full cursor-pointer transition-colors 
-        ${
-          isSelected
-            ? "bg-zinc-400 text-white dark:bg-zinc-800 dark:text-white"
-            : "hover:bg-gray-100 dark:hover:bg-gray-800"
-        }`}
+      className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 ${
+        isSelected
+          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm"
+          : "hover:bg-zinc-50 dark:hover:bg-zinc-800/40 text-zinc-700 dark:text-zinc-300"
+      }`}
       onClick={handleSelectConversation}
     >
-      <div className="relative">
+      <div className="relative flex-shrink-0">
         <img
-          className="w-10 h-10 rounded-full object-cover"
-          src={user?.profilePic || "defaultdp.png"}
-          alt={`${user?.username || "User"}'s profile`}
+          className="w-11 h-11 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+          src={user?.profilePic || "/defaultdp.png"}
+          alt={user?.username || "User"}
         />
         {isOnline && (
-          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-ebony"></span>
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-900 shadow-sm" />
         )}
       </div>
 
-      <div className="flex flex-col text-sm">
-        <div
-          className={`flex items-center font-semibold ${
-            isSelected ? "text-white" : "text-gray-900 dark:text-white"
-          }`}
-        >
-          {user?.username || "Unknown User"}
-          <img src="/verified.png" alt="Verified" className="w-4 h-4 ml-1" />
+      <div className="flex flex-col min-w-0 flex-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1 truncate font-semibold text-sm text-zinc-900 dark:text-zinc-100">
+            <span className="truncate">{user?.username || "Unknown"}</span>
+            <img src="/verified.png" alt="Verified" className="w-3.5 h-3.5 flex-shrink-0" />
+          </div>
         </div>
-        <div
-          className={`flex items-center gap-1 text-xs ${
-            isSelected ? "text-white" : "text-gray-500 dark:text-gray-400"
-          }`}
-        >
+
+        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
           {currentUser?._id === lastMessage?.sender && (
             <span
-              className={lastMessage?.seen ? "text-blue-500" : "text-zinc-500"}
+              className={
+                lastMessage?.seen
+                  ? "text-blue-500 flex-shrink-0"
+                  : "text-zinc-400 flex-shrink-0"
+              }
             >
-              <BsCheck2All size={16} />
+              <BsCheck2All size={15} />
             </span>
           )}
-          {lastMessage?.text?.length > 18
-            ? `${lastMessage.text.substring(0, 18)}...`
-            : lastMessage?.text || "Start the conversation..."}
+          <span className="truncate">
+            {lastMessage?.text || (lastMessage?.sender ? "Attachment" : "Start chatting...")}
+          </span>
         </div>
       </div>
     </div>

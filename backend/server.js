@@ -26,10 +26,22 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Enable CORS for your frontend domain
+const allowedOrigins = [
+  "https://spools.onrender.com",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+// Enable CORS
 app.use(
   cors({
-    origin: "https://spools.onrender.com/", // Replace with your frontend domain
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -78,4 +90,4 @@ app.use((err, req, res, next) => {
     .json({ message: err.message || "Something went wrong!" });
 });
 
-server.listen(PORT, () => console.log(`Server started at ${PORT}`));
+server.listen(PORT, "0.0.0.0", () => console.log(`Server started at http://localhost:${PORT}`));

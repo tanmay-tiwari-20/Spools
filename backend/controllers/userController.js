@@ -83,6 +83,9 @@ const signupUser = async (req, res) => {
         username: newUser.username,
         bio: newUser.bio,
         profilePic: newUser.profilePic,
+        followers: newUser.followers,
+        following: newUser.following,
+        savedPosts: newUser.savedPosts || [],
       });
     } else {
       res.status(400).json({ error: "Invalid user data" });
@@ -119,6 +122,9 @@ const loginUser = async (req, res) => {
       username: user.username,
       bio: user.bio,
       profilePic: user.profilePic,
+      followers: user.followers,
+      following: user.following,
+      savedPosts: user.savedPosts || [],
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -128,11 +134,15 @@ const loginUser = async (req, res) => {
 
 const logoutUser = (req, res) => {
   try {
-    res.cookie("jwt", "", { maxAge: 1 });
+    res.cookie("jwt", "", {
+      maxAge: 1,
+      httpOnly: true,
+      sameSite: "strict",
+    });
     res.status(200).json({ message: "User logged out successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
-    console.log("Error in signupUser: ", err.message);
+    console.error("Error in logoutUser: ", err.message);
   }
 };
 
@@ -247,8 +257,12 @@ const getSuggestedUsers = async (req, res) => {
         $sample: { size: 10 },
       },
     ]);
+    const followingStrings = (usersFollowedByYou?.following || []).map((id) =>
+      id.toString()
+    );
+
     const filteredUsers = users.filter(
-      (user) => !usersFollowedByYou.following.includes(user._id),
+      (user) => !followingStrings.includes(user._id.toString()),
     );
     const suggestedUsers = filteredUsers.slice(0, 4);
 
@@ -276,6 +290,19 @@ const freezeAccount = async (req, res) => {
   }
 };
 
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    console.error("Error in getMe: ", error.message);
+  }
+};
+
 export {
   signupUser,
   loginUser,
@@ -286,4 +313,5 @@ export {
   searchUser,
   getSuggestedUsers,
   freezeAccount,
+  getMe,
 };

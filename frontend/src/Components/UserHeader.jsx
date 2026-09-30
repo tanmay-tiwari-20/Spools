@@ -17,13 +17,15 @@ import useShowToast from "../hooks/useShowToast";
 import { motion } from "framer-motion";
 import { MdOutlineSettings } from "react-icons/md";
 
-const UserHeader = ({ user }) => {
+const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
   const MotionMenuList = motion.create(MenuList);
   const showToast = useShowToast();
   const toast = useToast();
   const currentUser = useRecoilValue(userAtom); // logged in user
   const [following, setFollowing] = useState(
-    user.followers.includes(currentUser?._id)
+    Array.isArray(user?.followers) && currentUser?._id
+      ? user.followers.includes(currentUser._id)
+      : false
   );
   const [updating, setUpdating] = useState(false);
 
@@ -66,10 +68,16 @@ const UserHeader = ({ user }) => {
 
       if (following) {
         showToast("Success", `Unfollowed ${user.name}`, "success");
-        user.followers.pop(); // simulate removing from followers
+        if (Array.isArray(user.followers)) {
+          user.followers = user.followers.filter(
+            (id) => id !== currentUser?._id
+          );
+        }
       } else {
         showToast("Success", `Followed ${user.name}`, "success");
-        user.followers.push(currentUser?._id); // simulate adding to followers
+        if (Array.isArray(user.followers)) {
+          user.followers.push(currentUser?._id);
+        }
       }
       setFollowing(!following);
     } catch (error) {
@@ -207,13 +215,57 @@ const UserHeader = ({ user }) => {
         </div>
       </div>
       {/* Tabs section */}
-      <div className="flex w-full">
-        <div className="flex flex-1 border-b-2 border-b-gray-800 dark:border-b-gray-200 justify-center pb-3 cursor-pointer">
-          <p className="font-bold text-gray-800 dark:text-gray-200">Spools</p>
-        </div>
-        <div className="flex flex-1 border-b-2 border-b-gray-300 dark:border-b-gray-600 justify-center pb-3 cursor-pointer">
-          <p className="font-bold text-gray-600 dark:text-gray-400">Replies</p>
-        </div>
+      <div className="flex w-full mt-4 border-b border-gray-200 dark:border-zinc-800">
+        <button
+          onClick={() => setActiveTab && setActiveTab("spools")}
+          className={`flex-1 pb-3 text-sm md:text-base font-semibold transition-all relative ${
+            activeTab === "spools"
+              ? "text-zinc-900 dark:text-white"
+              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+          }`}
+        >
+          Spools
+          {activeTab === "spools" && (
+            <motion.div
+              layoutId="userHeaderTab"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white"
+            />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab && setActiveTab("replies")}
+          className={`flex-1 pb-3 text-sm md:text-base font-semibold transition-all relative ${
+            activeTab === "replies"
+              ? "text-zinc-900 dark:text-white"
+              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+          }`}
+        >
+          Replies
+          {activeTab === "replies" && (
+            <motion.div
+              layoutId="userHeaderTab"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white"
+            />
+          )}
+        </button>
+        {currentUser?._id === user._id && (
+          <button
+            onClick={() => setActiveTab && setActiveTab("saved")}
+            className={`flex-1 pb-3 text-sm md:text-base font-semibold transition-all relative ${
+              activeTab === "saved"
+                ? "text-zinc-900 dark:text-white"
+                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+            }`}
+          >
+            Saved
+            {activeTab === "saved" && (
+              <motion.div
+                layoutId="userHeaderTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white"
+              />
+            )}
+          </button>
+        )}
       </div>
     </VStack>
   );

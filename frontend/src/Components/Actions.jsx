@@ -20,10 +20,18 @@ import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
 import { motion } from "framer-motion";
+import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
 
 const Actions = ({ post }) => {
   const user = useRecoilValue(userAtom);
-  const [liked, setLiked] = useState(post.likes.includes(user?._id));
+  const [liked, setLiked] = useState(post.likes?.includes(user?._id));
+  const [reposted, setReposted] = useState(
+    post.reposts?.some((id) => (typeof id === "object" ? id._id : id) === user?._id)
+  );
+  const [isSaved, setIsSaved] = useState(
+    user?.savedPosts?.some((p) => (typeof p === "object" ? p._id : p) === post._id) || false
+  );
+
   const [posts, setPosts] = useRecoilState(postsAtom);
   const [isLiking, setIsLiking] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
@@ -33,12 +41,9 @@ const Actions = ({ post }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleLikeAndUnlike = async () => {
-    if (!user)
-      return showToast(
-        "Error",
-        "You must be logged in to like a post",
-        "error",
-      );
+    if (!user) {
+      return showToast("Error", "You must be logged in to like a post", "error");
+    }
     if (isLiking) return;
     setIsLiking(true);
     try {
@@ -52,19 +57,20 @@ const Actions = ({ post }) => {
       if (data.error) return showToast("Error", data.error, "error");
 
       if (!liked) {
-        // add the id of the current user to post.likes array
         const updatedPosts = posts.map((p) => {
           if (p._id === post._id) {
-            return { ...p, likes: [...p.likes, user._id] };
+            return { ...p, likes: [...(p.likes || []), user._id] };
           }
           return p;
         });
         setPosts(updatedPosts);
       } else {
-        // remove the id of the current user from post.likes array
         const updatedPosts = posts.map((p) => {
           if (p._id === post._id) {
-            return { ...p, likes: p.likes.filter((id) => id !== user._id) };
+            return {
+              ...p,
+              likes: (p.likes || []).filter((id) => id !== user._id),
+            };
           }
           return p;
         });
@@ -80,12 +86,9 @@ const Actions = ({ post }) => {
   };
 
   const handleReply = async () => {
-    if (!user)
-      return showToast(
-        "Error",
-        "You must be logged in to reply to a post",
-        "error",
-      );
+    if (!user) {
+      return showToast("Error", "You must be logged in to reply to a post", "error");
+    }
     if (isReplying) return;
     setIsReplying(true);
     try {
@@ -101,7 +104,7 @@ const Actions = ({ post }) => {
 
       const updatedPosts = posts.map((p) => {
         if (p._id === post._id) {
-          return { ...p, replies: [...p.replies, data] };
+          return { ...p, replies: [...(p.replies || []), data] };
         }
         return p;
       });
@@ -116,96 +119,221 @@ const Actions = ({ post }) => {
     }
   };
 
+  const handleRepost = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      return showToast("Error", "You must be logged in to repost", "error");
+    }
+    try {
+      const res = await fetch(`/api/posts/repost/${post._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (data.error) return showToast("Error", data.error, "error");
+
+      const updatedPosts = posts.map((p) => {
+        if (p._id === post._id) {
+          const reposts = p.reposts || [];
+          const newReposts = data.reposted
+            ? [...reposts, user._id]
+            : reposts.filter((id) => id !== user._id);
+          return { ...p, reposts: newReposts };
+        }
+        return p;
+      });
+      setPosts(updatedPosts);
+      setReposted(data.reposted);
+      showToast("Success", data.message, "success");
+    } catch (error) {
+      showToast("Error", error.message, "error");
+    }
+  };
+
+  const handleBookmark = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      return showToast("Error", "You must be logged in to save posts", "error");
+    }
+    try {
+      const res = await fetch(`/api/posts/save/${post._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (data.error) return showToast("Error", data.error, "error");
+      setIsSaved(data.saved);
+      showToast("Success", data.message, "success");
+    } catch (error) {
+      showToast("Error", error.message, "error");
+    }
+  };
+
+  const handleShare = async (e) => {
+    e.preventDefault();
+    const authorUsername =
+      typeof post.postedBy === "object"
+        ? post.postedBy?.username
+        : user?.username || "spools";
+    const postUrl = `${window.location.origin}/${authorUsername}/post/${post._id}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Spools",
+          text: post.text,
+          url: postUrl,
+        });
+      } catch (err) {
+        // cancelled
+      }
+    } else {
+      navigator.clipboard.writeText(postUrl);
+      showToast("Success", "Post link copied to clipboard!", "success");
+    }
+  };
+
+  const repostsCount = post.reposts?.length || 0;
+
   return (
-    <Flex flexDirection="column">
-      <Flex gap={3} my={2} onClick={(e) => e.preventDefault()}>
-        <motion.svg
-          aria-label="Like"
-          color={liked ? "rgb(237, 73, 86)" : ""}
-          fill={liked ? "rgb(237, 73, 86)" : "transparent"}
-          height="19"
-          role="img"
-          viewBox="0 0 24 22"
-          width="20"
+    <Flex flexDirection="column" width="100%">
+      <Flex gap={4} my={2} alignItems="center" onClick={(e) => e.preventDefault()}>
+        {/* Like */}
+        <motion.button
           onClick={handleLikeAndUnlike}
-          className="cursor-pointer"
+          className="text-zinc-600 dark:text-zinc-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
           whileTap={{ scale: 0.8 }}
-          animate={{ scale: liked ? 1.2 : 1 }}
+          animate={{ scale: liked ? 1.15 : 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 10 }}
         >
-          <path
-            d="M1 7.66c0 4.575 3.899 9.086 9.987 12.934.338.203.74.406 1.013.406.283 0 .686-.203 1.013-.406C19.1 16.746 23 12.234 23 7.66 23 3.736 20.245 1 16.672 1 14.603 1 12.98 1.94 12 3.352 11.042 1.952 9.408 1 7.328 1 3.766 1 1 3.736 1 7.66Z"
-            stroke="currentColor"
-            strokeWidth="2"
-          ></path>
-        </motion.svg>
+          <svg
+            aria-label="Like"
+            color={liked ? "rgb(239, 68, 68)" : "currentColor"}
+            fill={liked ? "rgb(239, 68, 68)" : "transparent"}
+            height="19"
+            role="img"
+            viewBox="0 0 24 22"
+            width="20"
+          >
+            <path
+              d="M1 7.66c0 4.575 3.899 9.086 9.987 12.934.338.203.74.406 1.013.406.283 0 .686-.203 1.013-.406C19.1 16.746 23 12.234 23 7.66 23 3.736 20.245 1 16.672 1 14.603 1 12.98 1.94 12 3.352 11.042 1.952 9.408 1 7.328 1 3.766 1 1 3.736 1 7.66Z"
+              stroke="currentColor"
+              strokeWidth="2"
+            ></path>
+          </svg>
+        </motion.button>
 
-        <svg
-          aria-label="Comment"
-          color=""
-          fill=""
-          height="20"
-          role="img"
-          viewBox="0 0 24 24"
-          width="20"
+        {/* Comment */}
+        <button
           onClick={onOpen}
-          className="cursor-pointer"
+          className="text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
         >
-          <title>Comment</title>
-          <path
-            d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z"
-            fill="none"
-            stroke="currentColor"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          ></path>
-        </svg>
+          <svg
+            aria-label="Comment"
+            height="20"
+            role="img"
+            viewBox="0 0 24 24"
+            width="20"
+          >
+            <title>Comment</title>
+            <path
+              d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z"
+              fill="none"
+              stroke="currentColor"
+              strokeLinejoin="round"
+              strokeWidth="2"
+            ></path>
+          </svg>
+        </button>
 
-        <RepostSVG />
-        <ShareSVG />
+        {/* Repost */}
+        <motion.button
+          onClick={handleRepost}
+          whileTap={{ scale: 0.85 }}
+          className={`transition-colors ${
+            reposted
+              ? "text-emerald-500"
+              : "text-zinc-600 dark:text-zinc-300 hover:text-emerald-500"
+          }`}
+          title="Repost"
+        >
+          <RepostSVG />
+        </motion.button>
+
+        {/* Bookmark / Save */}
+        <motion.button
+          onClick={handleBookmark}
+          whileTap={{ scale: 0.85 }}
+          className={`transition-colors ${
+            isSaved
+              ? "text-indigo-500 dark:text-indigo-400"
+              : "text-zinc-600 dark:text-zinc-300 hover:text-indigo-500"
+          }`}
+          title={isSaved ? "Saved" : "Save spool"}
+        >
+          {isSaved ? <BsBookmarkFill size={17} /> : <BsBookmark size={17} />}
+        </motion.button>
+
+        {/* Share */}
+        <button
+          onClick={handleShare}
+          className="text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
+          title="Share"
+        >
+          <ShareSVG />
+        </button>
       </Flex>
 
-      <Flex gap={2} alignItems={"center"}>
-        <Text color={"gray.light"} fontSize="sm">
-          {post.replies.length} replies
-        </Text>
-        <Box w={0.5} h={0.5} borderRadius={"full"} bg={"gray.light"}></Box>
-        <Text color={"gray.light"} fontSize="sm">
-          {post.likes.length} likes
-        </Text>
+      {/* Counters */}
+      <Flex gap={2} alignItems={"center"} className="text-xs text-zinc-500 dark:text-zinc-400">
+        <span>{post.replies?.length || 0} replies</span>
+        <Box w={1} h={1} borderRadius={"full"} bg={"zinc.500"} className="opacity-60" />
+        <span>{post.likes?.length || 0} likes</span>
+        {repostsCount > 0 && (
+          <>
+            <Box w={1} h={1} borderRadius={"full"} bg={"zinc.500"} className="opacity-60" />
+            <span>{repostsCount} reposts</span>
+          </>
+        )}
       </Flex>
 
-      <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }}>
-        <ModalOverlay />
-        <ModalContent bg="#101010" rounded="3xl" boxShadow="lg">
-          <ModalHeader fontSize="xl" fontWeight="semibold" color="white">
-            Reply
+      {/* Modern Reply Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }} isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(8px)" />
+        <ModalContent
+          className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800"
+          overflow="hidden"
+        >
+          <ModalHeader
+            fontSize="lg"
+            fontWeight="bold"
+            className="text-zinc-900 dark:text-zinc-100 border-b border-zinc-100 dark:border-zinc-800/80"
+          >
+            Reply to spool
           </ModalHeader>
-          <ModalCloseButton color="gray.500" dark={{ color: "gray.200" }} />
-          <ModalBody pb={6}>
+          <ModalCloseButton className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" />
+          <ModalBody py={6}>
             <FormControl>
               <Input
-                placeholder="Reply goes here..."
+                placeholder="Write your reply..."
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
-                bg="#374151"
-                dark={{ bg: "gray.700" }}
-                color="white"
-                borderColor="gray.300"
-                rounded="md"
-                _placeholder={{ color: "gray.500" }}
+                className="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700/80 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-zinc-400"
+                _placeholder={{ color: "gray.400" }}
               />
             </FormControl>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter className="border-t border-zinc-100 dark:border-zinc-800/80">
             <Button
-              bgGradient="linear(to-r, #0095f6, #9b51e0)" // Set the gradient background
-              color="white" // Set text color to white for better contrast
+              className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 rounded-full px-6"
               size="sm"
-              mr={3}
               isLoading={isReplying}
               onClick={handleReply}
-              borderRadius="full" // Set border radius to full for rounded edges
+              disabled={!reply.trim()}
             >
               Reply
             </Button>
@@ -224,10 +352,10 @@ const RepostSVG = () => {
       aria-label="Repost"
       color="currentColor"
       fill="currentColor"
-      height="20"
+      height="19"
       role="img"
       viewBox="0 0 24 24"
-      width="20"
+      width="19"
     >
       <title>Repost</title>
       <path
@@ -242,16 +370,15 @@ const ShareSVG = () => {
   return (
     <svg
       aria-label="Share"
-      color=""
-      fill="rgb(243, 245, 247)"
-      height="20"
+      color="currentColor"
+      fill="none"
+      height="19"
       role="img"
       viewBox="0 0 24 24"
-      width="20"
+      width="19"
     >
       <title>Share</title>
       <line
-        fill="none"
         stroke="currentColor"
         strokeLinejoin="round"
         strokeWidth="2"
@@ -261,7 +388,6 @@ const ShareSVG = () => {
         y2="10.083"
       ></line>
       <polygon
-        fill="none"
         points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"
         stroke="currentColor"
         strokeLinejoin="round"

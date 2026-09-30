@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
@@ -8,7 +8,8 @@ import useGetUserProfile from "../hooks/useGetUserProfile";
 import useShowToast from "../hooks/useShowToast";
 import Actions from "../Components/Actions";
 import Comment from "../Components/Comment";
-import { MdDelete } from "react-icons/md";
+import { MdDeleteOutline } from "react-icons/md";
+import { IoSend } from "react-icons/io5";
 
 const PostPage = () => {
   const { user, loading } = useGetUserProfile();
@@ -17,6 +18,9 @@ const PostPage = () => {
   const { pid } = useParams();
   const currentUser = useRecoilValue(userAtom);
   const navigate = useNavigate();
+
+  const [replyText, setReplyText] = useState("");
+  const [isReplying, setIsReplying] = useState(false);
 
   const currentPost = posts[0];
 
@@ -51,105 +55,171 @@ const PostPage = () => {
         return;
       }
       showToast("Success", "Post deleted", "success");
-      navigate(`/${user.username}`);
+      navigate(`/${user?.username || ""}`);
     } catch (error) {
       showToast("Error", error.message, "error");
     }
   };
 
-  if (!user && loading) {
+  const handlePostReply = async (e) => {
+    e.preventDefault();
+    if (!currentUser) {
+      return showToast("Error", "You must be logged in to reply", "error");
+    }
+    if (!replyText.trim() || isReplying) return;
+
+    setIsReplying(true);
+    try {
+      const res = await fetch(`/api/posts/reply/${currentPost._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: replyText }),
+      });
+      const data = await res.json();
+      if (data.error) return showToast("Error", data.error, "error");
+
+      setPosts([{ ...currentPost, replies: [...(currentPost.replies || []), data] }]);
+      setReplyText("");
+      showToast("Success", "Reply added!", "success");
+    } catch (error) {
+      showToast("Error", error.message, "error");
+    } finally {
+      setIsReplying(false);
+    }
+  };
+
+  if (loading || !currentPost) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="w-16 h-16 rounded-full animate-spin bg-gradient-to-r from-[#0095f6] to-[#9b51e0] border-4 border-transparent">
-          {/* Inner spinner with a gradient background */}
-          <div className="absolute top-0 left-0 w-full h-full rounded-full opacity-70"></div>
-        </div>
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 rounded-full border-2 border-zinc-900 dark:border-white border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  if (!currentPost) return null;
+  const author =
+    typeof currentPost.postedBy === "object" && currentPost.postedBy !== null
+      ? currentPost.postedBy
+      : user || {};
 
   return (
-    <>
-      <div className="flex">
-        <div className="flex w-full items-center gap-3">
+    <div className="max-w-2xl mx-auto py-4 px-2">
+      {/* Author Header */}
+      <div className="flex justify-between items-center mb-4">
+        <Link
+          to={`/${author.username}`}
+          className="flex items-center gap-3 hover:opacity-85 transition-opacity"
+        >
           <img
-            src={user.profilePic || "defaultdp.png"}
-            alt={user.username}
-            className="w-10 h-10 object-cover rounded-full"
+            src={author.profilePic || "/defaultdp.png"}
+            alt={author.username}
+            className="w-11 h-11 object-cover rounded-full ring-1 ring-zinc-200 dark:ring-zinc-800"
           />
-          <div className="flex items-center">
-            <h2 className="text-sm font-bold text-gray-900 dark:text-white">
-              {user.username}
-            </h2>
-            <img
-              src="/verified.png"
-              alt="Verified"
-              className="md:w-4 md:h-4 w-3 h-3 ml-1 object-cover"
-            />
+          <div>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-bold text-zinc-900 dark:text-white">
+                {author.username}
+              </span>
+              <img src="/verified.png" alt="Verified" className="w-3.5 h-3.5" />
+            </div>
+            <span className="text-xs text-zinc-400">
+              {formatDistanceToNow(new Date(currentPost.createdAt))} ago
+            </span>
           </div>
-        </div>
-        <div className="flex gap-3 items-center">
-          <span className="text-xs w-36 text-right text-gray-500 dark:text-gray-300 font-semibold">
-            {formatDistanceToNow(new Date(currentPost.createdAt))} ago
-          </span>
+        </Link>
 
-          {currentUser?._id === user._id && (
-            <button
-              className="text-gray-500 dark:text-white hover:text-red-400 dark:hover:text-red-400 cursor-pointer"
-              onClick={handleDeletePost}
-            >
-              <MdDelete className="md:text-2xl text-lg" />
-            </button>
-          )}
-        </div>
+        {currentUser?._id === author._id && (
+          <button
+            onClick={handleDeletePost}
+            className="p-2 text-zinc-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            title="Delete post"
+          >
+            <MdDeleteOutline size={20} />
+          </button>
+        )}
       </div>
 
-      <p className="my-3">{currentPost.text}</p>
+      {/* Main Post Text */}
+      <p className="text-base md:text-lg text-zinc-900 dark:text-zinc-100 whitespace-pre-line leading-relaxed my-3">
+        {currentPost.text}
+      </p>
 
+      {/* Post Image */}
       {currentPost.img && (
-        <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
-          <img src={currentPost.img} alt="Post" className="w-full" />
+        <div className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 my-4 bg-black/5 dark:bg-black/30">
+          <img
+            src={currentPost.img}
+            alt="Post content"
+            className="w-full h-auto object-cover max-h-[500px]"
+          />
         </div>
       )}
 
-      <div className="flex gap-3 my-3">
+      {/* Actions */}
+      <div className="py-2 border-y border-zinc-100 dark:border-zinc-800/80 my-3">
         <Actions post={currentPost} />
       </div>
 
-      {!currentUser && (
-        <>
-          <hr className="my-4" />
-          <div className="flex justify-between">
-            <div className="flex gap-2 items-center">
-              <span className="md:text-2xl text-base">👋</span>
-              <span className="text-gray-500 md:text-base text-sm font-semibold">
-                Make an account to like, reply and post.
-              </span>
-            </div>
-            <a
-              href="/auth"
-              className="md:px-4 px-3 py-1 md:text-base text-sm bg-gradient-to-r from-gray-400 to-gray-500 rounded-full font-semibold text-white cursor-pointer transition-all duration-300 hover:shadow-3xl hover:shadow-darkGray dark:hover:shadow-lightGray"
-            >
-              Login
-            </a>
-          </div>
-        </>
+      {/* Quick Reply Form */}
+      {currentUser ? (
+        <form onSubmit={handlePostReply} className="flex items-center gap-2 my-4">
+          <img
+            src={currentUser.profilePic || "/defaultdp.png"}
+            alt={currentUser.name}
+            className="w-8 h-8 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+          />
+          <input
+            type="text"
+            placeholder={`Reply to ${author.username || "spool"}...`}
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            className="flex-1 py-2 px-4 text-sm bg-zinc-100 dark:bg-zinc-800/60 rounded-full border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+          />
+          <button
+            type="submit"
+            disabled={isReplying || !replyText.trim()}
+            className="p-2.5 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 disabled:opacity-40 transition-all hover:scale-105 active:scale-95"
+          >
+            {isReplying ? (
+              <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin block" />
+            ) : (
+              <IoSend size={15} />
+            )}
+          </button>
+        </form>
+      ) : (
+        <div className="p-4 my-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+            Log in to join the conversation
+          </span>
+          <Link
+            to="/auth"
+            className="px-4 py-1.5 rounded-full text-xs font-semibold bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+          >
+            Log in
+          </Link>
+        </div>
       )}
 
-      <hr className="my-4" />
-      {currentPost.replies.map((reply) => (
-        <Comment
-          key={reply._id}
-          reply={reply}
-          lastReply={
-            reply._id ===
-            currentPost.replies[currentPost.replies.length - 1]._id
-          }
-        />
-      ))}
-    </>
+      {/* Replies Thread */}
+      <div className="mt-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+          Replies ({currentPost.replies?.length || 0})
+        </h3>
+        {currentPost.replies?.length === 0 ? (
+          <p className="text-sm text-zinc-400 py-6 text-center">
+            No replies yet. Be the first to reply!
+          </p>
+        ) : (
+          currentPost.replies.map((reply, idx) => (
+            <Comment
+              key={reply._id || idx}
+              reply={reply}
+              lastReply={idx === currentPost.replies.length - 1}
+            />
+          ))
+        )}
+      </div>
+    </div>
   );
 };
 

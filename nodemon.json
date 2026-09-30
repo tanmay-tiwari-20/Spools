@@ -1,0 +1,15 @@
+{
+  "watch": ["backend"],
+  "ext": "js,json",
+  "ignore": [
+    "frontend",
+    "frontend/*",
+    "node_modules",
+    "node_modules/*",
+    ".git",
+    ".git/*",
+    "dist",
+    "dist/*"
+  ],
+  "delay": "1000"
+}

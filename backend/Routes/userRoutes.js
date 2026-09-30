@@ -9,11 +9,13 @@ import {
   updateUser,
   getSuggestedUsers,
   freezeAccount,
+  getMe,
 } from "../controllers/userController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 
 const router = express.Router();
 
+router.get("/me", protectRoute, getMe);
 router.get("/profile/:query", getUserProfile);
 router.get("/search/:query", searchUser);
 router.get("/suggested", protectRoute, getSuggestedUsers);

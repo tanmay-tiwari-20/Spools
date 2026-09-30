@@ -1,12 +1,11 @@
 import { useRef, useState } from "react";
-import { BsFillImageFill } from "react-icons/bs";
+import { BsImage } from "react-icons/bs";
 import { AiOutlineClose } from "react-icons/ai";
 import usePreviewImg from "../hooks/usePreviewImg";
 import userAtom from "../atoms/userAtom";
-import { useRecoilValue, useRecoilState } from "recoil"; // Import useRecoilState
+import { useRecoilValue, useRecoilState } from "recoil";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
-import { useParams } from "react-router-dom";
 import { IoAddOutline } from "react-icons/io5";
 
 const MAX_CHAR = 500;
@@ -20,8 +19,7 @@ const CreatePost = () => {
   const imageRef = useRef(null);
   const [remainingChar, setRemainingChar] = useState(MAX_CHAR);
   const [loading, setLoading] = useState(false);
-  const [posts, setPosts] = useRecoilState(postsAtom); // Use Recoil state
-  const { username } = useParams();
+  const [posts, setPosts] = useRecoilState(postsAtom);
 
   const handleTextChange = (e) => {
     const inputText = e.target.value;
@@ -37,6 +35,7 @@ const CreatePost = () => {
   };
 
   const handleCreatePost = async () => {
+    if (!postText.trim() && !imgUrl) return;
     setLoading(true);
     try {
       const res = await fetch("/api/posts/create", {
@@ -55,10 +54,8 @@ const CreatePost = () => {
         showToast("Error", data.error, "error");
         return;
       }
-      showToast("Success", "Post created successfully!", "success");
-      if (username === user.username) {
-        setPosts([data, ...posts]); // Prepend new post to the existing posts
-      }
+      showToast("Success", "Spool created successfully!", "success");
+      setPosts([data, ...posts]);
       closeModal();
       setPostText("");
       setImgUrl("");
@@ -70,78 +67,84 @@ const CreatePost = () => {
   };
 
   const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
+  const closeModal = () => {
+    setIsOpen(false);
+    setPostText("");
+    setImgUrl("");
+  };
 
   return (
     <>
-      {/* Create Post Button */}
+      {/* Floating Action Button */}
       <button
-        className="fixed bottom-7 right-7 flex items-center justify-center gap-2 px-2 py-2 md:px-5 md:py-2 text-ebony bg-gray-300 rounded-full hover:bg-zinc-100 dark:bg-softPurple dark:text-white dark:hover:bg-softPurple/90 focus:ring-8 focus:ring-zinc-300/50 dark:focus:ring-softPurple/50 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple"
+        className="fixed bottom-20 md:bottom-8 right-6 z-40 flex items-center justify-center gap-2 p-3.5 md:px-5 md:py-3 text-white bg-zinc-900 dark:bg-white dark:text-zinc-900 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
         onClick={openModal}
+        title="Create new spool"
       >
-        <IoAddOutline className="text-lg md:text-xl font-semibold" />
-        <span className="hidden md:block">Post</span>
+        <IoAddOutline className="text-xl font-bold" />
+        <span className="hidden md:inline text-sm font-bold">New Spool</span>
       </button>
 
-      {/* Modal */}
+      {/* Modern Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-ebony p-6 rounded-3xl shadow-xl w-full max-w-lg mx-4 sm:mx-0">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Create Post
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-2xl w-full max-w-lg border border-zinc-200 dark:border-zinc-800">
+            <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-zinc-800/80 mb-4">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-white">
+                New Spool
               </h2>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
               >
-                <AiOutlineClose size={20} />
+                <AiOutlineClose size={18} />
               </button>
             </div>
 
             {/* Form */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <textarea
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={handleTextChange}
-                className="w-full p-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full p-4 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-400 resize-none text-sm md:text-base border border-zinc-200 dark:border-zinc-700/80"
                 rows={4}
               />
 
-              {/* Remaining Characters */}
-              <p className="text-right text-xs text-gray-500 dark:text-gray-400">
-                {remainingChar}/{MAX_CHAR}
-              </p>
-
-              {/* Image Upload */}
-              <input
-                type="file"
-                ref={imageRef}
-                hidden
-                onChange={handleImageChange}
-              />
-              <div
-                className="flex items-center gap-2 text-xs md:text-base text-gray-500 dark:text-gray-300 cursor-pointer"
-                onClick={() => imageRef.current.click()}
-              >
-                <button className="flex items-center gap-2 px-4 py-2 w-42 text-white rounded-full bg-gradient-to-r from-electricBlue to-softPurple hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple">
-                  <BsFillImageFill className="text-sm md:text-base" />
-                  <span>Add an image</span>
-                </button>
+              <div className="flex items-center justify-between text-xs text-zinc-400">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={imageRef}
+                    hidden
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => imageRef.current.click()}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <BsImage size={15} />
+                    <span>Attach photo</span>
+                  </button>
+                </div>
+                <span>
+                  {remainingChar}/{MAX_CHAR}
+                </span>
               </div>
 
               {/* Image Preview */}
               {imgUrl && (
-                <div className="relative">
+                <div className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 max-h-64">
                   <img
                     src={imgUrl}
                     alt="Preview"
-                    className="w-full rounded-md"
+                    className="w-full h-auto object-cover max-h-64"
                   />
                   <button
                     onClick={() => setImgUrl("")}
-                    className="absolute top-2 right-2 text-white bg-gray-800 rounded-full p-1"
+                    className="absolute top-2 right-2 p-1.5 text-white bg-black/70 hover:bg-black rounded-full transition-colors"
                   >
                     <AiOutlineClose size={16} />
                   </button>
@@ -150,19 +153,21 @@ const CreatePost = () => {
             </div>
 
             {/* Footer Buttons */}
-            <div className="flex justify-end gap-4 mt-6">
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
               <button
-                className="px-4 py-2 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                className="px-4 py-2 text-sm font-semibold text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white transition-colors"
                 onClick={closeModal}
               >
                 Cancel
               </button>
               <button
-                className={`px-4 py-2 text-white rounded-full bg-gradient-to-r from-electricBlue to-softPurple hover:scale-105 shadow-xl transition-all duration-300 hover:shadow-electricBlue dark:hover:shadow-softPurple ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
+                className={`px-6 py-2 text-sm font-semibold rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-sm transition-all duration-200 ${
+                  loading || (!postText.trim() && !imgUrl)
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                 }`}
                 onClick={handleCreatePost}
-                disabled={loading}
+                disabled={loading || (!postText.trim() && !imgUrl)}
               >
                 {loading ? "Posting..." : "Post"}
               </button>
