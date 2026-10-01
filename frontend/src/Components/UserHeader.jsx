@@ -24,6 +24,10 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
   const [showShareModal, setShowShareModal] = useState(false);
 
   const handleShareProfile = async () => {
+    const hasProfilePicture = Boolean(user.profilePic);
+    const profileTitle = hasProfilePicture && user.name
+      ? `${user.name} (@${user.username}) • Spools`
+      : `@${user.username} • Spools`;
     const profileUrl = typeof window !== "undefined"
       ? `${window.location.origin}/${user.username}`
       : `https://spools.net/${user.username}`;
@@ -31,8 +35,10 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: `${user.name} (@${user.username}) • Spools`,
-          text: `Check out ${user.name}'s profile on Spools:`,
+          title: profileTitle,
+          text: hasProfilePicture && user.name
+            ? `Check out ${user.name}'s profile on Spools:`
+            : `Check out @${user.username} on Spools:`,
           url: profileUrl,
         });
         return;

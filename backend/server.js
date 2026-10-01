@@ -1,4 +1,5 @@
 import path from "path";
+import { readFile } from "node:fs/promises";
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -14,6 +15,8 @@ import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./socket/socket.js";
 import helmet from "helmet";
 import job from "./cron/cron.js";
+import User from "./models/userModel.js";
+import Post from "./models/postModel.js";
 
 dotenv.config();
 
@@ -22,6 +25,63 @@ job.start();
 
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
+const frontendIndexPath = path.join(__dirname, "frontend", "dist", "index.html");
+let frontendIndexHtml;
+
+const escapeHtml = (value = "") => String(value)
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
+
+const getSiteOrigin = (req) => {
+  const configuredOrigin = process.env.FRONTEND_URL?.trim();
+  if (configuredOrigin) return new URL(configuredOrigin).origin;
+  const protocol = req.get("x-forwarded-proto")?.split(",")[0] || req.protocol;
+  return `${protocol}://${req.get("host")}`;
+};
+
+const absoluteImageUrl = (image, origin) => {
+  if (!image || typeof image !== "string") return null;
+  try {
+    return new URL(image, origin).href;
+  } catch {
+    return null;
+  }
+};
+
+const renderSharePage = async (req, metadata) => {
+  frontendIndexHtml ||= await readFile(frontendIndexPath, "utf8");
+  const origin = getSiteOrigin(req);
+  const image = absoluteImageUrl(metadata.image, origin);
+  const pageUrl = new URL(req.originalUrl, origin).href;
+  const cardType = image ? "summary_large_image" : "summary";
+  const tags = [
+    `<title>${escapeHtml(metadata.title)}</title>`,
+    `<meta name="description" content="${escapeHtml(metadata.description)}" />`,
+    `<link rel="canonical" href="${escapeHtml(pageUrl)}" />`,
+    `<meta property="og:type" content="${escapeHtml(metadata.type || "website")}" />`,
+    `<meta property="og:site_name" content="Spools" />`,
+    `<meta property="og:title" content="${escapeHtml(metadata.title)}" />`,
+    `<meta property="og:description" content="${escapeHtml(metadata.description)}" />`,
+    `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`,
+    image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : "",
+    image ? `<meta property="og:image:alt" content="${escapeHtml(metadata.imageAlt || metadata.title)}" />` : "",
+    metadata.username ? `<meta property="profile:username" content="${escapeHtml(metadata.username)}" />` : "",
+    `<meta name="twitter:card" content="${cardType}" />`,
+    `<meta name="twitter:title" content="${escapeHtml(metadata.title)}" />`,
+    `<meta name="twitter:description" content="${escapeHtml(metadata.description)}" />`,
+    image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : "",
+  ].filter(Boolean).join("\n  ");
+
+  const html = frontendIndexHtml
+    .replace(/<title>[\s\S]*?<\/title>/i, "")
+    .replace(/\s*<meta\s+(?:name|property)=["'](?:description|og:[^"']+|twitter:[^"']+|profile:[^"']+)["'][^>]*\/?\s*>/gi, "")
+    .replace(/\s*<link\s+rel=["']canonical["'][^>]*\/?\s*>/gi, "")
+    .replace(/<\/head>/i, `  ${tags}\n</head>`);
+  return html;
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -80,7 +140,77 @@ app.use("/api/notifications", notificationRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "/frontend/dist")));
+  app.use(express.static(path.join(__dirname, "/frontend/dist"), { index: false }));
+
+  app.get("/", async (req, res, next) => {
+    try {
+      const html = await renderSharePage(req, {
+        title: "Spools — share ideas and conversations",
+        description: "A place to share ideas, stories, and conversations.",
+        image: "/pwa-512x512.png",
+        imageAlt: "Spools",
+      });
+      res.type("html").send(html);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/:username/post/:pid", async (req, res, next) => {
+    try {
+      const post = await Post.findById(req.params.pid)
+        .select("text img postedBy isFrozen")
+        .populate("postedBy", "name username profilePic isFrozen")
+        .lean();
+      const author = post?.postedBy;
+      if (!post || !author || author.isFrozen) return next();
+
+      const username = author.username || req.params.username;
+      const title = post.img || author.profilePic
+        ? `Spool by ${author.name || `@${username}`} (@${username}) · Spools`
+        : `Spool by @${username} · Spools`;
+      const description = String(post.text || `A Spool shared by @${username} on Spools.`).replace(/\s+/g, " ").trim().slice(0, 240);
+      const html = await renderSharePage(req, {
+        title,
+        description,
+        image: post.img || author.profilePic,
+        imageAlt: `Spool by @${username}`,
+        type: "article",
+        username,
+      });
+      res.type("html").send(html);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/:username", async (req, res, next) => {
+    try {
+      const profile = await User.findOne({ username: req.params.username })
+        .select("name username bio profilePic isFrozen")
+        .lean();
+      if (!profile || profile.isFrozen) return next();
+
+      const hasProfilePicture = Boolean(profile.profilePic);
+      const title = hasProfilePicture && profile.name
+        ? `${profile.name} (@${profile.username}) · Spools`
+        : `@${profile.username} · Spools`;
+      const description = hasProfilePicture && profile.bio?.trim()
+        ? profile.bio.trim().slice(0, 240)
+        : `View @${profile.username}'s profile on Spools.`;
+      const html = await renderSharePage(req, {
+        title,
+        description,
+        image: profile.profilePic,
+        imageAlt: `@${profile.username} on Spools`,
+        type: "profile",
+        username: profile.username,
+      });
+      res.type("html").send(html);
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // React app
   app.get("*", (req, res) => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -10,6 +10,7 @@ import Actions from "../Components/Actions";
 import Comment from "../Components/Comment";
 import { MdDeleteOutline } from "react-icons/md";
 import { IoSend } from "react-icons/io5";
+import { setShareMetadata } from "../utils/shareMetadata";
 
 const PostPage = () => {
   const { user, loading } = useGetUserProfile();
@@ -23,6 +24,30 @@ const PostPage = () => {
   const [isReplying, setIsReplying] = useState(false);
 
   const currentPost = posts[0];
+  const author = useMemo(
+    () => typeof currentPost?.postedBy === "object" && currentPost.postedBy !== null
+      ? currentPost.postedBy
+      : user || {},
+    [currentPost, user]
+  );
+
+  useEffect(() => {
+    if (!currentPost || !author.username) return;
+    const image = currentPost.img || author.profilePic || null;
+    const title = image && author.name
+      ? `Spool by ${author.name} (@${author.username}) · Spools`
+      : `Spool by @${author.username} · Spools`;
+    const description = String(currentPost.text || `A Spool shared by @${author.username} on Spools.`).replace(/\s+/g, " ").trim().slice(0, 240);
+    setShareMetadata({
+      title,
+      description,
+      url: `${window.location.origin}/${encodeURIComponent(author.username)}/post/${currentPost._id}`,
+      image,
+      imageAlt: `Spool by @${author.username}`,
+      type: "article",
+      username: author.username,
+    });
+  }, [currentPost, author]);
 
   useEffect(() => {
     const getPost = async () => {
@@ -95,11 +120,6 @@ const PostPage = () => {
       </div>
     );
   }
-
-  const author =
-    typeof currentPost.postedBy === "object" && currentPost.postedBy !== null
-      ? currentPost.postedBy
-      : user || {};
 
   return (
     <div className="max-w-2xl mx-auto py-4 px-2">

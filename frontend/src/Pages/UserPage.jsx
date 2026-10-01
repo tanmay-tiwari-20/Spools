@@ -7,6 +7,7 @@ import Post from "../Components/Post";
 import useGetUserProfile from "../hooks/useGetUserProfile";
 import { useRecoilState } from "recoil";
 import postsAtom from "../atoms/postsAtom";
+import { setShareMetadata } from "../utils/shareMetadata";
 
 const UserPage = () => {
 	const { user, loading } = useGetUserProfile();
@@ -15,6 +16,19 @@ const UserPage = () => {
 	const [posts, setPosts] = useRecoilState(postsAtom);
 	const [fetchingPosts, setFetchingPosts] = useState(true);
 	const [activeTab, setActiveTab] = useState("spools");
+
+	useEffect(() => {
+		if (!user || loading) return;
+		const hasProfilePicture = Boolean(user.profilePic);
+		setShareMetadata({
+			title: hasProfilePicture && user.name ? `${user.name} (@${user.username}) · Spools` : `@${user.username} · Spools`,
+			description: hasProfilePicture && user.bio?.trim() ? user.bio.trim().slice(0, 240) : `View @${user.username}'s profile on Spools.`,
+			url: `${window.location.origin}/${encodeURIComponent(user.username)}`,
+			image: user.profilePic || null,
+			type: "profile",
+			username: user.username,
+		});
+	}, [user, loading]);
 
 	useEffect(() => {
 		const getPosts = async () => {

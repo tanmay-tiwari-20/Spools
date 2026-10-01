@@ -11,7 +11,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Text,
   useDisclosure,
 } from "@chakra-ui/react";
 import { useState } from "react";
@@ -179,16 +178,18 @@ const Actions = ({ post }) => {
       typeof post.postedBy === "object"
         ? post.postedBy?.username
         : user?.username || "spools";
+    const authorName = typeof post.postedBy === "object" ? post.postedBy?.name : user?.name;
+    const hasPreviewImage = Boolean(post.img || (typeof post.postedBy === "object" ? post.postedBy?.profilePic : user?.profilePic));
     const postUrl = `${window.location.origin}/${authorUsername}/post/${post._id}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Spools",
+          title: hasPreviewImage && authorName ? `Spool by ${authorName} (@${authorUsername}) · Spools` : `Spool by @${authorUsername} · Spools`,
           text: post.text,
           url: postUrl,
         });
-      } catch (err) {
+      } catch {
         // cancelled
       }
     } else {
