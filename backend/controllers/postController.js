@@ -2,6 +2,7 @@ import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import Circle from "../models/circleModel.js";
+import { deliverUserNotification } from "../utils/webPush.js";
 
 const createPost = async (req, res) => {
   try {
@@ -120,6 +121,18 @@ const likeUnlikePost = async (req, res) => {
       // Like post
       post.likes.push(userId);
       await post.save();
+      if (post.postedBy.toString() !== userId.toString()) {
+        const owner = await User.findById(post.postedBy).select("username");
+        if (owner) {
+          void deliverUserNotification(owner._id, {
+            type: "like",
+            title: "New like",
+            body: `@${req.user.username} liked your spool.`,
+            url: `/${owner.username}/post/${post._id}`,
+            tag: `like-${post._id}-${userId}`,
+          });
+        }
+      }
       res.status(200).json({ message: "Post liked successfully" });
     }
   } catch (err) {
@@ -160,6 +173,19 @@ const replyToPost = async (req, res) => {
 
     post.replies.push(reply);
     await post.save();
+
+    if (post.postedBy.toString() !== userId.toString()) {
+      const owner = await User.findById(post.postedBy).select("username");
+      if (owner) {
+        void deliverUserNotification(owner._id, {
+          type: "reply",
+          title: "New reply",
+          body: `@${username}: ${text.slice(0, 120)}`,
+          url: `/${owner.username}/post/${post._id}`,
+          tag: `reply-${post._id}-${reply._id || Date.now()}`,
+        });
+      }
+    }
 
     res.status(200).json(reply);
   } catch (err) {

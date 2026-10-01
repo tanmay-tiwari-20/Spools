@@ -12,6 +12,7 @@ Spools is a full-stack social app built with the MERN stack. Share short posts, 
 - [Tech stack](#tech-stack)
 - [Run locally](#run-locally)
 - [Environment variables](#environment-variables)
+- [Push notifications](#push-notifications)
 - [Project structure](#project-structure)
 - [API overview](#api-overview)
 - [Production build](#production-build)
@@ -178,3 +179,10 @@ npm start
 ```
 
 In production mode, Express serves the built frontend from `frontend/dist` along with the API and Socket.IO server. Configure `FRONTEND_URL` for your deployed frontend origin and set the database, JWT, and Cloudinary values in the deployment environment.
+# Push notifications
+
+Spools can send web push notifications to subscribed devices, including while the PWA is closed. Push delivery requires HTTPS (localhost is allowed for development) and a VAPID key pair.
+
+Generate a pair with `node backend/utils/generateVapidKeys.js`. Add the printed `PUSH_VAPID_PUBLIC_KEY`, `PUSH_VAPID_PRIVATE_KEY`, and `PUSH_VAPID_SUBJECT` values to the backend environment. For local development, `node backend/utils/generateVapidKeys.js --write-local` adds missing settings to the ignored root `.env` file without printing the private key. Keep the private key secret and use the same pair for all running instances of an environment.
+
+After deployment, users can enable push for each device in **Settings → Notifications**. On iPhone and iPad, users need iOS/iPadOS 16.4 or newer and must open Spools from its Home Screen icon before granting permission. Notification sounds are controlled by the operating system; the in-app sound-effects preference controls sounds while Spools is open.

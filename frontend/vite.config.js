@@ -28,6 +28,13 @@ export default defineConfig({
 	plugins: [
 		react(),
 		VitePWA({
+			strategies: "injectManifest",
+			srcDir: "src",
+			filename: "sw.js",
+			injectManifest: {
+				globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+			},
+			devOptions: { enabled: true, type: "module" },
 			registerType: "autoUpdate",
 			includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-512x512.png"],
 			manifest: {

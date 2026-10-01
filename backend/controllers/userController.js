@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
+import { deliverUserNotification } from "../utils/webPush.js";
 
 const getUserProfile = async (req, res) => {
   // We will fetch user profile either with username or userId
@@ -171,6 +172,13 @@ const followUnFollowUser = async (req, res) => {
       // Follow user
       await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
       await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });
+      void deliverUserNotification(userToModify._id, {
+        type: "follow",
+        title: "New follower",
+        body: `@${currentUser.username} started following you.`,
+        url: `/${userToModify.username}`,
+        tag: `follow-${currentUser._id}`,
+      });
       res.status(200).json({ message: "User followed successfully" });
     }
   } catch (err) {

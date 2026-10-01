@@ -1,5 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import UserPage from "./Pages/UserPage";
 import PostPage from "./Pages/PostPage";
 import Header from "./Components/Header";
@@ -15,10 +15,12 @@ import SearchPage from "./Pages/SearchPage";
 import CirclesPage from "./Pages/CirclesPage";
 import SeriesPage from "./Pages/SeriesPage";
 import { useTheme } from "./context/ThemeContext";
+import NotificationManager from "./Components/NotificationManager";
 
 const App = () => {
   const { isDarkMode, toggleColorMode } = useTheme();
   const [user, setUser] = useRecoilState(userAtom);
+  const location = useLocation();
 
   // Listen for global unauthorized events (e.g., 401 on expired session)
   useEffect(() => {
@@ -71,8 +73,9 @@ const App = () => {
     <div
       className="w-full min-h-screen min-h-[100dvh] relative px-2 pt-2 pb-24 sm:px-3 md:pb-2 bg-white dark:bg-ebony transition-colors duration-300"
     >
-      <div className="w-full max-w-[1000px] mx-auto px-1 sm:px-2 md:px-0 text-ebony dark:text-white">
+      <div className={`w-full ${location.pathname === "/chat" ? "max-w-[1280px]" : "max-w-[1000px]"} mx-auto px-1 sm:px-2 md:px-0 text-ebony dark:text-white`}>
         <Header isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} />
+        {user && <NotificationManager />}
         <Routes>
           <Route
             path="/"

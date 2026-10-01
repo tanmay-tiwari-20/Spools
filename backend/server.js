@@ -9,6 +9,7 @@ import postRoutes from "./Routes/postRoutes.js";
 import messageRoutes from "./Routes/messageRoutes.js";
 import circleRoutes from "./Routes/circleRoutes.js";
 import seriesRoutes from "./Routes/seriesRoutes.js";
+import notificationRoutes from "./Routes/notificationRoutes.js";
 import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./socket/socket.js";
 import helmet from "helmet";
@@ -75,6 +76,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/circles", circleRoutes);
 app.use("/api/series", seriesRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === "production") {

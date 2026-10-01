@@ -2,6 +2,7 @@ import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
 import { getRecipientSocketId, io } from "../socket/socket.js";
 import { v2 as cloudinary } from "cloudinary";
+import { deliverUserNotification } from "../utils/webPush.js";
 
 async function sendMessage(req, res) {
   try {
@@ -60,6 +61,15 @@ async function sendMessage(req, res) {
     if (recipientSocketId) {
       io.to(recipientSocketId).emit("newMessage", newMessage);
     }
+
+    void deliverUserNotification(recipientId, {
+      type: "message",
+      title: `New message from @${req.user.username}`,
+      body: message?.trim() || "Sent you an image.",
+      senderId: String(senderId),
+      url: "/chat",
+      tag: `message-${conversation._id}`,
+    });
 
     // Send the response back to the client
     res.status(201).json(newMessage);

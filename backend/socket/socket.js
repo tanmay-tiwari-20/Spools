@@ -27,10 +27,13 @@ const io = new Server(server, {
 });
 
 const userSocketMap = {}; // userId: socketId
+const userVisibilityMap = {}; // userId: whether the app is visible and focused
 
 export const getRecipientSocketId = (recipientId) => {
   return userSocketMap[recipientId];
 };
+
+export const isUserActivelyViewing = (userId) => userVisibilityMap[String(userId)] === true;
 
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
@@ -38,8 +41,15 @@ io.on("connection", (socket) => {
   // Only add the user if a valid userId is provided
   if (userId && userId !== "undefined") {
     userSocketMap[userId] = socket.id;
+    userVisibilityMap[userId] = false;
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   }
+
+  socket.on("clientVisibility", (isVisible) => {
+    if (userId && userId !== "undefined" && userSocketMap[userId] === socket.id) {
+      userVisibilityMap[userId] = isVisible === true;
+    }
+  });
 
   // Mark messages as seen event
   socket.on("markMessagesAsSeen", async ({ conversationId }) => {
@@ -73,8 +83,11 @@ io.on("connection", (socket) => {
   // Handle user disconnection
   socket.on("disconnect", () => {
     if (userId && userId !== "undefined") {
-      delete userSocketMap[userId];
-      io.emit("getOnlineUsers", Object.keys(userSocketMap));
+      if (userSocketMap[userId] === socket.id) {
+        delete userSocketMap[userId];
+        delete userVisibilityMap[userId];
+        io.emit("getOnlineUsers", Object.keys(userSocketMap));
+      }
     }
   });
 });

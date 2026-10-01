@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
@@ -30,6 +30,7 @@ import {
 } from "react-icons/fi";
 import { BsMoonStars, BsSun } from "react-icons/bs";
 import ShareProfileModal from "../Components/ShareProfileModal";
+import PushNotificationControl from "../Components/PushNotificationControl";
 
 export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   const user = useRecoilValue(userAtom);
@@ -81,6 +82,20 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
       localStorage.setItem("spools-preferences", JSON.stringify(updated));
       return updated;
     });
+    if (["pauseNotifications", "notifyLikes", "notifyReplies", "notifyFollowers", "notifyMessages", "soundEffects"].includes(key)) {
+      fetch("/api/notifications/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: value }),
+      }).then(async (response) => {
+        if (!response.ok) {
+          const data = await response.json();
+          showToast("Sync failed", data.error || "This preference was only saved on this device.", "error");
+        }
+      }).catch(() => {
+        showToast("Sync failed", "This preference was only saved on this device.", "error");
+      });
+    }
     showToast("Preferences Updated", "Your settings have been saved", "success");
   };
 
@@ -503,6 +518,8 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
             </div>
           </div>
 
+          <PushNotificationControl />
+
           <div className="settings-toggle-list space-y-4 pt-1 divide-y divide-zinc-100 dark:divide-zinc-800/70">
             {/* Pause All */}
             <div className="flex items-center justify-between gap-4 pt-2">
@@ -758,7 +775,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
                   In-App Sound Effects
                 </p>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Play subtle audio feedback when liking or posting spools.
+                  Play in-app alert sounds. Device sounds for system notifications follow your device settings.
                 </p>
               </div>
               <button
@@ -1103,7 +1120,7 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
                     3. Safety first
                   </p>
                   <p>
-                    Protect personal private data. Never share someone else's confidential phone numbers, physical addresses, or credentials without consent.
+                    Protect personal private data. Never share someone else&apos;s confidential phone numbers, physical addresses, or credentials without consent.
                   </p>
                 </>
               )}

@@ -9,7 +9,6 @@ import {
 } from "../atoms/messagesAtom";
 import userAtom from "../atoms/userAtom";
 import { useSocket } from "../context/SocketContext.jsx";
-import messageSound from "../assets/sounds/message.mp3";
 import { Link } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 
@@ -21,39 +20,42 @@ const MessageContainer = () => {
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [messages, setMessages] = useState([]);
   const currentUser = useRecoilValue(userAtom);
-  const { socket } = useSocket();
+  const { socket, onlineUsers } = useSocket();
   const setConversations = useSetRecoilState(conversationsAtom);
   const messageEndRef = useRef(null);
+  const selectedConversationId = String(selectedConversation?._id || "");
 
   useEffect(() => {
     const handleNewMessage = (message) => {
-      if (selectedConversation._id === String(message.conversationId)) {
-        setMessages((prev) => [...prev, message]);
-      }
-
-      if (!document.hasFocus()) {
-        try {
-          const rawPrefs = localStorage.getItem("spools-preferences");
-          const prefs = rawPrefs ? JSON.parse(rawPrefs) : {};
-          const isMuted =
-            prefs.soundEffects === false ||
-            prefs.pauseNotifications === true ||
-            prefs.notifyMessages === false;
-
-          if (!isMuted) {
-            const sound = new Audio(messageSound);
-            sound.play();
-          }
-        } catch (e) {
-          // audio autoplay may be restricted
+      const conversationId = String(message.conversationId || "");
+      const isSelectedNewConversation = Boolean(
+        selectedConversation?.mock &&
+          String(message.sender) === String(selectedConversation.userId)
+      );
+      if (selectedConversationId === conversationId || isSelectedNewConversation) {
+        if (isSelectedNewConversation) {
+          setSelectedConversation((current) => ({
+            ...current,
+            _id: conversationId,
+            mock: false,
+          }));
         }
+        setMessages((prev) => prev.some((item) => String(item._id) === String(message._id))
+          ? prev
+          : [...prev, message]);
       }
 
       setConversations((prev) => {
         const updatedConversations = prev.map((conversation) => {
-          if (conversation._id === String(message.conversationId)) {
+          if (
+            String(conversation._id) === conversationId ||
+            (conversation?.mock && String(conversation?.participants?.[0]?._id) === String(message.sender))
+          ) {
             return {
               ...conversation,
+              _id: conversationId,
+              mock: false,
+              updatedAt: message.createdAt || new Date().toISOString(),
               lastMessage: {
                 text: message.text,
                 sender: message.sender,
@@ -63,26 +65,34 @@ const MessageContainer = () => {
           }
           return conversation;
         });
-        return updatedConversations;
+        return updatedConversations.sort((a, b) =>
+          new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+        );
       });
     };
     socket?.on("newMessage", handleNewMessage);
 
     return () => socket?.off("newMessage", handleNewMessage);
-  }, [socket, selectedConversation, setConversations]);
+  }, [socket, selectedConversationId, selectedConversation, setConversations, setSelectedConversation]);
 
   useEffect(() => {
     const hasUnseenIncomingMessages = messages.some(
       (message) => String(message.sender) !== String(currentUser?._id) && !message.seen
     );
-    if (!loadingMessages && hasUnseenIncomingMessages && selectedConversation._id) {
+    if (!loadingMessages && hasUnseenIncomingMessages && selectedConversationId) {
       socket?.emit("markMessagesAsSeen", {
-        conversationId: selectedConversation._id,
+        conversationId: selectedConversationId,
       });
+      setConversations((prev) => prev.map((conversation) =>
+        String(conversation._id) === selectedConversationId &&
+        String(conversation?.lastMessage?.sender) !== String(currentUser?._id)
+          ? { ...conversation, lastMessage: { ...conversation.lastMessage, seen: true } }
+          : conversation
+      ));
     }
 
     const handleMessagesSeen = ({ conversationId }) => {
-      if (String(selectedConversation._id) === String(conversationId)) {
+      if (selectedConversationId === String(conversationId)) {
         setMessages((prev) => {
           return prev.map((message) => {
             if (String(message.sender) === String(currentUser?._id) && !message.seen) {
@@ -99,35 +109,47 @@ const MessageContainer = () => {
     socket?.on("messagesSeen", handleMessagesSeen);
 
     return () => socket?.off("messagesSeen", handleMessagesSeen);
-  }, [socket, currentUser?._id, messages, loadingMessages, selectedConversation._id]);
+  }, [socket, currentUser?._id, messages, loadingMessages, selectedConversationId, setConversations]);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
+    const abortController = new AbortController();
     const getMessages = async () => {
       setLoadingMessages(true);
       setMessages([]);
       try {
         if (selectedConversation.mock) return;
-        const res = await fetch(`/api/messages/${selectedConversation.userId}`);
+        const res = await fetch(`/api/messages/${selectedConversation.userId}`, {
+          signal: abortController.signal,
+        });
         const data = await res.json();
+        if (abortController.signal.aborted) return;
         if (data.error || !Array.isArray(data)) {
           if (data.error) showToast("Error", data.error, "error");
           setMessages([]);
           return;
         }
-        setMessages(data);
+        setMessages((current) => {
+          const fetchedIds = new Set(data.map((message) => String(message._id)));
+          return [
+            ...data,
+            ...current.filter((message) => !fetchedIds.has(String(message._id))),
+          ];
+        });
       } catch (error) {
+        if (error.name === "AbortError") return;
         showToast("Error", error.message, "error");
         setMessages([]);
       } finally {
-        setLoadingMessages(false);
+        if (!abortController.signal.aborted) setLoadingMessages(false);
       }
     };
 
     getMessages();
+    return () => abortController.abort();
   }, [showToast, selectedConversation.userId, selectedConversation.mock]);
 
   return (
@@ -158,7 +180,9 @@ const MessageContainer = () => {
               </span>
               <img src="/verified.png" alt="Verified" className="w-3.5 h-3.5 inline" />
             </div>
-            <span className="text-xs text-zinc-400">View profile</span>
+            <span className="text-xs text-zinc-400">
+              {onlineUsers?.includes(selectedConversation.userId) ? "Active now" : "View profile"}
+            </span>
           </div>
         </Link>
       </div>
@@ -190,18 +214,14 @@ const MessageContainer = () => {
         )}
 
         {!loadingMessages &&
-          messages.map((message) => (
+          messages.map((message, index) => (
             <div
-              key={message._id || Math.random()}
-              ref={
-                messages.length - 1 === messages.indexOf(message)
-                  ? messageEndRef
-                  : null
-              }
+              key={message._id || `${message.createdAt}-${message.sender}`}
+              ref={index === messages.length - 1 ? messageEndRef : null}
             >
               <Message
                 message={message}
-                ownMessage={currentUser._id === message.sender}
+                ownMessage={String(currentUser?._id) === String(message.sender)}
               />
             </div>
           ))}

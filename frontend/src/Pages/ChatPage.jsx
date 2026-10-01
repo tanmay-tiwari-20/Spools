@@ -90,7 +90,7 @@ const ChatPage = () => {
 
       const conversationAlreadyExists = conversations.find(
         (conversation) =>
-          conversation?.participants?.[0]?._id === searchedUser?._id
+          String(conversation?.participants?.[0]?._id) === String(searchedUser?._id)
       );
 
       if (conversationAlreadyExists) {
@@ -135,10 +135,10 @@ const ChatPage = () => {
   const isConversationActive = Boolean(selectedConversation?._id);
 
   return (
-    <div className="w-full min-w-0 bg-white dark:bg-zinc-900/60 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-2.5 sm:p-4 shadow-sm h-[calc(100dvh-176px)] min-h-[360px] max-h-[900px] flex gap-2 sm:gap-4 overflow-hidden mb-8">
+    <div className="w-full min-w-0 bg-white dark:bg-zinc-900/60 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-2.5 sm:p-4 shadow-sm h-[calc(100dvh-220px)] min-h-[360px] max-h-[900px] md:h-[calc(100dvh-150px)] md:min-h-[520px] flex gap-2 sm:gap-4 overflow-hidden mb-8">
       {/* Conversation List */}
       <div
-        className={`flex flex-col gap-3 min-w-0 w-full md:w-1/3 border-r border-zinc-100 dark:border-zinc-800/80 pr-0 md:pr-3 h-full overflow-hidden ${
+        className={`flex flex-col gap-3 min-w-0 w-full md:w-[320px] lg:w-[360px] md:flex-shrink-0 border-r border-zinc-100 dark:border-zinc-800/80 pr-0 md:pr-3 h-full overflow-hidden ${
           isConversationActive ? "hidden md:flex" : "flex"
         }`}
       >
@@ -155,7 +155,8 @@ const ChatPage = () => {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Search user to chat..."
+              placeholder="Find someone by username"
+              aria-label="Find someone by username"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-full focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:text-zinc-100 placeholder-zinc-400"
@@ -204,15 +205,17 @@ const ChatPage = () => {
           )}
 
           {!loadingConversations &&
-            conversations.map((conversation) => (
-              <Conversation
-                key={conversation?._id}
-                isOnline={onlineUsers?.includes(
-                  conversation?.participants?.[0]?._id
-                )}
-                conversation={conversation}
-              />
-            ))}
+            [...conversations]
+              .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+              .map((conversation) => (
+                <Conversation
+                  key={conversation?._id}
+                  isOnline={onlineUsers?.includes(
+                    conversation?.participants?.[0]?._id
+                  )}
+                  conversation={conversation}
+                />
+              ))}
         </div>
       </div>
 

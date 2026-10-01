@@ -41,6 +41,14 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    notificationPreferences: {
+      pauseNotifications: { type: Boolean, default: false },
+      notifyLikes: { type: Boolean, default: true },
+      notifyReplies: { type: Boolean, default: true },
+      notifyFollowers: { type: Boolean, default: true },
+      notifyMessages: { type: Boolean, default: true },
+      soundEffects: { type: Boolean, default: true },
+    },
     savedPosts: [
       {
         type: mongoose.Schema.Types.ObjectId,
