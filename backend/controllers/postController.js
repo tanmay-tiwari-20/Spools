@@ -41,10 +41,14 @@ const createPost = async (req, res) => {
     }
 
     if (circleId) {
-      const circle = await Circle.findById(circleId);
+      const circle = await Circle.findById(circleId).select("creator members restrictedMembers");
       if (!circle) return res.status(404).json({ error: "Circle not found" });
       if (!circle.members.some((member) => member.toString() === req.user._id.toString())) {
         return res.status(403).json({ error: "Join this circle before posting" });
+      }
+      const isCreator = circle.creator.toString() === req.user._id.toString();
+      if (!isCreator && circle.restrictedMembers.some((member) => member.toString() === req.user._id.toString())) {
+        return res.status(403).json({ error: "The circle creator has paused your posting access" });
       }
     }
 

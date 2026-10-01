@@ -5,6 +5,7 @@ const spoolSeriesSchema = new mongoose.Schema({
   description: { type: String, trim: true, maxlength: 240, default: "" },
   creator: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  restrictedContributors: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   parts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 }, { timestamps: true });
 
