@@ -160,10 +160,10 @@ if (process.env.NODE_ENV === "production") {
     try {
       const post = await Post.findById(req.params.pid)
         .select("text img postedBy isFrozen")
-        .populate("postedBy", "name username profilePic isFrozen")
+        .populate("postedBy", "name username profilePic isFrozen isPrivate")
         .lean();
       const author = post?.postedBy;
-      if (!post || !author || author.isFrozen) return next();
+      if (!post || !author || author.isFrozen || author.isPrivate) return next();
 
       const username = author.username || req.params.username;
       const title = post.img || author.profilePic

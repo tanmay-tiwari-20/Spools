@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import useFollowUnfollow from "../hooks/useFollowUnfollow";
 
 const SuggestedUser = ({ user }) => {
-  const { handleFollowUnfollow, following, updating } = useFollowUnfollow(user);
+  const { handleFollowUnfollow, following, requestPending, updating } = useFollowUnfollow(user);
 
   return (
     <div className="flex items-center justify-between gap-3 p-2.5 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
@@ -26,7 +26,7 @@ const SuggestedUser = ({ user }) => {
         onClick={handleFollowUnfollow}
         disabled={updating}
         className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 active:scale-95 flex-shrink-0 ${
-          following
+          following || requestPending
             ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200"
             : "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:opacity-90 shadow-sm"
         }`}
@@ -35,6 +35,10 @@ const SuggestedUser = ({ user }) => {
           <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
         ) : following ? (
           "Following"
+        ) : requestPending ? (
+          "Requested"
+        ) : user.isPrivate ? (
+          "Request"
         ) : (
           "Follow"
         )}

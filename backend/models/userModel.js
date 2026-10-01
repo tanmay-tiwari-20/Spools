@@ -41,6 +41,14 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isPrivate: {
+      type: Boolean,
+      default: false,
+    },
+    followRequests: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    }],
     notificationPreferences: {
       pauseNotifications: { type: Boolean, default: false },
       notifyLikes: { type: Boolean, default: true },

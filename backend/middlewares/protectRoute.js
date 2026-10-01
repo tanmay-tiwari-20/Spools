@@ -36,4 +36,17 @@ const protectRoute = async (req, res, next) => {
   }
 };
 
+export const optionalAuth = async (req, _res, next) => {
+  try {
+    const token = req.cookies?.jwt;
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.userId).select("_id username");
+    }
+  } catch {
+    req.user = null;
+  }
+  next();
+};
+
 export default protectRoute;

@@ -8,6 +8,13 @@ import postsAtom from "../atoms/postsAtom";
 import Actions from "./Actions";
 import { MdDeleteOutline } from "react-icons/md";
 import { motion } from "framer-motion";
+import { FiAtSign, FiGlobe, FiUsers } from "react-icons/fi";
+
+const replyPermissionDetails = {
+  everyone: { label: "Everyone can reply", Icon: FiGlobe },
+  followers: { label: "Followers can reply", Icon: FiUsers },
+  mentioned: { label: "Mentioned people can reply", Icon: FiAtSign },
+};
 
 const Post = ({ post, postedBy }) => {
   const initialAuthor =
@@ -35,7 +42,7 @@ const Post = ({ post, postedBy }) => {
         const data = await res.json();
         if (data.error) return;
         setUser(data);
-      } catch (error) {
+      } catch {
         setUser(null);
       }
     };
@@ -64,13 +71,15 @@ const Post = ({ post, postedBy }) => {
   };
 
   if (!user) return null;
+  const replyPermission = replyPermissionDetails[post.replyPermission] || replyPermissionDetails.everyone;
+  const ReplyIcon = replyPermission.Icon;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="group relative p-3 md:p-4 rounded-2xl hover:bg-zinc-50/70 dark:hover:bg-zinc-900/40 transition-all duration-200 border-b border-zinc-100 dark:border-zinc-800/80 mb-1"
+      className="group relative mb-3 rounded-2xl border border-zinc-200/80 bg-white p-3.5 shadow-sm transition-all duration-200 hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-zinc-700 sm:p-4"
     >
       <div className="flex gap-3">
         {/* Left Column: Avatar & Thread Line */}
@@ -137,7 +146,8 @@ const Post = ({ post, postedBy }) => {
             {currentUser?._id === user._id && (
               <button
                 onClick={handleDeletePost}
-                className="p-1 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all opacity-0 group-hover:opacity-100"
+                aria-label="Delete post"
+                className="ml-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 dark:hover:bg-red-950/30 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                 title="Delete post"
               >
                 <MdDeleteOutline size={18} />
@@ -145,13 +155,13 @@ const Post = ({ post, postedBy }) => {
             )}
           </div>
 
+          <div className="mb-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-2.5 py-1 text-[10px] font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-400">
+            <ReplyIcon size={12} aria-hidden="true" />
+            <span>{replyPermission.label}</span>
+          </div>
+
           {/* Post Text */}
           <Link to={`/${user.username}/post/${post?._id}`} className="block">
-            {post.replyPermission && post.replyPermission !== "everyone" && (
-              <span className="inline-flex mb-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                {post.replyPermission === "followers" ? "Followers can reply" : "Mentioned people can reply"}
-              </span>
-            )}
             <p className="break-words text-sm md:text-base text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed mb-2">
               {post.text}
             </p>

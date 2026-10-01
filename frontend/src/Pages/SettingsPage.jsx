@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import { useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
 import useLogout from "../hooks/useLogout";
@@ -33,7 +33,7 @@ import ShareProfileModal from "../Components/ShareProfileModal";
 import PushNotificationControl from "../Components/PushNotificationControl";
 
 export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
-  const user = useRecoilValue(userAtom);
+  const [user, setUser] = useRecoilState(userAtom);
   const showToast = useShowToast();
   const logout = useLogout();
   const navigate = useNavigate();
@@ -46,15 +46,9 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
 
   // Local interactive preferences stored in localStorage
   const [preferences, setPreferences] = useState(() => {
-    try {
-      const saved = localStorage.getItem("spools-preferences");
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
-    return {
-      isPrivate: false,
-      replyPermission: "everyone", // 'everyone' | 'following' | 'mentioned'
+    const defaults = {
+      isPrivate: user?.isPrivate ?? false,
+      replyPermission: "everyone",
       sensitiveContentShield: false,
       searchEngineIndexing: true,
       pauseNotifications: false,
@@ -66,17 +60,58 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
       dataSaver: false,
       soundEffects: true,
     };
+    try {
+      const saved = localStorage.getItem("spools-preferences");
+      if (saved) {
+        const stored = JSON.parse(saved);
+        return { ...defaults, ...stored, isPrivate: user?.isPrivate ?? stored.isPrivate ?? false };
+      }
+    } catch {
+      // fallback
+    }
+    return defaults;
   });
 
   const [freezing, setFreezing] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [activeModalContent, setActiveModalContent] = useState(null); // 'terms' | 'privacy' | 'guidelines'
 
+  useEffect(() => {
+    if (!user?._id || typeof user.isPrivate !== "boolean") return;
+    setPreferences((previous) => ({ ...previous, isPrivate: user.isPrivate }));
+  }, [user?._id, user?.isPrivate]);
+
   // Persist preferences
   const updatePreference = (key, value) => {
+    if (key === "isPrivate") {
+      if (savingPrivacy) return;
+      setSavingPrivacy(true);
+      fetch("/api/users/privacy", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPrivate: value }),
+      }).then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.error) throw new Error(data.error || "Could not update profile privacy.");
+        const updatedUser = user ? { ...user, isPrivate: data.isPrivate, pendingFollowRequestsCount: data.pendingFollowRequestsCount } : user;
+        if (updatedUser) localStorage.setItem("user-spools", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        setPreferences((previous) => {
+          const updated = { ...previous, isPrivate: data.isPrivate };
+          localStorage.setItem("spools-preferences", JSON.stringify(updated));
+          return updated;
+        });
+        showToast("Privacy updated", data.isPrivate ? "Your profile is now private." : "Your profile is now public.", "success");
+      }).catch((error) => {
+        showToast("Could not update privacy", error.message, "error");
+      }).finally(() => setSavingPrivacy(false));
+      return;
+    }
+
     setPreferences((prev) => {
       const updated = { ...prev, [key]: value };
       localStorage.setItem("spools-preferences", JSON.stringify(updated));
@@ -389,25 +424,29 @@ export const SettingsPage = ({ isDarkMode: propIsDark, toggleColorMode: propTogg
                   Private Profile
                 </p>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-md">
-                  When enabled, only people you approve can see your spools, replies, and followers.
+                  When enabled, only approved followers can see your spools, replies, and follower/following lists.
                 </p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={preferences.isPrivate}
-                aria-label="Private profile"
-                onClick={() => updatePreference("isPrivate", !preferences.isPrivate)}
-                className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
-                  preferences.isPrivate ? "bg-zinc-900 dark:bg-white" : "bg-zinc-300 dark:bg-zinc-700"
-                }`}
-              >
-                <div
-                  className={`bg-white dark:bg-zinc-900 w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
-                    preferences.isPrivate ? "translate-x-6" : "translate-x-0"
+              <div className="flex shrink-0 items-center gap-3">
+                <span className={`text-xs font-bold ${preferences.isPrivate ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"}`}>{preferences.isPrivate ? "Private" : "Public"}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={preferences.isPrivate}
+                  aria-label="Private profile"
+                  onClick={() => updatePreference("isPrivate", !preferences.isPrivate)}
+                  disabled={savingPrivacy}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 disabled:opacity-60 ${
+                    preferences.isPrivate ? "bg-zinc-900 dark:bg-white" : "bg-zinc-300 dark:bg-zinc-700"
                   }`}
-                />
-              </button>
+                >
+                  <div
+                    className={`bg-white dark:bg-zinc-900 w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+                      preferences.isPrivate ? "translate-x-6" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             {/* Who Can Reply */}

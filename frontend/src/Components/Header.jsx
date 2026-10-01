@@ -27,7 +27,7 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   return (
     <>
       {/* Top Glass Header */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-ebony/80 border-b border-zinc-200/60 dark:border-zinc-800/60 transition-colors duration-300 py-2.5 sm:py-3 px-2.5 sm:px-4 mb-4 rounded-b-2xl">
+      <header className="relative z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-ebony/80 border-b border-zinc-200/60 dark:border-zinc-800/60 transition-colors duration-300 py-2.5 sm:py-3 px-2.5 sm:px-4 mb-4 rounded-b-2xl">
         <div className="flex items-center justify-between max-w-5xl mx-auto">
           {/* Left: Brand Logo (Toggles theme on click) & Home Link */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">

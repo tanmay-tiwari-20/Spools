@@ -5,23 +5,33 @@ import {
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { Link, Link as RouterLink } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useShowToast from "../hooks/useShowToast";
 import { motion } from "framer-motion";
 import { MdOutlineSettings } from "react-icons/md";
-import { FiShare2 } from "react-icons/fi";
+import { FiLock, FiShare2 } from "react-icons/fi";
 import ShareProfileModal from "./ShareProfileModal";
+import FollowPeopleModal from "./FollowPeopleModal";
 
 const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
   const showToast = useShowToast();
   const currentUser = useRecoilValue(userAtom); // logged in user
-  const [following, setFollowing] = useState(
-    Array.isArray(user?.followers) && currentUser?._id
-      ? user.followers.includes(currentUser._id)
-      : false
-  );
+  const [following, setFollowing] = useState(Boolean(user?.isFollowing));
+  const [requestPending, setRequestPending] = useState(Boolean(user?.followRequestPending));
+  const [followersCount, setFollowersCount] = useState(user?.followersCount ?? user?.followers?.length ?? 0);
+  const [followingCount, setFollowingCount] = useState(user?.followingCount ?? user?.following?.length ?? 0);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(user?.pendingFollowRequestsCount || 0);
   const [updating, setUpdating] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [peopleList, setPeopleList] = useState(null);
+
+  useEffect(() => {
+    setFollowing(Boolean(user?.isFollowing));
+    setRequestPending(Boolean(user?.followRequestPending));
+    setFollowersCount(user?.followersCount ?? user?.followers?.length ?? 0);
+    setFollowingCount(user?.followingCount ?? user?.following?.length ?? 0);
+    setPendingRequestsCount(user?.pendingFollowRequestsCount || 0);
+  }, [user?._id, user?.isFollowing, user?.followRequestPending, user?.followersCount, user?.followingCount, user?.followers?.length, user?.following?.length, user?.pendingFollowRequestsCount]);
 
   const handleShareProfile = async () => {
     const hasProfilePicture = Boolean(user.profilePic);
@@ -75,21 +85,13 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
         showToast("Error", data.error, "error");
         return;
       }
-
-      if (following) {
-        showToast("Success", `Unfollowed ${user.name}`, "success");
-        if (Array.isArray(user.followers)) {
-          user.followers = user.followers.filter(
-            (id) => id !== currentUser?._id
-          );
-        }
-      } else {
-        showToast("Success", `Followed ${user.name}`, "success");
-        if (Array.isArray(user.followers)) {
-          user.followers.push(currentUser?._id);
-        }
-      }
-      setFollowing(!following);
+      const nextFollowing = data.status === "following";
+      const nextRequested = data.status === "requested";
+      if (nextFollowing && !following) setFollowersCount((count) => count + 1);
+      if (!nextFollowing && following) setFollowersCount((count) => Math.max(0, count - 1));
+      setFollowing(nextFollowing);
+      setRequestPending(nextRequested);
+      showToast("Success", data.message || (nextRequested ? "Follow request sent" : nextFollowing ? `Followed ${user.name}` : `Unfollowed ${user.name}`), "success");
     } catch (error) {
       showToast("Error", error.message, "error");
     } finally {
@@ -110,6 +112,7 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
             <p className="rounded-full select-none px-2 py-1 text-xs bg-gray-300 dark:bg-softPurple text-gray-700 dark:text-gray-200 font-semibold">
               spools.net
             </p>
+            {user.isPrivate && <p className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"><FiLock size={11} /> Private</p>}
           </div>
         </div>
         <Box>
@@ -154,6 +157,10 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
               <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : following ? (
               "Unfollow"
+            ) : requestPending ? (
+              "Cancel request"
+            ) : user.isPrivate ? (
+              "Request to follow"
             ) : (
               "Follow"
             )}
@@ -170,15 +177,13 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
       )}
 
       {/* Followers and action link section */}
-      <div className="flex justify-between w-full mt-2 items-center gap-2">
+      <div className="flex flex-wrap justify-between w-full mt-2 items-center gap-2">
         <div className="gap-1.5 sm:gap-2 flex flex-wrap items-center min-w-0">
-          <p className="text-sm text-gray-600 dark:text-gray-300 font-semibold">
-            {user.followers.length} followers
-          </p>
-          <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 font-semibold">
-            {user.following.length} following
-          </p>
+          <button type="button" disabled={!user.canViewContent} onClick={() => setPeopleList("followers")} className="text-sm text-gray-600 dark:text-gray-300 font-semibold hover:text-zinc-950 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-60">{followersCount} followers</button>
+          <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full" />
+          <button type="button" disabled={!user.canViewContent} onClick={() => setPeopleList("following")} className="text-sm text-gray-600 dark:text-gray-300 font-semibold hover:text-zinc-950 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-60">{followingCount} following</button>
+          {!user.canViewContent && <span className="text-[11px] text-zinc-400">Lists are private</span>}
+          {currentUser?._id === user._id && user.isPrivate && pendingRequestsCount > 0 && <button type="button" onClick={() => setPeopleList("requests")} className="ml-1 rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-950/70 dark:text-indigo-200 dark:hover:bg-indigo-900">{pendingRequestsCount} follow {pendingRequestsCount === 1 ? "request" : "requests"}</button>}
         </div>
         <div className="flex items-center gap-2">
           {/* Share Profile button */}
@@ -261,6 +266,16 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         user={user}
+      />
+      <FollowPeopleModal
+        isOpen={Boolean(peopleList)}
+        onClose={() => setPeopleList(null)}
+        user={user}
+        type={peopleList}
+        onRequestResolved={(approved) => {
+          setPendingRequestsCount((count) => Math.max(0, count - 1));
+          if (approved) setFollowersCount((count) => count + 1);
+        }}
       />
     </VStack>
   );

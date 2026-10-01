@@ -12,15 +12,15 @@ import {
   getSavedPosts,
   repostPost,
 } from "../controllers/postController.js";
-import protectRoute from "../middlewares/protectRoute.js";
+import protectRoute, { optionalAuth } from "../middlewares/protectRoute.js";
 
 const router = express.Router();
 
 router.get("/feed", protectRoute, getFeedPosts);
 router.get("/saved", protectRoute, getSavedPosts);
-router.get("/user/:username", getUserPosts);
-router.get("/replies/:username", getUserReplies);
-router.get("/:id", getPost);
+router.get("/user/:username", optionalAuth, getUserPosts);
+router.get("/replies/:username", optionalAuth, getUserReplies);
+router.get("/:id", optionalAuth, getPost);
 router.post("/create", protectRoute, createPost);
 router.delete("/:id", protectRoute, deletePost);
 router.put("/like/:id", protectRoute, likeUnlikePost);

@@ -6,6 +6,7 @@ import userAtom from "../atoms/userAtom";
 import { useRecoilValue, useRecoilState } from "recoil";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
+import ReplyPermissionPicker from "./ReplyPermissionPicker";
 
 const MAX_CHAR = 500;
 
@@ -96,8 +97,8 @@ const CreatePostInline = () => {
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 mt-2">
-            <div className="flex items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-2 dark:border-zinc-800/80">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
               <input
                 type="file"
                 ref={imageRef}
@@ -125,12 +126,7 @@ const CreatePostInline = () => {
                   {remainingChar}
                 </span>
               )}
-              <select aria-label="Who can reply" value={replyPermission} onChange={(e) => setReplyPermission(e.target.value)}
-                className="max-w-[140px] bg-transparent text-xs text-zinc-500 dark:text-zinc-400 focus:outline-none">
-                <option value="everyone">Everyone can reply</option>
-                <option value="followers">Followers only</option>
-                <option value="mentioned">Mentioned only</option>
-              </select>
+              <ReplyPermissionPicker value={replyPermission} onChange={setReplyPermission} />
             </div>
 
             <button

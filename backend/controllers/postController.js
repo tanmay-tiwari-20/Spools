@@ -3,6 +3,7 @@ import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import Circle from "../models/circleModel.js";
 import { deliverUserNotification } from "../utils/webPush.js";
+import { canViewPost, canViewPrivateProfile } from "../utils/profilePrivacy.js";
 
 const createPost = async (req, res) => {
   try {
@@ -67,14 +68,23 @@ const getPost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).populate(
       "postedBy",
-      "name username profilePic isFrozen"
+      "name username profilePic isFrozen isPrivate followers"
     );
 
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    res.status(200).json(post);
+    if (!canViewPrivateProfile(post.postedBy, req.user?._id)) {
+      return res.status(403).json({ error: "This spool belongs to a private profile." });
+    }
+
+    const postData = post.toObject();
+    if (postData.postedBy) {
+      delete postData.postedBy.followers;
+      delete postData.postedBy.isPrivate;
+    }
+    res.status(200).json(postData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -114,6 +124,7 @@ const likeUnlikePost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
+    if (!await canViewPost(post, userId)) return res.status(403).json({ error: "This spool belongs to a private profile." });
 
     const userLikedPost = post.likes.includes(userId);
 
@@ -160,6 +171,7 @@ const replyToPost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
+    if (!await canViewPost(post, userId)) return res.status(403).json({ error: "This spool belongs to a private profile." });
 
     if (post.postedBy.toString() !== userId.toString()) {
       const mentionsUser = [...(post.text || "").matchAll(/(^|\s)@([\w.-]+)/g)].some((match) => match[2].toLowerCase() === username.toLowerCase());
@@ -207,8 +219,11 @@ const getFeedPosts = async (req, res) => {
 
     const following = (user.following || []).map((id) => id.toString());
     const feedType = req.query.type === "explore" ? "explore" : "following";
+    const hiddenPrivateAuthors = feedType === "explore"
+      ? await User.find({ isPrivate: true, _id: { $ne: userId }, followers: { $ne: userId.toString() } }).distinct("_id")
+      : [];
     const authorFilter = feedType === "explore"
-      ? { $nin: [...following, userId.toString()] }
+      ? { $nin: [...following, userId.toString(), ...hiddenPrivateAuthors] }
       : { $in: [...following, userId] };
     const feedPosts = await Post.find({ postedBy: authorFilter })
       .populate("postedBy", "name username profilePic isFrozen")
@@ -227,6 +242,7 @@ const getUserPosts = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    if (!canViewPrivateProfile(user, req.user?._id)) return res.status(403).json({ error: "This profile is private. Request to follow to see their spools." });
 
     const posts = await Post.find({ postedBy: user._id })
       .populate("postedBy", "name username profilePic isFrozen")
@@ -245,6 +261,7 @@ const getUserReplies = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    if (!canViewPrivateProfile(user, req.user?._id)) return res.status(403).json({ error: "This profile is private. Request to follow to see their replies." });
 
     const posts = await Post.find({ "replies.userId": user._id })
       .populate("postedBy", "name username profilePic isFrozen")
@@ -265,6 +282,12 @@ const saveUnsavePost = async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const isSaved = user.savedPosts?.some((p) => p.toString() === postId);
+
+    if (!isSaved) {
+      const post = await Post.findById(postId);
+      if (!post) return res.status(404).json({ error: "Post not found" });
+      if (!await canViewPost(post, req.user._id)) return res.status(403).json({ error: "This spool belongs to a private profile." });
+    }
 
     if (isSaved) {
       await User.findByIdAndUpdate(userId, { $pull: { savedPosts: postId } });
@@ -291,7 +314,11 @@ const getSavedPosts = async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const savedPosts = (user.savedPosts || []).filter(Boolean).reverse();
-    res.status(200).json(savedPosts);
+    const visiblePosts = [];
+    for (const post of savedPosts) {
+      if (await canViewPost(post, req.user._id)) visiblePosts.push(post);
+    }
+    res.status(200).json(visiblePosts);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -304,6 +331,7 @@ const repostPost = async (req, res) => {
 
     const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ error: "Post not found" });
+    if (!await canViewPost(post, userId)) return res.status(403).json({ error: "This spool belongs to a private profile." });
 
     const isReposted = post.reposts?.some(
       (id) => id.toString() === userId.toString()

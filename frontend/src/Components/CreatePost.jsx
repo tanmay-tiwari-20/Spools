@@ -7,6 +7,7 @@ import { useRecoilValue, useRecoilState } from "recoil";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
 import { IoAddOutline } from "react-icons/io5";
+import ReplyPermissionPicker from "./ReplyPermissionPicker";
 
 const MAX_CHAR = 500;
 
@@ -114,15 +115,13 @@ const CreatePost = () => {
                 rows={4}
               />
 
-              <label className="flex items-center justify-between gap-3 text-sm text-zinc-600 dark:text-zinc-300">
-                <span>Who can reply?</span>
-                <select value={replyPermission} onChange={(e) => setReplyPermission(e.target.value)}
-                  className="max-w-[190px] rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs focus:outline-none">
-                  <option value="everyone">Everyone</option>
-                  <option value="followers">Followers</option>
-                  <option value="mentioned">People mentioned</option>
-                </select>
-              </label>
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-800/40">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-100">Who can reply?</p>
+                  <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">Choose who can join in</p>
+                </div>
+                <ReplyPermissionPicker value={replyPermission} onChange={setReplyPermission} className="shrink-0" />
+              </div>
 
               <div className="flex items-center justify-between text-xs text-zinc-400">
                 <div className="flex items-center gap-2">

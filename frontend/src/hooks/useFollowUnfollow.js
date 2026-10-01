@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useShowToast from "./useShowToast";
 import userAtom from "../atoms/userAtom";
 import { useRecoilValue } from "recoil";
 
 const useFollowUnfollow = (user) => {
   const currentUser = useRecoilValue(userAtom);
-  const [following, setFollowing] = useState(
-    user.followers.includes(currentUser?._id)
-  );
+  const [following, setFollowing] = useState(Boolean(user.isFollowing));
+  const [requestPending, setRequestPending] = useState(Boolean(user.followRequestPending));
   const [updating, setUpdating] = useState(false);
   const showToast = useShowToast();
+
+  useEffect(() => {
+    setFollowing(Boolean(user.isFollowing));
+    setRequestPending(Boolean(user.followRequestPending));
+  }, [user._id, user.isFollowing, user.followRequestPending]);
 
   const handleFollowUnfollow = async () => {
     if (!currentUser) {
@@ -32,16 +36,9 @@ const useFollowUnfollow = (user) => {
         return;
       }
 
-      if (following) {
-        showToast("Success", `Unfollowed ${user.name}`, "success");
-        user.followers.pop(); // simulate removing from followers
-      } else {
-        showToast("Success", `Followed ${user.name}`, "success");
-        user.followers.push(currentUser?._id); // simulate adding to followers
-      }
-      setFollowing(!following);
-
-      console.log(data);
+      setFollowing(data.status === "following");
+      setRequestPending(data.status === "requested");
+      showToast("Success", data.message || "Your follow preference was updated.", "success");
     } catch (error) {
       showToast("Error", error, "error");
     } finally {
@@ -49,7 +46,7 @@ const useFollowUnfollow = (user) => {
     }
   };
 
-  return { handleFollowUnfollow, updating, following };
+  return { handleFollowUnfollow, updating, following, requestPending };
 };
 
 export default useFollowUnfollow;

@@ -202,11 +202,12 @@ const Actions = ({ post }) => {
 
   return (
     <Flex flexDirection="column" width="100%">
-      <Flex gap={4} my={2} alignItems="center" onClick={(e) => e.preventDefault()}>
+      <Flex gap={{ base: 2, sm: 3 }} my={2} alignItems="center" onClick={(e) => e.preventDefault()}>
         {/* Like */}
         <motion.button
           onClick={handleLikeAndUnlike}
-          className="text-zinc-600 dark:text-zinc-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+          aria-label={liked ? "Unlike spool" : "Like spool"}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-zinc-300 dark:hover:bg-red-950/30 dark:hover:text-red-400"
           whileTap={{ scale: 0.8 }}
           animate={{ scale: liked ? 1.15 : 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -231,7 +232,8 @@ const Actions = ({ post }) => {
         {/* Comment */}
         <button
           onClick={onOpen}
-          className="text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
+          aria-label="Reply to spool"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"
         >
           <svg
             aria-label="Comment"
@@ -255,10 +257,9 @@ const Actions = ({ post }) => {
         <motion.button
           onClick={handleRepost}
           whileTap={{ scale: 0.85 }}
-          className={`transition-colors ${
-            reposted
-              ? "text-emerald-500"
-              : "text-zinc-600 dark:text-zinc-300 hover:text-emerald-500"
+          aria-label={reposted ? "Undo repost" : "Repost spool"}
+          className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 ${
+            reposted ? "text-emerald-500" : "text-zinc-600 hover:text-emerald-500 dark:text-zinc-300"
           }`}
           title="Repost"
         >
@@ -269,7 +270,8 @@ const Actions = ({ post }) => {
         <motion.button
           onClick={handleBookmark}
           whileTap={{ scale: 0.85 }}
-          className={`transition-colors ${
+          aria-label={isSaved ? "Remove saved spool" : "Save spool"}
+          className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-indigo-50 dark:hover:bg-indigo-950/30 ${
             isSaved
               ? "text-indigo-500 dark:text-indigo-400"
               : "text-zinc-600 dark:text-zinc-300 hover:text-indigo-500"
@@ -282,7 +284,8 @@ const Actions = ({ post }) => {
         {/* Share */}
         <button
           onClick={handleShare}
-          className="text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
+          aria-label="Share spool"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"
           title="Share"
         >
           <ShareSVG />
