@@ -23,7 +23,9 @@ import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
 
 const Actions = ({ post }) => {
   const user = useRecoilValue(userAtom);
-  const [liked, setLiked] = useState(post.likes?.includes(user?._id));
+  const [liked, setLiked] = useState(
+    () => Array.isArray(post?.likes) && post.likes.includes(user?._id)
+  );
   const [reposted, setReposted] = useState(
     post.reposts?.some((id) => (typeof id === "object" ? id._id : id) === user?._id)
   );
