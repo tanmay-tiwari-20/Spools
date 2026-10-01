@@ -13,6 +13,7 @@ const CreatePostInline = () => {
   const user = useRecoilValue(userAtom);
   const showToast = useShowToast();
   const [postText, setPostText] = useState("");
+  const [replyPermission, setReplyPermission] = useState("everyone");
   const { handleImageChange, imgUrl, setImgUrl } = usePreviewImg();
   const imageRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,7 @@ const CreatePostInline = () => {
           postedBy: user._id,
           text: postText,
           img: imgUrl,
+          replyPermission,
         }),
       });
       const data = await res.json();
@@ -44,6 +46,7 @@ const CreatePostInline = () => {
       showToast("Success", "Spool created!", "success");
       setPosts([data, ...posts]);
       setPostText("");
+      setReplyPermission("everyone");
       setImgUrl("");
     } catch (error) {
       showToast("Error", error.message || "Post creation failed", "error");
@@ -93,7 +96,7 @@ const CreatePostInline = () => {
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/80 mt-2">
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 mt-2">
             <div className="flex items-center gap-2">
               <input
                 type="file"
@@ -122,6 +125,12 @@ const CreatePostInline = () => {
                   {remainingChar}
                 </span>
               )}
+              <select aria-label="Who can reply" value={replyPermission} onChange={(e) => setReplyPermission(e.target.value)}
+                className="max-w-[140px] bg-transparent text-xs text-zinc-500 dark:text-zinc-400 focus:outline-none">
+                <option value="everyone">Everyone can reply</option>
+                <option value="followers">Followers only</option>
+                <option value="mentioned">Mentioned only</option>
+              </select>
             </div>
 
             <button

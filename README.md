@@ -1,57 +1,180 @@
 # Spools
 
-Spools is a social media platform with functionalities similar to the Threads app, allowing users to create profiles, post images, like and reply to posts, and engage in real-time chatting. This project is built using the MERN stack, and it combines frontend, backend, and database operations for a seamless user experience.
+**A social space for sharing ideas, finding your people, and building things together.**
 
-## 🌟 Features
+Spools is a full-stack social app built with the MERN stack. Share short posts, explore beyond your feed, start interest-based Circles, collaborate on multi-part Spool series, and chat in real time.
 
-### User Management
-- **User Authentication:** Sign up, login, and logout functionality with secure password hashing.
-- **Profile Management:** Users can update their profile, including changing their name, username, bio, and profile picture.
-- **View Profiles:** Users can view other user profiles and follow them.
+---
 
-### Posts & Interactions
-- **Create Posts:** Users can upload images and create posts.
-- **Feed:** Displays a feed of posts from followed users, similar to Pinterest and Instagram.
-- **Like & Reply to Posts:** Users can like posts and add comments/replies to engage with the content.
-- **Save Posts:** Users have the ability to save posts they like for later viewing.
+## Contents
 
-### Real-time Chatting
-- **Direct Messaging:** Users can chat with each other in real time.
-- **Seen Status:** Messages are marked as seen when the recipient views them.
-- **Message Notifications:** Receive notifications for new messages and replies.
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Run locally](#run-locally)
+- [Environment variables](#environment-variables)
+- [Project structure](#project-structure)
+- [API overview](#api-overview)
+- [Production build](#production-build)
 
-### Responsive Design
-- **Light & Dark Mode:** Custom-tailored light and dark mode styles for a better user experience.
-- **Responsive UI:** Designed for all screen sizes, ensuring a consistent experience across desktop, tablet, and mobile devices.
+## Features
 
-## 💻 Tech Stack
+### Profiles and connections
 
-### Frontend
-- **React**: For building a dynamic and responsive user interface.
-- **Tailwind CSS**: For styling the UI with custom colors, light/dark mode, and responsiveness.
-- **Chakra UI**: For toast notifications and modals.
-- **Recoil**: For state management.
-- **Cloudinary**: For handling profile picture uploads.
-- **JavaScript (ES6+)**: For client-side logic and interactions.
+- Create an account, sign in, and manage your profile.
+- Add a profile photo, bio, name, and username.
+- Find people, view profiles, and follow or unfollow accounts.
 
-### Backend
-- **Node.js**: For server-side logic.
-- **Express.js**: For building the REST API.
-- **MongoDB**: As a NoSQL database to store user data and posts.
-- **Mongoose**: For data modeling and validation.
-- **JWT (JSON Web Tokens)**: For authentication and authorization.
-- **bcrypt.js**: For hashing passwords.
+### Spools and feeds
 
-### Other Tools
-- **Git & GitHub**: For version control.
-- **Postman**: For testing API endpoints.
-- **Figma**: For designing the UI layout and prototyping.
+- Create short text posts with an optional image.
+- Switch between two feeds:
+  - **Following** shows posts from you and accounts you follow.
+  - **Explore** discovers posts from accounts outside your following list.
+- Like, reply to, repost, and save posts.
+- Choose who can reply to each post: everyone, your followers, or people you mention with `@username`.
 
-## 🚀 Getting Started
+### Circles
 
-Follow these steps to get a local copy of the project up and running.
+Create or join public, interest-based communities called **Circles**. Each Circle has a name, description, member list, and its own post feed. Members can share posts with the Circle; join a Circle before posting there.
+
+### Collaborative Spool series
+
+Start a titled series and invite existing Spools users by username. The creator and invited collaborators can add up to 500 characters per part. Parts are numbered and displayed together in order, making a series useful for shared stories, guides, or evolving ideas.
+
+### Real-time messaging
+
+- Send direct messages and image messages.
+- Receive new messages in real time while online.
+- See read receipts: the sender's check mark turns blue after the recipient opens the conversation and the messages are marked seen.
+- Message alerts respect the notification and sound preferences configured in the app.
+
+### Installable, responsive experience
+
+- Responsive layouts for desktop, tablet, and mobile screens.
+- Light and dark themes.
+- Progressive Web App support, so Spools can be installed on supported devices.
+
+## Tech stack
+
+| Area | Technologies |
+| --- | --- |
+| Frontend | React, Vite, React Router, Recoil, Tailwind CSS, Chakra UI |
+| Backend | Node.js, Express, Socket.IO |
+| Database | MongoDB with Mongoose |
+| Authentication | JWT stored in an HTTP-only cookie; bcrypt password hashing |
+| Media | Cloudinary |
+| PWA | Vite PWA plugin and Workbox |
+
+## Run locally
 
 ### Prerequisites
-- **Node.js** installed on your machine.
-- **MongoDB** installed locally or a MongoDB Atlas account.
-- **Cloudinary Account** for handling image uploads.
+
+- Node.js and npm
+- A MongoDB database, local or MongoDB Atlas
+- A Cloudinary account for image uploads
+
+### 1. Install dependencies
+
+From the repository root:
+
+```bash
+npm install
+npm install --prefix frontend
+```
+
+### 2. Configure environment variables
+
+Create a `.env` file in the repository root. See [Environment variables](#environment-variables) below.
+
+### 3. Start the backend
+
+In one terminal, from the repository root:
+
+```bash
+npm run dev
+```
+
+The API and Socket.IO server run on port `5000` by default.
+
+### 4. Start the frontend
+
+In a second terminal, from the repository root:
+
+```bash
+npm run dev --prefix frontend
+```
+
+Open the Vite URL shown in the terminal (normally `http://localhost:3000`). During development, Vite proxies `/api` requests to the backend on port `5000`.
+
+## Environment variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `MONGODB_URI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | Secret used to sign and verify login tokens |
+| `CLOUDINARY_CLOUD_NAME` | For image uploads | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | For image uploads | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | For image uploads | Cloudinary API secret |
+| `PORT` | No | Backend port; defaults to `5000` |
+| `FRONTEND_URL` | Deployment | Frontend origin allowed by the backend CORS configuration |
+
+Example `.env` (replace the placeholder values and keep real credentials private):
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/spools
+JWT_SECRET=replace-with-a-long-random-secret
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+PORT=5000
+FRONTEND_URL=http://localhost:3000
+```
+
+## Project structure
+
+```text
+backend/
+  controllers/   Request handlers and feature logic
+  models/        Mongoose models
+  Routes/        Express API routes
+  socket/        Socket.IO server and real-time events
+  server.js      Backend entry point
+frontend/
+  public/        Static assets and PWA icons
+  src/
+    Components/  Shared interface components
+    Pages/       Route-level screens
+    atoms/       Recoil state
+    context/     App-wide contexts
+```
+
+## API overview
+
+Most routes below require a signed-in user. Authentication is handled with the HTTP-only `jwt` cookie.
+
+| Feature | Routes |
+| --- | --- |
+| Users and profiles | `/api/users` |
+| Posts and feeds | `GET /api/posts/feed?type=following\|explore`, `POST /api/posts/create`, `/api/posts/:id`, `/api/posts/reply/:id`, `/api/posts/like/:id`, `/api/posts/repost/:id`, `/api/posts/save/:id` |
+| Circles | `GET/POST /api/circles`, `GET /api/circles/:id`, `PUT /api/circles/:id/join`, `PUT /api/circles/:id/leave` |
+| Collaborative series | `GET/POST /api/series`, `GET /api/series/:id`, `POST /api/series/:id/parts` |
+| Messages | `GET /api/messages/conversations`, `GET /api/messages/:otherUserId`, `POST /api/messages` |
+
+Real-time messages and read receipts use Socket.IO events. A recipient's messages are marked as seen when that recipient views the conversation.
+
+## Production build
+
+Build the frontend from the repository root:
+
+```bash
+npm run build --prefix frontend
+```
+
+For the single-server production setup, build the frontend and start the backend with:
+
+```bash
+npm run build
+npm start
+```
+
+In production mode, Express serves the built frontend from `frontend/dist` along with the API and Socket.IO server. Configure `FRONTEND_URL` for your deployed frontend origin and set the database, JWT, and Cloudinary values in the deployment environment.

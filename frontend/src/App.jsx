@@ -12,6 +12,8 @@ import CreatePost from "./Components/CreatePost";
 import ChatPage from "./Pages/ChatPage";
 import { SettingsPage } from "./Pages/SettingsPage";
 import SearchPage from "./Pages/SearchPage";
+import CirclesPage from "./Pages/CirclesPage";
+import SeriesPage from "./Pages/SeriesPage";
 import { useTheme } from "./context/ThemeContext";
 
 const App = () => {
@@ -99,6 +101,10 @@ const App = () => {
             path="/settings"
             element={user ? <SettingsPage isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} /> : <Navigate to={"/auth"} />}
           />
+          <Route path="/circles" element={user ? <CirclesPage /> : <Navigate to="/auth" />} />
+          <Route path="/circles/:id" element={user ? <CirclesPage /> : <Navigate to="/auth" />} />
+          <Route path="/series" element={user ? <SeriesPage /> : <Navigate to="/auth" />} />
+          <Route path="/series/:id" element={user ? <SeriesPage /> : <Navigate to="/auth" />} />
         </Routes>
         {user && <CreatePost />}
       </div>

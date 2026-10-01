@@ -42,24 +42,28 @@ io.on("connection", (socket) => {
   }
 
   // Mark messages as seen event
-  socket.on("markMessagesAsSeen", async ({ conversationId, userId }) => {
+  socket.on("markMessagesAsSeen", async ({ conversationId }) => {
     try {
-      // Update unseen messages in the specified conversation
-      await Message.updateMany(
-        { conversationId: conversationId, seen: false, recipient: userId },
+      if (!userId || userId === "undefined" || !conversationId) return;
+      const conversation = await Conversation.findById(conversationId).select("participants lastMessage");
+      if (!conversation) return;
+      const isParticipant = conversation.participants.some((participant) => participant.toString() === userId);
+      if (!isParticipant) return;
+
+      const senderId = conversation.participants.find((participant) => participant.toString() !== userId)?.toString();
+      if (!senderId) return;
+
+      const update = await Message.updateMany(
+        { conversationId, sender: senderId, seen: false },
         { $set: { seen: true } }
       );
+      if (conversation.lastMessage?.sender?.toString() === senderId && update.modifiedCount > 0) {
+        await Conversation.updateOne({ _id: conversationId }, { $set: { "lastMessage.seen": true } });
+      }
 
-      // Update the lastMessage in the conversation to seen
-      await Conversation.updateOne(
-        { _id: conversationId },
-        { $set: { "lastMessage.seen": true } }
-      );
-
-      // Notify the recipient that messages have been seen
-      const recipientSocketId = getRecipientSocketId(userId);
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit("messagesSeen", { conversationId });
+      const senderSocketId = getRecipientSocketId(senderId);
+      if (senderSocketId && update.modifiedCount > 0) {
+        io.to(senderSocketId).emit("messagesSeen", { conversationId, readerId: userId });
       }
     } catch (error) {
       console.error("Error marking messages as seen:", error);

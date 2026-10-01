@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./Routes/userRoutes.js";
 import postRoutes from "./Routes/postRoutes.js";
 import messageRoutes from "./Routes/messageRoutes.js";
+import circleRoutes from "./Routes/circleRoutes.js";
+import seriesRoutes from "./Routes/seriesRoutes.js";
 import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./socket/socket.js";
 import helmet from "helmet";
@@ -71,6 +73,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Adjust 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/circles", circleRoutes);
+app.use("/api/series", seriesRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === "production") {

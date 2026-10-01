@@ -1,10 +1,15 @@
 import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import Circle from "../models/circleModel.js";
 
 const createPost = async (req, res) => {
   try {
     const { postedBy, text } = req.body;
+    const replyPermission = ["everyone", "followers", "mentioned"].includes(req.body.replyPermission)
+      ? req.body.replyPermission
+      : "everyone";
+    const circleId = req.body.circle || null;
     let { img } = req.body;
 
     if (!postedBy || !text) {
@@ -34,7 +39,15 @@ const createPost = async (req, res) => {
       img = uploadedResponse.secure_url;
     }
 
-    const newPost = new Post({ postedBy, text, img });
+    if (circleId) {
+      const circle = await Circle.findById(circleId);
+      if (!circle) return res.status(404).json({ error: "Circle not found" });
+      if (!circle.members.some((member) => member.toString() === req.user._id.toString())) {
+        return res.status(403).json({ error: "Join this circle before posting" });
+      }
+    }
+
+    const newPost = new Post({ postedBy, text, img, replyPermission, circle: circleId });
     await newPost.save();
     await newPost.populate("postedBy", "name username profilePic isFrozen");
 
@@ -131,6 +144,18 @@ const replyToPost = async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
+    if (post.postedBy.toString() !== userId.toString()) {
+      const mentionsUser = [...(post.text || "").matchAll(/(^|\s)@([\w.-]+)/g)].some((match) => match[2].toLowerCase() === username.toLowerCase());
+      if (post.replyPermission === "mentioned" && !mentionsUser) {
+        return res.status(403).json({ error: "Only people mentioned in this spool can reply" });
+      }
+      if (post.replyPermission === "followers") {
+        const author = await User.findById(post.postedBy).select("followers");
+        const isFollower = author?.followers?.some((id) => id.toString() === userId.toString());
+        if (!isFollower) return res.status(403).json({ error: "Only the author's followers can reply" });
+      }
+    }
+
     const reply = { userId, text, userProfilePic, username };
 
     post.replies.push(reply);
@@ -150,12 +175,12 @@ const getFeedPosts = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const following = user.following || [];
-
-    // Include posts from people the user follows AND user's own posts
-    const feedPosts = await Post.find({
-      postedBy: { $in: [...following, userId] },
-    })
+    const following = (user.following || []).map((id) => id.toString());
+    const feedType = req.query.type === "explore" ? "explore" : "following";
+    const authorFilter = feedType === "explore"
+      ? { $nin: [...following, userId.toString()] }
+      : { $in: [...following, userId] };
+    const feedPosts = await Post.find({ postedBy: authorFilter })
       .populate("postedBy", "name username profilePic isFrozen")
       .sort({ createdAt: -1 });
 

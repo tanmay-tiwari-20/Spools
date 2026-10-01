@@ -11,6 +11,14 @@ const postSchema = mongoose.Schema(
       type: String,
       maxLength: 500,
     },
+    replyPermission: {
+      type: String,
+      enum: ["everyone", "followers", "mentioned"],
+      default: "everyone",
+    },
+    circle: { type: mongoose.Schema.Types.ObjectId, ref: "Circle", default: null },
+    series: { type: mongoose.Schema.Types.ObjectId, ref: "SpoolSeries", default: null },
+    seriesPart: { type: Number, default: null },
     img: {
       type: String,
     },

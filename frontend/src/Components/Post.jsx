@@ -147,6 +147,11 @@ const Post = ({ post, postedBy }) => {
 
           {/* Post Text */}
           <Link to={`/${user.username}/post/${post?._id}`} className="block">
+            {post.replyPermission && post.replyPermission !== "everyone" && (
+              <span className="inline-flex mb-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                {post.replyPermission === "followers" ? "Followers can reply" : "Mentioned people can reply"}
+              </span>
+            )}
             <p className="break-words text-sm md:text-base text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed mb-2">
               {post.text}
             </p>

@@ -124,6 +124,11 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
             </div>
           )}
 
+          {user && <nav aria-label="Community features" className="hidden md:flex items-center gap-3 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+            <RouterLink to="/circles" className="hover:text-zinc-900 dark:hover:text-white">Circles</RouterLink>
+            <RouterLink to="/series" className="hover:text-zinc-900 dark:hover:text-white">Series</RouterLink>
+          </nav>}
+
           {/* Right: Settings & User Actions */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {user ? (
@@ -171,6 +176,11 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
           </div>
         </div>
       </header>
+
+      {user && <div className="md:hidden flex justify-center gap-2 -mt-2 mb-3">
+        <RouterLink to="/circles" className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300">Circles</RouterLink>
+        <RouterLink to="/series" className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300">Collaborative Spools</RouterLink>
+      </div>}
 
       {/* Mobile Floating Bottom Bar */}
       {user && (

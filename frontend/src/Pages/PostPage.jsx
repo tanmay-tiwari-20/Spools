@@ -139,6 +139,11 @@ const PostPage = () => {
       </div>
 
       {/* Main Post Text */}
+      {currentPost.replyPermission && currentPost.replyPermission !== "everyone" && (
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
+          {currentPost.replyPermission === "followers" ? "Only followers of the author can reply." : "Only people mentioned in this spool can reply."}
+        </p>
+      )}
       <p className="break-words text-base md:text-lg text-zinc-900 dark:text-zinc-100 whitespace-pre-line leading-relaxed my-3">
         {currentPost.text}
       </p>

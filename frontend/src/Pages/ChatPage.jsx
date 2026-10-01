@@ -25,10 +25,12 @@ const ChatPage = () => {
   const { socket, onlineUsers } = useSocket();
 
   useEffect(() => {
-    socket?.on("messagesSeen", ({ conversationId }) => {
+    const handleMessagesSeen = ({ conversationId, readerId }) => {
       setConversations((prev) =>
         prev.map((conversation) =>
-          conversation?._id === conversationId
+          String(conversation?._id) === String(conversationId) &&
+          String(conversation?.lastMessage?.sender) === String(currentUser?._id) &&
+          String(readerId) !== String(currentUser?._id)
             ? {
                 ...conversation,
                 lastMessage: { ...conversation.lastMessage, seen: true },
@@ -36,8 +38,10 @@ const ChatPage = () => {
             : conversation
         )
       );
-    });
-  }, [socket, setConversations]);
+    };
+    socket?.on("messagesSeen", handleMessagesSeen);
+    return () => socket?.off("messagesSeen", handleMessagesSeen);
+  }, [socket, setConversations, currentUser?._id]);
 
   useEffect(() => {
     const getConversations = async () => {

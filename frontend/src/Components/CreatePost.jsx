@@ -15,6 +15,7 @@ const CreatePost = () => {
   const showToast = useShowToast();
   const [isOpen, setIsOpen] = useState(false);
   const [postText, setPostText] = useState("");
+  const [replyPermission, setReplyPermission] = useState("everyone");
   const { handleImageChange, imgUrl, setImgUrl } = usePreviewImg();
   const imageRef = useRef(null);
   const [remainingChar, setRemainingChar] = useState(MAX_CHAR);
@@ -47,6 +48,7 @@ const CreatePost = () => {
           postedBy: user._id,
           text: postText,
           img: imgUrl,
+          replyPermission,
         }),
       });
       const data = await res.json();
@@ -58,6 +60,7 @@ const CreatePost = () => {
       setPosts([data, ...posts]);
       closeModal();
       setPostText("");
+      setReplyPermission("everyone");
       setImgUrl("");
     } catch (error) {
       showToast("Error", error.message || "Post creation failed", "error");
@@ -110,6 +113,16 @@ const CreatePost = () => {
                 className="w-full p-4 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-400 resize-none text-sm md:text-base border border-zinc-200 dark:border-zinc-700/80"
                 rows={4}
               />
+
+              <label className="flex items-center justify-between gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+                <span>Who can reply?</span>
+                <select value={replyPermission} onChange={(e) => setReplyPermission(e.target.value)}
+                  className="max-w-[190px] rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs focus:outline-none">
+                  <option value="everyone">Everyone</option>
+                  <option value="followers">Followers</option>
+                  <option value="mentioned">People mentioned</option>
+                </select>
+              </label>
 
               <div className="flex items-center justify-between text-xs text-zinc-400">
                 <div className="flex items-center gap-2">

@@ -12,10 +12,13 @@ import {
   SkeletonCircle,
   SkeletonText,
 } from "@chakra-ui/react";
+import { useSearchParams } from "react-router-dom";
 
 const HomePage = () => {
   const [posts, setPosts] = useRecoilState(postsAtom);
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const feedType = searchParams.get("feed") === "explore" ? "explore" : "following";
   const showToast = useShowToast();
 
   useEffect(() => {
@@ -23,7 +26,7 @@ const HomePage = () => {
       setLoading(true);
       setPosts([]); // Ensure posts are reset to an empty array before fetching
       try {
-        const res = await fetch("/api/posts/feed");
+        const res = await fetch(`/api/posts/feed?type=${feedType}`);
         const data = await res.json();
         if (data.error) {
           showToast("Error", data.error, "error");
@@ -41,11 +44,19 @@ const HomePage = () => {
       }
     };
     getFeedPosts();
-  }, [showToast, setPosts]);
+  }, [showToast, setPosts, feedType]);
 
   return (
     <div className="flex min-w-0 flex-col md:flex-row gap-5 lg:gap-8 items-start pt-2">
       <div className="w-full min-w-0 md:flex-1">
+        <div className="flex gap-2 mb-4 p-1 rounded-full bg-zinc-100 dark:bg-zinc-900/70 border border-zinc-200/70 dark:border-zinc-800/80 w-fit">
+          {[{ id: "following", label: "Following" }, { id: "explore", label: "Explore" }].map((tab) => (
+            <button key={tab.id} type="button" onClick={() => setSearchParams(tab.id === "following" ? {} : { feed: tab.id })}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${feedType === tab.id ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"}`}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <CreatePostInline />
 
         {loading ? (
