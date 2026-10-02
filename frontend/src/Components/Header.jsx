@@ -1,5 +1,7 @@
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useEffect } from "react";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
+import { conversationsAtom, selectedConversationAtom } from "../atoms/messagesAtom";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { AiFillHome, AiOutlineHome } from "react-icons/ai";
 import { FiBookOpen, FiLogOut, FiSearch, FiSettings, FiUsers } from "react-icons/fi";
@@ -7,9 +9,13 @@ import { IoChatbubbleEllipsesSharp, IoChatbubbleEllipsesOutline } from "react-ic
 import useLogout from "../hooks/useLogout";
 import authScreenAtom from "../atoms/authAtom";
 import { useTheme } from "../context/ThemeContext";
+import { useSocket } from "../context/SocketContext.jsx";
 
 const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   const user = useRecoilValue(userAtom);
+  const [conversations, setConversations] = useRecoilState(conversationsAtom);
+  const selectedConversation = useRecoilValue(selectedConversationAtom);
+  const { socket } = useSocket();
   const logout = useLogout();
   const setAuthScreen = useSetRecoilState(authScreenAtom);
   const location = useLocation();
@@ -25,6 +31,62 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   const isCircles = location.pathname.startsWith("/circles");
   const isSeries = location.pathname.startsWith("/series");
   const isProfile = user && location.pathname === `/${user.username}`;
+  const unreadConversationCount = conversations.reduce((count, conversation) => {
+    const hasUnread = String(conversation?.lastMessage?.sender) !== String(user?._id) &&
+      Boolean(conversation?.lastMessage?.sender) && !conversation?.lastMessage?.seen;
+    return count + (Math.max(Number(conversation?.unreadCount) || 0, hasUnread ? 1 : 0) > 0 ? 1 : 0);
+  }, 0);
+
+  useEffect(() => {
+    if (!user?._id) return undefined;
+    let cancelled = false;
+    fetch("/api/messages/conversations")
+      .then((response) => response.json())
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setConversations(data);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user?._id, setConversations]);
+
+  useEffect(() => {
+    if (!socket || !user?._id) return undefined;
+    const handleNewMessage = (message) => {
+      const conversationId = String(message.conversationId || "");
+      const senderId = String(message.sender || "");
+      const isViewingConversation = location.pathname === "/chat" &&
+        String(selectedConversation?._id) === conversationId;
+
+      setConversations((previous) => {
+        let found = false;
+        const updated = previous.map((conversation) => {
+          const matchesId = String(conversation?._id) === conversationId;
+          const matchesParticipant = String(conversation?.participants?.[0]?._id) === senderId;
+          if (!matchesId && !matchesParticipant) return conversation;
+          found = true;
+          return {
+            ...conversation,
+            _id: conversationId || conversation._id,
+            mock: false,
+            unreadCount: isViewingConversation ? 0 : (Number(conversation.unreadCount) || 0) + 1,
+          };
+        });
+        if (!found && message.senderProfile) {
+          updated.push({
+            _id: conversationId,
+            updatedAt: message.createdAt || new Date().toISOString(),
+            lastMessage: { text: message.text, sender: message.sender, seen: false },
+            unreadCount: isViewingConversation ? 0 : 1,
+            participants: [message.senderProfile],
+          });
+        }
+        return updated;
+      });
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    return () => socket.off("newMessage", handleNewMessage);
+  }, [socket, user?._id, location.pathname, selectedConversation?._id, setConversations]);
 
   const primaryLinkClass = (active) => `inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
     active
@@ -67,7 +129,11 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
                   <FiSearch size={17} /> <span className="hidden lg:inline">Search</span>
                 </RouterLink>
                 <RouterLink to="/chat" className={`${primaryLinkClass(isChat)} px-2 lg:px-3`} aria-current={isChat ? "page" : undefined}>
-                  {isChat ? <IoChatbubbleEllipsesSharp size={18} /> : <IoChatbubbleEllipsesOutline size={18} />} <span className="hidden lg:inline">Messages</span>
+                  <span className="relative">
+                    {isChat ? <IoChatbubbleEllipsesSharp size={18} /> : <IoChatbubbleEllipsesOutline size={18} />}
+                    {unreadConversationCount > 0 && <span className="absolute -right-2 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-zinc-100 dark:ring-zinc-900">{unreadConversationCount > 99 ? "99+" : unreadConversationCount}</span>}
+                  </span>
+                  <span className="hidden lg:inline">Messages</span>
                 </RouterLink>
               </nav>
 
@@ -130,7 +196,10 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
             <FiSearch size={21} />
           </RouterLink>
           <RouterLink to="/chat" aria-label="Messages" aria-current={isChat ? "page" : undefined} className={`grid h-10 w-12 place-items-center rounded-xl transition-colors ${isChat ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}>
-            {isChat ? <IoChatbubbleEllipsesSharp size={21} /> : <IoChatbubbleEllipsesOutline size={21} />}
+            <span className="relative">
+              {isChat ? <IoChatbubbleEllipsesSharp size={21} /> : <IoChatbubbleEllipsesOutline size={21} />}
+              {unreadConversationCount > 0 && <span className="absolute -right-2 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white dark:ring-zinc-900">{unreadConversationCount > 99 ? "99+" : unreadConversationCount}</span>}
+            </span>
           </RouterLink>
           <RouterLink to={`/${user.username}`} aria-label="Your profile" aria-current={isProfile ? "page" : undefined} className="grid h-10 w-12 place-items-center rounded-xl transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
             <img src={user.profilePic || "/defaultdp.png"} alt="" className={`h-6 w-6 rounded-full object-cover ${isProfile ? "ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900" : ""}`} />

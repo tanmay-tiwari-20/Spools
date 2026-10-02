@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
 import useShowToast from "../hooks/useShowToast";
@@ -19,11 +19,41 @@ const MessageContainer = () => {
   );
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [messages, setMessages] = useState([]);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [remoteTyping, setRemoteTyping] = useState(false);
   const currentUser = useRecoilValue(userAtom);
   const { socket, onlineUsers } = useSocket();
   const setConversations = useSetRecoilState(conversationsAtom);
-  const messageEndRef = useRef(null);
+  const messageScrollRef = useRef(null);
+  const shouldStickToBottom = useRef(true);
+  const previousConversationId = useRef(String(selectedConversation?._id || ""));
   const selectedConversationId = String(selectedConversation?._id || "");
+  const isPeerOnline = Boolean(onlineUsers?.some((id) => String(id) === String(selectedConversation?.userId)));
+
+  useEffect(() => {
+    setRemoteTyping(false);
+    if (!socket || !selectedConversationId || selectedConversation?.mock) return undefined;
+    let typingTimeout;
+    const handleTyping = ({ conversationId, userId }) => {
+      if (String(conversationId) !== selectedConversationId || String(userId) !== String(selectedConversation.userId)) return;
+      setRemoteTyping(true);
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => setRemoteTyping(false), 2400);
+    };
+    const handleStoppedTyping = ({ conversationId, userId }) => {
+      if (String(conversationId) === selectedConversationId && String(userId) === String(selectedConversation.userId)) {
+        clearTimeout(typingTimeout);
+        setRemoteTyping(false);
+      }
+    };
+    socket.on("userTyping", handleTyping);
+    socket.on("userStoppedTyping", handleStoppedTyping);
+    return () => {
+      clearTimeout(typingTimeout);
+      socket.off("userTyping", handleTyping);
+      socket.off("userStoppedTyping", handleStoppedTyping);
+    };
+  }, [socket, selectedConversationId, selectedConversation?.userId, selectedConversation?.mock]);
 
   useEffect(() => {
     const handleNewMessage = (message) => {
@@ -76,6 +106,16 @@ const MessageContainer = () => {
   }, [socket, selectedConversationId, selectedConversation, setConversations, setSelectedConversation]);
 
   useEffect(() => {
+    const handleDeletedMessage = ({ conversationId, messageId }) => {
+      if (String(conversationId) === selectedConversationId) {
+        setMessages((previous) => previous.filter((message) => String(message._id) !== String(messageId)));
+      }
+    };
+    socket?.on("messageDeleted", handleDeletedMessage);
+    return () => socket?.off("messageDeleted", handleDeletedMessage);
+  }, [socket, selectedConversationId]);
+
+  useEffect(() => {
     const hasUnseenIncomingMessages = messages.some(
       (message) => String(message.sender) !== String(currentUser?._id) && !message.seen
     );
@@ -84,9 +124,14 @@ const MessageContainer = () => {
         conversationId: selectedConversationId,
       });
       setConversations((prev) => prev.map((conversation) =>
-        String(conversation._id) === selectedConversationId &&
-        String(conversation?.lastMessage?.sender) !== String(currentUser?._id)
-          ? { ...conversation, lastMessage: { ...conversation.lastMessage, seen: true } }
+        String(conversation._id) === selectedConversationId
+          ? {
+              ...conversation,
+              unreadCount: 0,
+              lastMessage: String(conversation?.lastMessage?.sender) !== String(currentUser?._id)
+                ? { ...conversation.lastMessage, seen: true }
+                : conversation.lastMessage,
+            }
           : conversation
       ));
     }
@@ -111,9 +156,42 @@ const MessageContainer = () => {
     return () => socket?.off("messagesSeen", handleMessagesSeen);
   }, [socket, currentUser?._id, messages, loadingMessages, selectedConversationId, setConversations]);
 
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useLayoutEffect(() => {
+    const viewport = messageScrollRef.current;
+    if (!viewport) return;
+
+    const conversationChanged = previousConversationId.current !== selectedConversationId;
+    if (conversationChanged) {
+      previousConversationId.current = selectedConversationId;
+      shouldStickToBottom.current = true;
+      setReplyingTo(null);
+    }
+    if (loadingMessages) return;
+
+    if (conversationChanged || shouldStickToBottom.current) {
+      viewport.scrollTop = viewport.scrollHeight;
+      shouldStickToBottom.current = true;
+    }
+  }, [messages, loadingMessages, selectedConversationId, remoteTyping]);
+
+  const scrollToLatestIfNeeded = () => {
+    const viewport = messageScrollRef.current;
+    if (viewport && shouldStickToBottom.current) viewport.scrollTop = viewport.scrollHeight;
+  };
+
+  const handleScroll = (event) => {
+    const viewport = event.currentTarget;
+    shouldStickToBottom.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 80;
+  };
+
+  const handleDeleteMessage = (message, result) => {
+    setMessages((previous) => previous.filter((item) => String(item._id) !== String(message._id)));
+    setConversations((previous) => previous.map((conversation) =>
+      String(conversation._id) === String(result.conversationId)
+        ? { ...conversation, lastMessage: result.lastMessage, updatedAt: result.updatedAt }
+        : conversation
+    ));
+  };
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -155,10 +233,10 @@ const MessageContainer = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+      <div className="flex items-center gap-3 border-b border-zinc-100 pb-3 dark:border-zinc-800/80">
         <button
           onClick={() => setSelectedConversation({})}
-          className="md:hidden p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+          className="grid h-9 w-9 place-items-center rounded-full text-zinc-600 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 md:hidden"
           title="Back to conversations"
         >
           <IoArrowBack size={20} />
@@ -166,29 +244,32 @@ const MessageContainer = () => {
 
         <Link
           to={`/${selectedConversation.username}`}
-          className="flex items-center gap-3 hover:opacity-85 transition-opacity"
+          className="flex min-w-0 items-center gap-3 transition-opacity hover:opacity-85"
         >
-          <img
-            src={selectedConversation.userProfilePic || "/defaultdp.png"}
-            alt={selectedConversation.username}
-            className="w-10 h-10 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
-          />
+          <span className="relative block h-10 w-10 shrink-0">
+            <img
+              src={selectedConversation.userProfilePic || "/defaultdp.png"}
+              alt={selectedConversation.username}
+              className="h-10 w-10 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+            />
+            {isPeerOnline && <span aria-label="Online" title="Online" className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 dark:border-zinc-950" />}
+          </span>
           <div>
             <div className="flex items-center gap-1">
-              <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
-                {selectedConversation.username}
+              <span className="max-w-[65vw] truncate text-sm font-bold text-zinc-900 dark:text-zinc-100 sm:max-w-none">
+                @{selectedConversation.username}
               </span>
               <img src="/verified.png" alt="Verified" className="w-3.5 h-3.5 inline" />
             </div>
-            <span className="text-xs text-zinc-400">
-              {onlineUsers?.includes(selectedConversation.userId) ? "Active now" : "View profile"}
+            <span className={`text-xs ${remoteTyping ? "font-medium text-emerald-600 dark:text-emerald-400" : "text-zinc-500 dark:text-zinc-400"}`}>
+              {remoteTyping ? "typing…" : isPeerOnline ? "Active now" : "View profile"}
             </span>
           </div>
         </Link>
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto py-4 px-1 sm:px-2 space-y-1">
+      <div ref={messageScrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain py-4 px-1 sm:px-2">
         {loadingMessages &&
           [...Array(4)].map((_, i) => (
             <div
@@ -206,29 +287,40 @@ const MessageContainer = () => {
           ))}
 
         {!loadingMessages && messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center text-zinc-400 py-12">
-            <span className="text-3xl mb-2">👋</span>
-            <p className="text-sm font-medium">Say hello to {selectedConversation.username}!</p>
-            <p className="text-xs text-zinc-500 mt-1">Send a message to start this spool chat.</p>
+          <div className="flex h-full flex-col items-center justify-center py-12 text-center text-zinc-400">
+            <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300">👋</span>
+            <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Say hello to @{selectedConversation.username}!</p>
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Send a message to start your conversation.</p>
           </div>
         )}
 
         {!loadingMessages &&
-          messages.map((message, index) => (
-            <div
-              key={message._id || `${message.createdAt}-${message.sender}`}
-              ref={index === messages.length - 1 ? messageEndRef : null}
-            >
+          messages.map((message) => (
+            <div key={message._id || `${message.createdAt}-${message.sender}`}>
               <Message
                 message={message}
                 ownMessage={String(currentUser?._id) === String(message.sender)}
+                onReply={setReplyingTo}
+                onDelete={handleDeleteMessage}
+                onImageLoad={scrollToLatestIfNeeded}
               />
             </div>
           ))}
+
+        {!loadingMessages && remoteTyping && (
+          <div className="mb-3 flex items-end gap-2" aria-label={`${selectedConversation.username} is typing`}>
+            <img src={selectedConversation.userProfilePic || "/defaultdp.png"} alt="" className="mb-1 h-7 w-7 rounded-full object-cover" />
+            <div className="flex h-9 items-center gap-1 rounded-2xl rounded-bl-sm bg-zinc-100 px-3 dark:bg-zinc-800">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.25s] dark:bg-zinc-400" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.12s] dark:bg-zinc-400" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 dark:bg-zinc-400" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Message Input Bar */}
-      <MessageInput setMessages={setMessages} />
+      <MessageInput setMessages={setMessages} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
     </div>
   );
 };

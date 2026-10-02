@@ -109,7 +109,7 @@ const App = () => {
           <Route path="/series" element={user ? <SeriesPage /> : <Navigate to="/auth" />} />
           <Route path="/series/:id" element={user ? <SeriesPage /> : <Navigate to="/auth" />} />
         </Routes>
-        {user && <CreatePost />}
+        {user && location.pathname !== "/chat" && <CreatePost />}
       </div>
     </div>
   );

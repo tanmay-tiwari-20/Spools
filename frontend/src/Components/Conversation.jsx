@@ -1,6 +1,7 @@
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { BsCheck2All } from "react-icons/bs";
+import { FiImage } from "react-icons/fi";
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 import { formatDistanceToNow } from "date-fns";
 
@@ -18,9 +19,11 @@ const Conversation = ({ conversation, isOnline }) => {
       String(lastMessage.sender) !== String(currentUser?._id) &&
       !lastMessage?.seen
   );
+  const unreadCount = Math.max(Number(conversation?.unreadCount) || 0, hasUnreadMessage ? 1 : 0);
   const updatedLabel = conversation?.updatedAt
     ? formatDistanceToNow(new Date(conversation.updatedAt), { addSuffix: false })
     : "";
+  const previewText = lastMessage?.text || (lastMessage?.sender ? "Photo" : "Start a conversation");
 
   const handleSelectConversation = () => {
     setSelectedConversation({
@@ -37,15 +40,15 @@ const Conversation = ({ conversation, isOnline }) => {
       type="button"
       aria-pressed={isSelected}
       onClick={handleSelectConversation}
-      className={`w-full text-left flex items-center gap-3 p-3 rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 ${
+      className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
         isSelected
-          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm"
-          : "hover:bg-zinc-50 dark:hover:bg-zinc-800/40 text-zinc-700 dark:text-zinc-300"
+          ? "border-indigo-100 bg-indigo-50/80 text-zinc-900 shadow-sm dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-white"
+          : "border-transparent text-zinc-700 hover:border-zinc-100 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:border-zinc-800 dark:hover:bg-zinc-800/50"
       }`}
     >
       <div className="relative flex-shrink-0">
         <img
-          className="w-11 h-11 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+          className="h-12 w-12 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
           src={user?.profilePic || "/defaultdp.png"}
           alt={user?.username || "User"}
         />
@@ -79,10 +82,15 @@ const Conversation = ({ conversation, isOnline }) => {
               <BsCheck2All size={15} />
             </span>
           )}
-          <span className={`truncate ${hasUnreadMessage ? "font-semibold text-zinc-800 dark:text-zinc-100" : ""}`}>
-            {lastMessage?.text || (lastMessage?.sender ? "Attachment" : "Start chatting...")}
+          <span className={`flex min-w-0 items-center gap-1.5 truncate ${hasUnreadMessage ? "font-semibold text-zinc-800 dark:text-zinc-100" : ""}`}>
+            {!lastMessage?.text && lastMessage?.sender && <FiImage className="shrink-0" size={13} />}
+            <span className="truncate">{previewText}</span>
           </span>
-          {hasUnreadMessage && <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />}
+          {unreadCount > 0 && (
+            <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-indigo-600 px-1.5 text-[10px] font-bold leading-none text-white dark:bg-indigo-500">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </div>
       </div>
     </button>

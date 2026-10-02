@@ -44,6 +44,52 @@ const ChatPage = () => {
   }, [socket, setConversations, currentUser?._id]);
 
   useEffect(() => {
+    const handleNewMessage = (message) => {
+      const conversationId = String(message.conversationId || "");
+      const senderId = String(message.sender || "");
+      setConversations((previous) => {
+        let found = false;
+        const updated = previous.map((conversation) => {
+          const matchesId = String(conversation?._id) === conversationId;
+          const matchesMock = conversation?.mock && String(conversation?.participants?.[0]?._id) === senderId;
+          if (!matchesId && !matchesMock) return conversation;
+          found = true;
+          return {
+            ...conversation,
+            _id: conversationId,
+            mock: false,
+            updatedAt: message.createdAt || new Date().toISOString(),
+            lastMessage: { text: message.text, sender: message.sender, seen: false },
+          };
+        });
+        if (!found && message.senderProfile) {
+          updated.push({
+            _id: conversationId,
+            updatedAt: message.createdAt || new Date().toISOString(),
+            lastMessage: { text: message.text, sender: message.sender, seen: false },
+            participants: [message.senderProfile],
+          });
+        }
+        return updated.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+      });
+    };
+    socket?.on("newMessage", handleNewMessage);
+    return () => socket?.off("newMessage", handleNewMessage);
+  }, [socket, setConversations]);
+
+  useEffect(() => {
+    const handleMessageDeleted = ({ conversationId, lastMessage, updatedAt }) => {
+      setConversations((previous) => previous.map((conversation) =>
+        String(conversation?._id) === String(conversationId)
+          ? { ...conversation, lastMessage, updatedAt }
+          : conversation
+      ).sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)));
+    };
+    socket?.on("messageDeleted", handleMessageDeleted);
+    return () => socket?.off("messageDeleted", handleMessageDeleted);
+  }, [socket, setConversations]);
+
+  useEffect(() => {
     const getConversations = async () => {
       try {
         const res = await fetch("/api/messages/conversations");
@@ -135,18 +181,16 @@ const ChatPage = () => {
   const isConversationActive = Boolean(selectedConversation?._id);
 
   return (
-    <div className="w-full min-w-0 bg-white dark:bg-zinc-900/60 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-2.5 sm:p-4 shadow-sm h-[calc(100dvh-220px)] min-h-[360px] max-h-[900px] md:h-[calc(100dvh-150px)] md:min-h-[520px] flex gap-2 sm:gap-4 overflow-hidden mb-8">
+    <div className="mb-8 flex h-[calc(100dvh-220px)] max-h-[900px] min-h-[360px] w-full min-w-0 gap-2 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-2.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/60 sm:gap-4 sm:rounded-3xl sm:p-4 md:h-[calc(100dvh-150px)] md:min-h-[520px]">
       {/* Conversation List */}
       <div
-        className={`flex flex-col gap-3 min-w-0 w-full md:w-[320px] lg:w-[360px] md:flex-shrink-0 border-r border-zinc-100 dark:border-zinc-800/80 pr-0 md:pr-3 h-full overflow-hidden ${
+        className={`flex h-full min-w-0 w-full flex-col gap-3 overflow-hidden border-r border-zinc-100 pr-0 dark:border-zinc-800/80 md:w-[320px] md:flex-shrink-0 md:pr-3 lg:w-[360px] ${
           isConversationActive ? "hidden md:flex" : "flex"
         }`}
       >
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-            Messages
-          </h2>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+        <div className="flex items-center justify-between px-1 py-0.5">
+          <div><h2 className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Messages</h2><p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Your conversations</p></div>
+          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
             {conversations.length}
           </span>
         </div>
@@ -159,7 +203,7 @@ const ChatPage = () => {
               aria-label="Find someone by username"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-full focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:text-zinc-100 placeholder-zinc-400"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-4 text-sm text-zinc-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-indigo-500 dark:focus:bg-zinc-900 dark:focus:ring-indigo-950 placeholder:text-zinc-400"
             />
             <IoSearchOutline
               className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
@@ -169,7 +213,7 @@ const ChatPage = () => {
           <button
             type="submit"
             disabled={searchingUser || !searchText.trim()}
-            className="p-2 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 disabled:opacity-40 transition-all hover:scale-105 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white transition hover:bg-indigo-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
             title="Search"
           >
             {searchingUser ? (
@@ -181,12 +225,12 @@ const ChatPage = () => {
         </form>
 
         {/* Conversation List Body */}
-        <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+        <div className="flex-1 space-y-1 overflow-y-auto overscroll-y-contain pr-1">
           {loadingConversations &&
             [0, 1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="flex gap-3 items-center p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 animate-pulse"
+                className="flex animate-pulse items-center gap-3 rounded-2xl p-3"
               >
                 <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" />
                 <div className="flex flex-col w-full gap-2">
@@ -197,10 +241,10 @@ const ChatPage = () => {
             ))}
 
           {!loadingConversations && conversations.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-48 text-zinc-400 text-center px-4">
-              <span className="text-3xl mb-2">💬</span>
-              <p className="text-sm font-medium">No conversations yet</p>
-              <p className="text-xs mt-1">Search for a user above to message them.</p>
+              <div className="flex h-52 flex-col items-center justify-center px-4 text-center text-zinc-400">
+              <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300"><GiConversation size={24} /></span>
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">No conversations yet</p>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Find someone above to start a chat.</p>
             </div>
           )}
 
@@ -210,9 +254,7 @@ const ChatPage = () => {
               .map((conversation) => (
                 <Conversation
                   key={conversation?._id}
-                  isOnline={onlineUsers?.includes(
-                    conversation?.participants?.[0]?._id
-                  )}
+                  isOnline={onlineUsers?.some((onlineId) => String(onlineId) === String(conversation?.participants?.[0]?._id))}
                   conversation={conversation}
                 />
               ))}
@@ -221,14 +263,14 @@ const ChatPage = () => {
 
       {/* Message Active Section */}
       <div
-        className={`flex-1 min-w-0 h-full overflow-hidden flex flex-col ${
+        className={`flex h-full min-w-0 flex-1 flex-col overflow-hidden ${
           !isConversationActive ? "hidden md:flex" : "flex"
         }`}
       >
         {!selectedConversation?._id ? (
-          <div className="flex flex-col items-center justify-center h-full text-zinc-400 dark:text-zinc-500">
-            <div className="w-20 h-20 rounded-3xl bg-zinc-100 dark:bg-zinc-800/60 flex items-center justify-center mb-4">
-              <GiConversation size={42} className="opacity-70" />
+          <div className="flex h-full flex-col items-center justify-center px-6 text-center text-zinc-400 dark:text-zinc-500">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300">
+              <GiConversation size={38} />
             </div>
             <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">
               Your messages

@@ -51,6 +51,29 @@ io.on("connection", (socket) => {
     }
   });
 
+  const relayTypingStatus = async (eventName, payload = {}) => {
+    try {
+      const conversationId = String(payload.conversationId || "");
+      if (!userId || userId === "undefined" || !conversationId) return;
+
+      const conversation = await Conversation.findById(conversationId).select("participants");
+      if (!conversation) return;
+      const participants = conversation.participants.map((participant) => participant.toString());
+      if (!participants.includes(String(userId))) return;
+
+      const recipientId = participants.find((participant) => participant !== String(userId));
+      if (!recipientId || (payload.recipientId && String(payload.recipientId) !== recipientId)) return;
+
+      const recipientSocketId = getRecipientSocketId(recipientId);
+      if (recipientSocketId) io.to(recipientSocketId).emit(eventName, { conversationId, userId: String(userId) });
+    } catch (error) {
+      console.error("Error relaying typing status:", error);
+    }
+  };
+
+  socket.on("typing", (payload) => relayTypingStatus("userTyping", payload));
+  socket.on("stopTyping", (payload) => relayTypingStatus("userStoppedTyping", payload));
+
   // Mark messages as seen event
   socket.on("markMessagesAsSeen", async ({ conversationId }) => {
     try {
