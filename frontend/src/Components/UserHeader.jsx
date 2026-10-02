@@ -1,14 +1,9 @@
-import {
-  Box,
-  VStack,
-} from "@chakra-ui/react";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import { Link, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useShowToast from "../hooks/useShowToast";
 import { motion } from "framer-motion";
-import { MdOutlineSettings } from "react-icons/md";
 import { FiLock, FiShare2 } from "react-icons/fi";
 import ShareProfileModal from "./ShareProfileModal";
 import FollowPeopleModal from "./FollowPeopleModal";
@@ -99,185 +94,108 @@ const UserHeader = ({ user, activeTab = "spools", setActiveTab }) => {
     }
   };
 
+  const isOwnProfile = currentUser?._id === user._id;
+  const followLabel = updating ? (
+    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+  ) : following ? "Following" : requestPending ? "Requested" : user.isPrivate ? "Request to follow" : "Follow";
+
+  const tabs = [
+    { id: "spools", label: "Spools" },
+    { id: "replies", label: "Replies" },
+    ...(isOwnProfile ? [{ id: "saved", label: "Saved" }] : []),
+  ];
+
   return (
-    <VStack gap={4} alignItems={"start"} className="w-full">
-      {/* Header section */}
-      <div className="flex justify-between w-full min-w-0 items-center gap-3">
-        <div className="min-w-0">
-          <h1 className="break-words font-bold lg:text-4xl text-2xl mb-2">{user.name}</h1>
-          <div className="gap-2 flex items-center">
-            <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">
-              @{user.username}
-            </p>
-            <p className="rounded-full select-none px-2 py-1 text-xs bg-gray-300 dark:bg-softPurple text-gray-700 dark:text-gray-200 font-semibold">
-              spools.net
-            </p>
-            {user.isPrivate && <p className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"><FiLock size={11} /> Private</p>}
+    <>
+    <section className="w-full pb-1 pt-3 sm:pt-5">
+      <div>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <img
+            src={user.profilePic || "/defaultdp.png"}
+            alt={`${user.username}'s profile`}
+            className="h-20 w-20 shrink-0 rounded-full object-cover ring-2 ring-indigo-100 dark:ring-indigo-950/70 sm:h-24 sm:w-24"
+          />
+
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 pb-1">
+            {isOwnProfile ? (
+              <RouterLink to="/update" className="inline-flex min-h-10 items-center justify-center rounded-full bg-zinc-900 px-5 text-xs font-semibold text-white shadow-sm transition hover:bg-zinc-800 active:scale-[0.98] dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 sm:text-sm">
+                Edit profile
+              </RouterLink>
+            ) : (
+              <button
+                type="button"
+                onClick={handleFollowUnfollow}
+                disabled={updating}
+                className={`inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-xs font-bold shadow-sm transition active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 sm:text-sm ${following || requestPending ? "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700" : "bg-indigo-600 text-white hover:bg-indigo-500"}`}
+              >
+                {updating ? followLabel : requestPending ? "Cancel request" : following ? "Unfollow" : user.isPrivate ? <><span className="sm:hidden">Request</span><span className="hidden sm:inline">Request to follow</span></> : "Follow"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleShareProfile}
+              aria-label="Share profile"
+              title="Share profile"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 text-zinc-600 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              <FiShare2 size={17} />
+            </button>
           </div>
         </div>
-        <Box>
-          <img
-            src={user.profilePic ? user.profilePic : "defaultdp.png"}
-            alt="avatar"
-            className="rounded-full object-cover lg:w-24 lg:h-24 w-20 h-20"
-          />
-        </Box>
-      </div>
 
-      {/* Bio section */}
-      <p className="break-words text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-300">
-        {user.bio}
-      </p>
+        <div className="mt-4 min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <h1 className="max-w-full break-words text-2xl font-extrabold tracking-tight text-zinc-950 dark:text-white sm:text-3xl">{user.name || user.username}</h1>
+            {user.isPrivate && <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200"><FiLock size={11} /> Private</span>}
+          </div>
+          <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">@{user.username}</p>
+          {user.bio?.trim() && <p className="mt-3 max-w-2xl whitespace-pre-line break-words text-sm leading-6 text-zinc-700 dark:text-zinc-300 sm:text-[15px]">{user.bio}</p>}
 
-      {/* Action buttons (Update Profile / Share Profile / Follow) */}
-      {currentUser?._id === user._id ? (
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          <Link as={RouterLink} to="/update">
-            <button className="rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 px-5 py-1.5 font-semibold text-xs sm:text-sm transition-all duration-200 shadow-sm active:scale-95 cursor-pointer">
-              Update Profile
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <button type="button" disabled={!user.canViewContent} onClick={() => setPeopleList("followers")} className="text-sm text-zinc-600 transition hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-300 dark:hover:text-white">
+              <span className="font-bold text-zinc-950 dark:text-white">{followersCount}</span> followers
             </button>
-          </Link>
-          <button
-            onClick={handleShareProfile}
-            className="flex items-center gap-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-4 py-1.5 font-semibold text-xs sm:text-sm transition-all duration-200 active:scale-95 cursor-pointer"
-            title="Share Profile"
-          >
-            <FiShare2 size={14} />
-            <span>Share Profile</span>
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          <button
-            className="flex justify-center items-center rounded-full shadow-sm bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 px-5 py-1.5 font-semibold text-xs sm:text-sm transition-all duration-200 active:scale-95"
-            onClick={handleFollowUnfollow}
-            disabled={updating}
-          >
-            {updating ? (
-              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : following ? (
-              "Unfollow"
-            ) : requestPending ? (
-              "Cancel request"
-            ) : user.isPrivate ? (
-              "Request to follow"
-            ) : (
-              "Follow"
+            <button type="button" disabled={!user.canViewContent} onClick={() => setPeopleList("following")} className="text-sm text-zinc-600 transition hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-300 dark:hover:text-white">
+              <span className="font-bold text-zinc-950 dark:text-white">{followingCount}</span> following
+            </button>
+            {!user.canViewContent && <span className="text-xs text-zinc-400">Lists are private</span>}
+            {isOwnProfile && user.isPrivate && pendingRequestsCount > 0 && (
+              <button type="button" onClick={() => setPeopleList("requests")} className="rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 dark:bg-indigo-950/70 dark:text-indigo-200 dark:hover:bg-indigo-900">
+                {pendingRequestsCount} follow {pendingRequestsCount === 1 ? "request" : "requests"}
+              </button>
             )}
-          </button>
-          <button
-            onClick={handleShareProfile}
-            className="flex items-center gap-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-4 py-1.5 font-semibold text-xs sm:text-sm transition-all duration-200 active:scale-95 cursor-pointer"
-            title="Share Profile"
-          >
-            <FiShare2 size={14} />
-            <span>Share</span>
-          </button>
-        </div>
-      )}
-
-      {/* Followers and action link section */}
-      <div className="flex flex-wrap justify-between w-full mt-2 items-center gap-2">
-        <div className="gap-1.5 sm:gap-2 flex flex-wrap items-center min-w-0">
-          <button type="button" disabled={!user.canViewContent} onClick={() => setPeopleList("followers")} className="text-sm text-gray-600 dark:text-gray-300 font-semibold hover:text-zinc-950 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-60">{followersCount} followers</button>
-          <div className="bg-gray-600 dark:bg-gray-400 w-1 h-1 rounded-full" />
-          <button type="button" disabled={!user.canViewContent} onClick={() => setPeopleList("following")} className="text-sm text-gray-600 dark:text-gray-300 font-semibold hover:text-zinc-950 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-60">{followingCount} following</button>
-          {!user.canViewContent && <span className="text-[11px] text-zinc-400">Lists are private</span>}
-          {currentUser?._id === user._id && user.isPrivate && pendingRequestsCount > 0 && <button type="button" onClick={() => setPeopleList("requests")} className="ml-1 rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-950/70 dark:text-indigo-200 dark:hover:bg-indigo-900">{pendingRequestsCount} follow {pendingRequestsCount === 1 ? "request" : "requests"}</button>}
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Share Profile button */}
-          <button
-            onClick={handleShareProfile}
-            className="p-2 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all duration-200 active:scale-95 cursor-pointer"
-            title="Share Profile"
-            aria-label="Share Profile"
-          >
-            <FiShare2 size={20} />
-          </button>
-
-          {/* Settings button (only for current user) */}
-          {currentUser?._id === user._id && (
-            <div className="cursor-pointer dark:text-gray-200 hover:scale-110 p-2 w-10 h-10 transition-all duration-300 ease-linear dark:hover:shadow-softPurple hover:shadow-electricBlue rounded-full flex items-center justify-center">
-              <Link as={RouterLink} to={`/settings`}>
-                <MdOutlineSettings size={22} />
-              </Link>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Tabs section */}
-      <div className="flex w-full mt-4 border-b border-gray-200 dark:border-zinc-800">
-        <button
-          onClick={() => setActiveTab && setActiveTab("spools")}
-          className={`flex-1 pb-3 text-sm md:text-base font-semibold transition-all relative ${
-            activeTab === "spools"
-              ? "text-zinc-900 dark:text-white"
-              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-          }`}
-        >
-          Spools
-          {activeTab === "spools" && (
-            <motion.div
-              layoutId="userHeaderTab"
-              className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white"
-            />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab && setActiveTab("replies")}
-          className={`flex-1 pb-3 text-sm md:text-base font-semibold transition-all relative ${
-            activeTab === "replies"
-              ? "text-zinc-900 dark:text-white"
-              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-          }`}
-        >
-          Replies
-          {activeTab === "replies" && (
-            <motion.div
-              layoutId="userHeaderTab"
-              className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white"
-            />
-          )}
-        </button>
-        {currentUser?._id === user._id && (
+      <div className="mt-5 flex border-b border-zinc-200/80 px-1 dark:border-zinc-800">
+        {tabs.map((tab) => (
           <button
-            onClick={() => setActiveTab && setActiveTab("saved")}
-            className={`flex-1 pb-3 text-sm md:text-base font-semibold transition-all relative ${
-              activeTab === "saved"
-                ? "text-zinc-900 dark:text-white"
-                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-            }`}
+            key={tab.id}
+            type="button"
+            aria-current={activeTab === tab.id ? "page" : undefined}
+            onClick={() => setActiveTab?.(tab.id)}
+            className={`relative min-h-12 flex-1 px-3 text-sm font-semibold transition-colors sm:min-h-14 sm:text-[15px] ${activeTab === tab.id ? "text-indigo-700 dark:text-indigo-300" : "text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"}`}
           >
-            Saved
-            {activeTab === "saved" && (
-              <motion.div
-                layoutId="userHeaderTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white"
-              />
-            )}
+            {tab.label}
+            {activeTab === tab.id && <motion.div layoutId="userHeaderTab" className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />}
           </button>
-        )}
+        ))}
       </div>
 
-      {/* Share Profile Modal */}
-      <ShareProfileModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        user={user}
-      />
-      <FollowPeopleModal
-        isOpen={Boolean(peopleList)}
-        onClose={() => setPeopleList(null)}
-        user={user}
-        type={peopleList}
-        onRequestResolved={(approved) => {
-          setPendingRequestsCount((count) => Math.max(0, count - 1));
-          if (approved) setFollowersCount((count) => count + 1);
-        }}
-      />
-    </VStack>
+    </section>
+    <ShareProfileModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} user={user} />
+    <FollowPeopleModal
+      isOpen={Boolean(peopleList)}
+      onClose={() => setPeopleList(null)}
+      user={user}
+      type={peopleList}
+      onRequestResolved={(approved) => {
+        setPendingRequestsCount((count) => Math.max(0, count - 1));
+        if (approved) setFollowersCount((count) => count + 1);
+      }}
+    />
+    </>
   );
 };
 

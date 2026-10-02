@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiAtSign, FiCheck, FiChevronDown, FiGlobe, FiUsers } from "react-icons/fi";
 
 const permissions = [
@@ -9,15 +10,55 @@ const permissions = [
 
 const ReplyPermissionPicker = ({ value, onChange, className = "" }) => {
   const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 272 });
   const pickerRef = useRef(null);
+  const menuRef = useRef(null);
   const selected = permissions.find((permission) => permission.value === value) || permissions[0];
   const SelectedIcon = selected.Icon;
+
+  const updateMenuPosition = useCallback(() => {
+    const anchor = pickerRef.current?.getBoundingClientRect();
+    if (!anchor) return;
+
+    const margin = 16;
+    const width = Math.min(272, window.innerWidth - margin * 2);
+    const height = menuRef.current?.getBoundingClientRect().height || 205;
+    const roomBelow = window.innerHeight - anchor.bottom;
+    const roomAbove = anchor.top;
+    const openAbove = roomBelow < height + 8 && roomAbove > roomBelow;
+    const top = openAbove ? anchor.top - height - 8 : anchor.bottom + 8;
+
+    setMenuPosition({
+      top: Math.max(margin, Math.min(top, window.innerHeight - height - margin)),
+      left: Math.max(margin, Math.min(anchor.right - width, window.innerWidth - width - margin)),
+      width,
+    });
+  }, []);
+
+  const toggleOpen = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open, updateMenuPosition]);
 
   useEffect(() => {
     if (!open) return undefined;
 
     const closeOnOutsideClick = (event) => {
-      if (!pickerRef.current?.contains(event.target)) setOpen(false);
+      if (!pickerRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) setOpen(false);
     };
     const closeOnEscape = (event) => {
       if (event.key === "Escape") setOpen(false);
@@ -37,7 +78,7 @@ const ReplyPermissionPicker = ({ value, onChange, className = "" }) => {
         aria-label={`Who can reply? ${selected.description}`}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((isOpen) => !isOpen)}
+        onClick={toggleOpen}
         className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
       >
         <SelectedIcon className="shrink-0 text-zinc-500 dark:text-zinc-400" size={15} aria-hidden="true" />
@@ -45,11 +86,13 @@ const ReplyPermissionPicker = ({ value, onChange, className = "" }) => {
         <FiChevronDown className={`shrink-0 text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`} size={14} aria-hidden="true" />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
+          ref={menuRef}
           role="listbox"
           aria-label="Who can reply?"
-          className="absolute left-0 top-full z-50 mt-2 w-[min(17rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-xl shadow-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/30"
+          style={{ top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }}
+          className="fixed z-[60] max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-xl shadow-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/30"
         >
           <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-400 dark:text-zinc-500">Reply access</p>
           {permissions.map(({ value: permissionValue, label, description, Icon }) => (
@@ -74,7 +117,8 @@ const ReplyPermissionPicker = ({ value, onChange, className = "" }) => {
               {selected.value === permissionValue && <FiCheck className="shrink-0 text-zinc-700 dark:text-zinc-200" size={15} aria-hidden="true" />}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

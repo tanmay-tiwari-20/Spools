@@ -2,7 +2,7 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { AiFillHome, AiOutlineHome } from "react-icons/ai";
-import { FiLogOut, FiSearch, FiSettings } from "react-icons/fi";
+import { FiBookOpen, FiLogOut, FiSearch, FiSettings, FiUsers } from "react-icons/fi";
 import { IoChatbubbleEllipsesSharp, IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import useLogout from "../hooks/useLogout";
 import authScreenAtom from "../atoms/authAtom";
@@ -22,231 +22,120 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   const isSearch = location.pathname === "/search";
   const isChat = location.pathname === "/chat";
   const isSettings = location.pathname === "/settings";
+  const isCircles = location.pathname.startsWith("/circles");
+  const isSeries = location.pathname.startsWith("/series");
   const isProfile = user && location.pathname === `/${user.username}`;
+
+  const primaryLinkClass = (active) => `inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
+    active
+      ? "bg-white text-indigo-700 shadow-sm dark:bg-zinc-800 dark:text-indigo-200"
+      : "text-zinc-500 hover:bg-white/70 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/70 dark:hover:text-white"
+  }`;
+  const communityLinkClass = (active) => `inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
+    active
+      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200"
+      : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+  }`;
 
   return (
     <>
-      {/* Top Glass Header */}
-      <header className="relative z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-ebony/80 border-b border-zinc-200/60 dark:border-zinc-800/60 transition-colors duration-300 py-2.5 sm:py-3 px-2.5 sm:px-4 mb-4 rounded-b-2xl">
-        <div className="flex items-center justify-between max-w-5xl mx-auto">
-          {/* Left: Brand Logo (Toggles theme on click) & Home Link */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+      <header className="sticky top-0 z-40 mb-3 w-full rounded-2xl border border-zinc-200/80 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur-xl transition-colors duration-300 dark:border-zinc-700/80 dark:bg-zinc-900/95 dark:shadow-black/20 sm:mb-4 sm:px-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
             <button
               type="button"
               onClick={toggleColorMode}
-              className="relative shrink-0 p-1 rounded-xl transition-transform duration-150 hover:scale-105 active:scale-95 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer focus:outline-none select-none"
+              className="shrink-0 rounded-xl p-1 transition hover:bg-zinc-100 active:scale-95 dark:hover:bg-zinc-800"
               title={`Spools • Click logo to switch to ${isDarkMode ? "Light" : "Dark"} mode`}
               aria-label="Click Spools logo to toggle theme"
             >
-              <img
-                src="/dark-mode.svg"
-                alt="Spools Logo"
-                className="w-8 h-8 object-contain dark:hidden"
-              />
-              <img
-                src="/light-mode.svg"
-                alt="Spools Logo"
-                className="w-8 h-8 object-contain hidden dark:block"
-              />
+              <img src="/dark-mode.svg" alt="Spools Logo" className="h-8 w-8 object-contain dark:hidden" />
+              <img src="/light-mode.svg" alt="Spools Logo" className="hidden h-8 w-8 object-contain dark:block" />
             </button>
-
-            <RouterLink
-              to="/"
-              className="font-extrabold text-lg sm:text-xl tracking-tight text-zinc-900 dark:text-white hover:opacity-80 transition-opacity hidden sm:inline select-none"
-              title="Spools Home"
-            >
+            <RouterLink to="/" className="select-none text-lg font-extrabold tracking-tight text-zinc-950 transition-opacity hover:opacity-75 dark:text-white sm:text-xl" title="Spools Home">
               Spools
             </RouterLink>
           </div>
 
-          {/* Center (Desktop): Quick Nav */}
           {user ? (
-            <nav className="hidden md:flex items-center gap-1 bg-zinc-100/80 dark:bg-zinc-900/80 px-3 py-1.5 rounded-full border border-zinc-200/60 dark:border-zinc-800/60">
-              <RouterLink
-                to="/"
-                className={`p-2 rounded-full transition-all ${
-                  isHome
-                    ? "text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-                }`}
-                title="Home"
-              >
-                {isHome ? <AiFillHome size={22} /> : <AiOutlineHome size={22} />}
-              </RouterLink>
+            <>
+              <nav aria-label="Main navigation" className="hidden items-center gap-1 rounded-2xl border border-zinc-200/70 bg-zinc-100/80 p-1 dark:border-zinc-700/80 dark:bg-zinc-900 md:flex">
+                <RouterLink to="/" className={`${primaryLinkClass(isHome)} px-2 lg:px-3`} aria-current={isHome ? "page" : undefined}>
+                  {isHome ? <AiFillHome size={18} /> : <AiOutlineHome size={18} />} <span className="hidden lg:inline">Home</span>
+                </RouterLink>
+                <RouterLink to="/search" className={`${primaryLinkClass(isSearch)} px-2 lg:px-3`} aria-current={isSearch ? "page" : undefined}>
+                  <FiSearch size={17} /> <span className="hidden lg:inline">Search</span>
+                </RouterLink>
+                <RouterLink to="/chat" className={`${primaryLinkClass(isChat)} px-2 lg:px-3`} aria-current={isChat ? "page" : undefined}>
+                  {isChat ? <IoChatbubbleEllipsesSharp size={18} /> : <IoChatbubbleEllipsesOutline size={18} />} <span className="hidden lg:inline">Messages</span>
+                </RouterLink>
+              </nav>
 
-              <RouterLink
-                to="/search"
-                className={`p-2 rounded-full transition-all ${
-                  isSearch
-                    ? "text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-                }`}
-                title="Search"
-              >
-                <FiSearch size={20} />
-              </RouterLink>
-
-              <RouterLink
-                to="/chat"
-                className={`p-2 rounded-full transition-all ${
-                  isChat
-                    ? "text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-                }`}
-                title="Direct Messages"
-              >
-                {isChat ? (
-                  <IoChatbubbleEllipsesSharp size={20} />
-                ) : (
-                  <IoChatbubbleEllipsesOutline size={20} />
-                )}
-              </RouterLink>
-
-              <RouterLink
-                to={`/${user.username}`}
-                className={`p-1.5 rounded-full transition-all ${
-                  isProfile
-                    ? "ring-2 ring-zinc-900 dark:ring-white"
-                    : "opacity-80 hover:opacity-100"
-                }`}
-                title="Your Profile"
-              >
-                <img
-                  src={user.profilePic || "/defaultdp.png"}
-                  alt={user.name}
-                  className="w-6 h-6 rounded-full object-cover"
-                />
-              </RouterLink>
-            </nav>
+              <nav aria-label="Community" className="hidden items-center gap-1 md:flex">
+                <RouterLink to="/circles" className={communityLinkClass(isCircles)} aria-current={isCircles ? "page" : undefined}>
+                  <FiUsers size={15} /> <span className="hidden lg:inline">Circles</span>
+                </RouterLink>
+                <RouterLink to="/series" className={communityLinkClass(isSeries)} aria-current={isSeries ? "page" : undefined}>
+                  <FiBookOpen size={15} /> <span className="hidden lg:inline">Series</span>
+                </RouterLink>
+              </nav>
+            </>
           ) : (
-            <div className="hidden sm:block font-semibold text-sm text-zinc-500 dark:text-zinc-400">
-              Welcome to the conversation
-            </div>
+            <div className="hidden text-sm font-medium text-zinc-500 dark:text-zinc-400 sm:block">Welcome to the conversation</div>
           )}
 
-          {user && <nav aria-label="Community features" className="hidden md:flex items-center gap-3 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            <RouterLink to="/circles" className="hover:text-zinc-900 dark:hover:text-white">Circles</RouterLink>
-            <RouterLink to="/series" className="hover:text-zinc-900 dark:hover:text-white">Series</RouterLink>
-          </nav>}
-
-          {/* Right: Settings & User Actions */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5">
             {user ? (
               <>
                 <RouterLink
                   to="/settings"
-                  className={`p-2.5 rounded-full transition-all duration-200 active:scale-95 ${
-                    isSettings
-                      ? "bg-zinc-200/90 dark:bg-zinc-800 text-zinc-950 dark:text-white ring-1 ring-zinc-300 dark:ring-zinc-700 shadow-sm"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80"
-                  }`}
+                  className={`grid h-10 w-10 place-items-center rounded-xl transition-colors ${isSettings ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"}`}
                   title="Settings"
                   aria-label="Settings"
+                  aria-current={isSettings ? "page" : undefined}
                 >
                   <FiSettings size={19} />
                 </RouterLink>
-
-                <button
-                  onClick={logout}
-                  className="hidden sm:flex items-center gap-1.5 py-2 px-3 text-sm font-semibold rounded-full text-zinc-600 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 active:scale-95"
-                  title="Log out"
-                >
-                  <FiLogOut size={17} />
-                  <span>Logout</span>
+                <button onClick={logout} className="hidden items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-zinc-500 transition hover:bg-rose-50 hover:text-rose-600 dark:text-zinc-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-300 sm:inline-flex" title="Log out">
+                  <FiLogOut size={16} /> <span>Log out</span>
                 </button>
               </>
             ) : (
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <RouterLink
-                  to="/auth"
-                  onClick={() => setAuthScreen("login")}
-                  className="inline-flex min-h-11 min-w-[76px] items-center justify-center rounded-full border border-zinc-200/90 dark:border-zinc-700 bg-white/70 dark:bg-zinc-900/70 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 whitespace-nowrap transition-colors"
-                >
-                  Log in
-                </RouterLink>
-                <RouterLink
-                  to="/auth"
-                  onClick={() => setAuthScreen("signup")}
-                  className="inline-flex min-h-11 min-w-[84px] items-center justify-center px-3.5 sm:px-4 text-xs sm:text-sm font-semibold rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-sm whitespace-nowrap transition-all"
-                >
-                  Sign up
-                </RouterLink>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <RouterLink to="/auth" onClick={() => setAuthScreen("login")} className="inline-flex min-h-10 items-center justify-center rounded-full border border-zinc-200 bg-white/70 px-3 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-800 sm:px-4 sm:text-sm">Log in</RouterLink>
+                <RouterLink to="/auth" onClick={() => setAuthScreen("signup")} className="inline-flex min-h-10 items-center justify-center rounded-full bg-zinc-900 px-3.5 text-xs font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 sm:px-4 sm:text-sm">Sign up</RouterLink>
               </div>
             )}
           </div>
         </div>
       </header>
 
-      {user && <div className="md:hidden flex justify-center gap-2 -mt-2 mb-3">
-        <RouterLink to="/circles" className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300">Circles</RouterLink>
-        <RouterLink to="/series" className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300">Collaborative Spools</RouterLink>
-      </div>}
-
-      {/* Mobile Floating Bottom Bar */}
       {user && (
-        <div className="md:hidden fixed safe-area-bottom bottom-2 left-2 right-2 sm:left-4 sm:right-4 z-50 backdrop-blur-xl bg-white/90 dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-zinc-800/80 rounded-full shadow-lg px-2.5 sm:px-4 py-2.5 flex items-center justify-around">
-          <RouterLink
-            to="/"
-            className={`p-2 transition-colors ${
-              isHome
-                ? "text-zinc-900 dark:text-white"
-                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-            }`}
-          >
-            {isHome ? <AiFillHome size={24} /> : <AiOutlineHome size={24} />}
+        <nav aria-label="Community features" className="-mt-1 mb-3 grid grid-cols-2 gap-2 px-0.5 md:hidden">
+          <RouterLink to="/circles" aria-current={isCircles ? "page" : undefined} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-colors ${isCircles ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "border-zinc-200/80 bg-white/90 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-800"}`}>
+            <FiUsers size={14} /> Circles
           </RouterLink>
+          <RouterLink to="/series" aria-current={isSeries ? "page" : undefined} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-colors ${isSeries ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "border-zinc-200/80 bg-white/90 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-800"}`}>
+            <FiBookOpen size={14} /> Series
+          </RouterLink>
+        </nav>
+      )}
 
-          <RouterLink
-            to="/search"
-            className={`p-2 transition-colors ${
-              isSearch
-                ? "text-zinc-900 dark:text-white"
-                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-            }`}
-          >
-            <FiSearch size={22} />
+      {user && (
+        <nav aria-label="Quick navigation" className="fixed safe-area-bottom bottom-2.5 left-3 right-3 z-50 flex items-center justify-around rounded-2xl border border-zinc-200/90 bg-white/95 px-2 py-2 shadow-xl shadow-zinc-950/10 backdrop-blur-xl dark:border-zinc-700/80 dark:bg-zinc-900/95 dark:shadow-black/30 sm:left-4 sm:right-4 md:hidden">
+          <RouterLink to="/" aria-label="Home" aria-current={isHome ? "page" : undefined} className={`grid h-10 w-12 place-items-center rounded-xl transition-colors ${isHome ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}>
+            {isHome ? <AiFillHome size={22} /> : <AiOutlineHome size={22} />}
           </RouterLink>
-
-          <RouterLink
-            to="/chat"
-            className={`p-2 transition-colors ${
-              isChat
-                ? "text-zinc-900 dark:text-white"
-                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-            }`}
-          >
-            {isChat ? (
-              <IoChatbubbleEllipsesSharp size={22} />
-            ) : (
-              <IoChatbubbleEllipsesOutline size={22} />
-            )}
+          <RouterLink to="/search" aria-label="Search" aria-current={isSearch ? "page" : undefined} className={`grid h-10 w-12 place-items-center rounded-xl transition-colors ${isSearch ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}>
+            <FiSearch size={21} />
           </RouterLink>
-
-          <RouterLink
-            to={`/${user.username}`}
-            className="p-1 transition-transform active:scale-95"
-          >
-            <img
-              src={user.profilePic || "/defaultdp.png"}
-              alt={user.name}
-              className={`w-7 h-7 rounded-full object-cover ${
-                isProfile ? "ring-2 ring-zinc-900 dark:ring-white" : ""
-              }`}
-            />
+          <RouterLink to="/chat" aria-label="Messages" aria-current={isChat ? "page" : undefined} className={`grid h-10 w-12 place-items-center rounded-xl transition-colors ${isChat ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}>
+            {isChat ? <IoChatbubbleEllipsesSharp size={21} /> : <IoChatbubbleEllipsesOutline size={21} />}
           </RouterLink>
-
-          <RouterLink
-            to="/settings"
-            className={`p-2 transition-colors ${
-              isSettings
-                ? "text-zinc-900 dark:text-white"
-                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-            }`}
-            title="Settings"
-          >
-            <FiSettings size={22} />
+          <RouterLink to={`/${user.username}`} aria-label="Your profile" aria-current={isProfile ? "page" : undefined} className="grid h-10 w-12 place-items-center rounded-xl transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <img src={user.profilePic || "/defaultdp.png"} alt="" className={`h-6 w-6 rounded-full object-cover ${isProfile ? "ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900" : ""}`} />
           </RouterLink>
-        </div>
+        </nav>
       )}
     </>
   );

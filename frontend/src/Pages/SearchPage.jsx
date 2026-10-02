@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
-import { IoCloseCircle } from "react-icons/io5";
+import { FiSearch, FiX } from "react-icons/fi";
 import useShowToast from "../hooks/useShowToast";
 import SuggestedUsers from "../Components/SuggestedUsers";
 
@@ -9,139 +8,119 @@ const SearchPage = () => {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const requestId = useRef(0);
   const showToast = useShowToast();
 
-  const handleSearch = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!searchText.trim()) {
+  const searchUsers = useCallback(async (query, requestKey = null) => {
+    const normalizedQuery = query.trim();
+    const currentRequest = requestKey ?? ++requestId.current;
+    if (requestKey !== null && requestKey !== requestId.current) return;
+
+    if (!normalizedQuery) {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
     try {
-      const res = await fetch(`/api/users/search/${searchText.trim()}`);
+      const res = await fetch(`/api/users/search/${encodeURIComponent(normalizedQuery)}`);
       const data = await res.json();
+      if (currentRequest !== requestId.current) return;
       if (data.error) {
         showToast("Error", data.error, "error");
         return;
       }
       setSearchResults(Array.isArray(data) ? data : []);
     } catch (error) {
-      showToast("Error", error.message, "error");
+      if (currentRequest === requestId.current) showToast("Error", error.message, "error");
     } finally {
-      setIsSearching(false);
+      if (currentRequest === requestId.current) setIsSearching(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchText.trim()) {
-        handleSearch();
-      } else {
-        setSearchResults([]);
-      }
-    }, 350);
+    const query = searchText.trim();
+    const requestKey = ++requestId.current;
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchText]);
+    if (!query) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return undefined;
+    }
+
+    setSearchResults([]);
+    setIsSearching(true);
+    const delayDebounce = setTimeout(() => searchUsers(query, requestKey), 350);
+    return () => clearTimeout(delayDebounce);
+  }, [searchText, searchUsers]);
+
+  const clearSearch = () => {
+    requestId.current += 1;
+    setSearchText("");
+    setSearchResults([]);
+    setIsSearching(false);
+  };
 
   return (
-    <div className="max-w-xl mx-auto pt-2 pb-16 w-full">
-      {/* Search Input Bar */}
-      <form onSubmit={handleSearch} className="relative w-full mb-6">
-        <FiSearch
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
-          size={18}
-        />
+    <main className="mx-auto w-full max-w-2xl px-1 pb-16 pt-3">
+      <h1 className="mb-4 text-xl font-bold text-zinc-900 dark:text-white">Search</h1>
+
+      <form role="search" onSubmit={(event) => { event.preventDefault(); searchUsers(searchText); }} className="relative">
+        <FiSearch aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
         <input
           type="text"
-          placeholder="Search for people on Spools..."
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="w-full pl-11 pr-10 py-3 text-sm md:text-base rounded-2xl bg-zinc-100 dark:bg-zinc-850/80 border border-zinc-200/80 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-all shadow-sm"
+          onChange={(event) => setSearchText(event.target.value)}
+          placeholder="Search people by name or username"
+          aria-label="Search people by name or username"
+          className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50 pl-11 pr-11 text-sm text-zinc-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white dark:focus:border-indigo-500 dark:focus:bg-zinc-900 dark:focus:ring-indigo-950"
         />
         {searchText && (
-          <button
-            type="button"
-            onClick={() => setSearchText("")}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-          >
-            <IoCloseCircle size={18} />
+          <button type="button" onClick={clearSearch} aria-label="Clear search" className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-zinc-400 hover:bg-zinc-200/70 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+            <FiX size={17} />
           </button>
         )}
       </form>
 
-      {/* Loading Skeleton */}
-      {isSearching && (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 animate-pulse border border-zinc-100 dark:border-zinc-800/60"
-            >
-              <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 flex-shrink-0" />
-              <div className="flex-1 space-y-2">
-                <div className="w-28 h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded" />
-                <div className="w-20 h-3 bg-zinc-200 dark:bg-zinc-800 rounded" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Search Results */}
-      {!isSearching && searchResults.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 px-2 mb-3">
-            Search Results ({searchResults.length})
-          </h3>
-          {searchResults.map((user) => (
-            <Link
-              key={user._id}
-              to={`/${user.username}`}
-              className="flex items-center justify-between p-3.5 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 group"
-            >
-              <div className="flex items-center gap-3">
-                <img
-                  src={user.profilePic || "/defaultdp.png"}
-                  alt={user.name}
-                  className="w-11 h-11 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
-                />
-                <div>
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 group-hover:underline">
-                      {user.username}
-                    </span>
-                    <img src="/verified.png" alt="Verified" className="w-3.5 h-3.5" />
-                  </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">{user.name}</p>
-                </div>
-              </div>
-
-              <span className="text-xs font-semibold px-4 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 transition-colors">
-                View
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* No results */}
-      {!isSearching && searchResults.length === 0 && searchText && (
-        <div className="text-center py-16 text-zinc-400">
-          <p className="text-sm font-medium">No users found matching &ldquo;{searchText}&rdquo;</p>
-          <p className="text-xs mt-1 text-zinc-500">Try searching with another name or username.</p>
-        </div>
-      )}
-
-      {/* Empty Search: Suggested Users */}
-      {!searchText && (
-        <div className="mt-4">
+      {!searchText.trim() && (
+        <section className="mt-6">
           <SuggestedUsers />
-        </div>
+        </section>
       )}
-    </div>
+
+      <section aria-live="polite" className="mt-5">
+        {isSearching ? (
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className="flex animate-pulse items-center gap-3 py-3">
+                <div className="h-11 w-11 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                <div className="space-y-2"><div className="h-3 w-28 rounded bg-zinc-200 dark:bg-zinc-800" /><div className="h-3 w-20 rounded bg-zinc-100 dark:bg-zinc-800/70" /></div>
+              </div>
+            ))}
+          </div>
+        ) : searchText.trim() && searchResults.length ? (
+          <>
+            <p className="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              {searchResults.length} {searchResults.length === 1 ? "person" : "people"}
+            </p>
+            <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {searchResults.map((user) => (
+                <Link key={user._id} to={`/${user.username}`} className="flex items-center gap-3 rounded-xl px-2 py-3 transition hover:bg-zinc-50 dark:hover:bg-zinc-900">
+                  <img src={user.profilePic || "/defaultdp.png"} alt={user.name || user.username} className="h-11 w-11 rounded-full object-cover" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">@{user.username}</p>
+                    <p className="truncate text-sm text-zinc-500 dark:text-zinc-400">{user.name}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        ) : searchText.trim() ? (
+          <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">No people found for “{searchText.trim()}”.</p>
+        ) : null}
+      </section>
+    </main>
   );
 };
 

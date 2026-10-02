@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import UserHeader from "../Components/UserHeader";
 import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
-import { Flex, Spinner } from "@chakra-ui/react";
 import Post from "../Components/Post";
 import useGetUserProfile from "../hooks/useGetUserProfile";
 import { useRecoilState } from "recoil";
 import postsAtom from "../atoms/postsAtom";
 import { setShareMetadata } from "../utils/shareMetadata";
+import { FiLock, FiMessageCircle, FiBookmark } from "react-icons/fi";
 
 const UserPage = () => {
 	const { user, loading } = useGetUserProfile();
@@ -68,38 +68,46 @@ const UserPage = () => {
 
 	if (!user && loading) {
 		return (
-			<Flex justifyContent={"center"} my={16}>
-				<Spinner size={"xl"} />
-			</Flex>
+			<div className="mx-auto flex max-w-3xl justify-center py-20">
+				<div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent dark:border-indigo-300 dark:border-t-transparent" />
+			</div>
 		);
 	}
 
-	if (!user && !loading) return <h1 className="text-center text-lg my-12 font-semibold">User not found</h1>;
+	if (!user && !loading) return <h1 className="my-12 text-center text-lg font-semibold text-zinc-700 dark:text-zinc-300">User not found</h1>;
 
 	return (
-		<>
+		<main className="mx-auto max-w-3xl space-y-4 pb-12">
 			<UserHeader user={user} activeTab={activeTab} setActiveTab={setActiveTab} />
 
 			{!fetchingPosts && posts.length === 0 && (
-				<div className="text-center py-16 text-zinc-500 dark:text-zinc-400">
-					{user.canViewContent === false ? <div className="mx-auto max-w-sm rounded-3xl border border-zinc-200 bg-zinc-50 px-6 py-8 dark:border-zinc-800 dark:bg-zinc-900/70"><h2 className="font-bold text-zinc-900 dark:text-white">This profile is private</h2><p className="mt-2 text-sm font-normal">Follow @{user.username} and wait for approval to see their Spools, replies, and people lists.</p></div> : <p className="text-base font-medium">
-						{activeTab === "spools" && "This user has not posted any spools yet."}
-						{activeTab === "replies" && "No replies found."}
-						{activeTab === "saved" && "You haven't saved any spools yet."}
-					</p>}
+				<div className="rounded-3xl border border-zinc-200/80 bg-white px-5 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900/60 sm:py-14">
+					{user.canViewContent === false ? (
+						<>
+							<span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"><FiLock size={20} /></span>
+							<h2 className="mt-4 font-bold text-zinc-900 dark:text-white">This profile is private</h2>
+							<p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">Follow @{user.username} and wait for approval to see their Spools, replies, and people lists.</p>
+						</>
+					) : (
+						<>
+							<span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300">{activeTab === "saved" ? <FiBookmark size={20} /> : <FiMessageCircle size={20} />}</span>
+							<h2 className="mt-4 font-bold text-zinc-900 dark:text-white">{activeTab === "spools" ? "No Spools yet" : activeTab === "replies" ? "No replies yet" : "Nothing saved yet"}</h2>
+							<p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{activeTab === "spools" ? "Their posts will show up here." : activeTab === "replies" ? "Replies from this profile will show up here." : "Spools you save will show up here."}</p>
+						</>
+					)}
 				</div>
 			)}
 			{fetchingPosts && (
-				<Flex justifyContent={"center"} my={12}>
-					<Spinner size={"xl"} />
-				</Flex>
+				<div className="flex justify-center py-12">
+					<div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent dark:border-indigo-300 dark:border-t-transparent" />
+				</div>
 			)}
 
 			{!fetchingPosts &&
 				posts.map((post) => (
 					<Post key={post._id} post={post} postedBy={post.postedBy} />
 				))}
-		</>
+		</main>
 	);
 };
 
