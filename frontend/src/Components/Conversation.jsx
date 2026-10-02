@@ -1,7 +1,7 @@
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { BsCheck2All } from "react-icons/bs";
-import { FiImage } from "react-icons/fi";
+import { FiImage, FiMic } from "react-icons/fi";
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 import { formatDistanceToNow } from "date-fns";
 
@@ -23,7 +23,7 @@ const Conversation = ({ conversation, isOnline }) => {
   const updatedLabel = conversation?.updatedAt
     ? formatDistanceToNow(new Date(conversation.updatedAt), { addSuffix: false })
     : "";
-  const previewText = lastMessage?.text || (lastMessage?.sender ? "Photo" : "Start a conversation");
+  const previewText = lastMessage?.text || (lastMessage?.type === "audio" ? "Voice message" : lastMessage?.sender ? "Photo" : "Start a conversation");
 
   const handleSelectConversation = () => {
     setSelectedConversation({
@@ -83,7 +83,7 @@ const Conversation = ({ conversation, isOnline }) => {
             </span>
           )}
           <span className={`flex min-w-0 items-center gap-1.5 truncate ${hasUnreadMessage ? "font-semibold text-zinc-800 dark:text-zinc-100" : ""}`}>
-            {!lastMessage?.text && lastMessage?.sender && <FiImage className="shrink-0" size={13} />}
+            {lastMessage?.type === "audio" ? <FiMic className="shrink-0" size={13} /> : !lastMessage?.text && lastMessage?.sender && <FiImage className="shrink-0" size={13} />}
             <span className="truncate">{previewText}</span>
           </span>
           {unreadCount > 0 && (

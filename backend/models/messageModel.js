@@ -19,6 +19,22 @@ const messageSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    audio: {
+      type: String,
+      default: "",
+    },
+    audioDuration: {
+      type: Number,
+      default: 0,
+    },
+    audioWaveform: {
+      type: [Number],
+      default: [],
+    },
+    forwarded: {
+      type: Boolean,
+      default: false,
+    },
     replyTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message",

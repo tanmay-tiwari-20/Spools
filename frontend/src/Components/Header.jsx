@@ -75,7 +75,12 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
           updated.push({
             _id: conversationId,
             updatedAt: message.createdAt || new Date().toISOString(),
-            lastMessage: { text: message.text, sender: message.sender, seen: false },
+            lastMessage: {
+              text: message.text || (message.audio ? "Voice message" : message.img ? "Photo" : ""),
+              sender: message.sender,
+              type: message.audio ? "audio" : message.img ? "image" : "text",
+              seen: false,
+            },
             unreadCount: isViewingConversation ? 0 : 1,
             participants: [message.senderProfile],
           });

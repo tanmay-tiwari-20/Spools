@@ -87,8 +87,9 @@ const MessageContainer = () => {
               mock: false,
               updatedAt: message.createdAt || new Date().toISOString(),
               lastMessage: {
-                text: message.text,
+                text: message.text || (message.audio ? "Voice message" : message.img ? "Photo" : ""),
                 sender: message.sender,
+                type: message.audio ? "audio" : message.img ? "image" : "text",
                 seen: false,
               },
             };

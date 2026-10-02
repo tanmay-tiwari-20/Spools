@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRecoilValue } from "recoil";
 import { BsCheck2All } from "react-icons/bs";
-import { FiCornerUpLeft, FiCopy, FiDownload, FiMoreHorizontal, FiTrash2, FiX } from "react-icons/fi";
+import { FiCornerUpLeft, FiCopy, FiDownload, FiMoreHorizontal, FiShare, FiTrash2, FiX } from "react-icons/fi";
 import { format } from "date-fns";
 import { selectedConversationAtom } from "../atoms/messagesAtom";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
+import AudioMessagePlayer from "./AudioMessagePlayer";
+import ForwardMessageModal from "./ForwardMessageModal";
 
 const Message = ({ ownMessage, message, onReply, onDelete, onImageLoad }) => {
   const selectedConversation = useRecoilValue(selectedConversationAtom);
@@ -15,6 +17,7 @@ const Message = ({ ownMessage, message, onReply, onDelete, onImageLoad }) => {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [forwardOpen, setForwardOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 12, left: 12 });
   const [swipeOffset, setSwipeOffset] = useState(0);
   const touchStart = useRef(null);
@@ -24,7 +27,8 @@ const Message = ({ ownMessage, message, onReply, onDelete, onImageLoad }) => {
   const formattedTime = message.createdAt ? format(new Date(message.createdAt), "h:mm a") : "";
 
   const openActionsAt = (x, y) => {
-    const menuHeight = ownMessage ? 142 : 104;
+    const actionCount = (message.audio ? 0 : 1) + 2 + (ownMessage ? 1 : 0);
+    const menuHeight = actionCount * 40 + 18;
     const menuWidth = 176;
     setMenuPosition({
       top: Math.max(12, Math.min(y - 44, window.innerHeight - menuHeight - 12)),
@@ -89,11 +93,11 @@ const Message = ({ ownMessage, message, onReply, onDelete, onImageLoad }) => {
   };
 
   const copyMessage = async () => {
-    const value = message.text || message.img;
+    const value = message.text || message.img || message.audio;
     if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
-      showToast("Copied", message.text ? "Message copied to clipboard." : "Image link copied to clipboard.", "success");
+      showToast("Copied", message.text ? "Message copied to clipboard." : message.audio ? "Voice message link copied to clipboard." : "Image link copied to clipboard.", "success");
     } catch {
       showToast("Could not copy", "Clipboard access is unavailable in this browser.", "error");
     }
@@ -148,6 +152,9 @@ const Message = ({ ownMessage, message, onReply, onDelete, onImageLoad }) => {
       )}
 
       <div className={`relative flex min-w-0 flex-col ${ownMessage ? "items-end" : "items-start"}`}>
+        {message.forwarded && (
+          <span className="mb-1 inline-flex items-center gap-1 px-1 text-[10px] font-medium text-zinc-400 dark:text-zinc-500"><FiShare size={11} /> Forwarded</span>
+        )}
         {(message.replyTo || message.text) && (
           <div className={`max-w-full overflow-hidden ${ownMessage ? "rounded-2xl rounded-br-sm bg-zinc-900 text-white shadow-sm dark:bg-indigo-600" : "rounded-2xl rounded-bl-sm bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"}`}>
             {message.replyTo && (
@@ -155,11 +162,23 @@ const Message = ({ ownMessage, message, onReply, onDelete, onImageLoad }) => {
                 <FiCornerUpLeft aria-hidden="true" className={`mt-0.5 shrink-0 ${ownMessage ? "text-white/70" : "text-indigo-600 dark:text-indigo-300"}`} size={13} />
                 <div className="min-w-0">
                   <p className={`truncate text-[10px] font-bold tracking-wide ${ownMessage ? "text-white/80" : "text-indigo-700 dark:text-indigo-300"}`}>{quotedAuthor}</p>
-                  <p className={`max-h-8 overflow-hidden break-words text-xs leading-4 ${ownMessage ? "text-white/80" : "text-zinc-600 dark:text-zinc-300"}`}>{message.replyTo.text || (message.replyTo.img ? "Photo" : "Message")}</p>
+                  <p className={`max-h-8 overflow-hidden break-words text-xs leading-4 ${ownMessage ? "text-white/80" : "text-zinc-600 dark:text-zinc-300"}`}>{message.replyTo.text || (message.replyTo.audio ? "Voice message" : message.replyTo.img ? "Photo" : "Message")}</p>
                 </div>
               </div>
             )}
             {message.text && <p className="whitespace-pre-wrap break-words px-3.5 py-2.5 text-sm leading-relaxed">{message.text}</p>}
+          </div>
+        )}
+
+        {message.audio && (
+          <div className="mt-1 max-w-full">
+            <AudioMessagePlayer
+              src={message.audio}
+              duration={message.audioDuration}
+              waveform={message.audioWaveform}
+              ownMessage={ownMessage}
+              downloadName={`voice-message-${message._id || "audio"}.webm`}
+            />
           </div>
         )}
 
@@ -201,12 +220,15 @@ const Message = ({ ownMessage, message, onReply, onDelete, onImageLoad }) => {
           style={menuPosition}
           className="fixed z-[110] w-44 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-1.5 text-zinc-700 shadow-xl shadow-zinc-950/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-black/40"
         >
-          <button type="button" role="menuitem" onClick={copyMessage} className="flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"><FiCopy size={15} /> Copy</button>
+          {!message.audio && <button type="button" role="menuitem" onClick={copyMessage} className="flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"><FiCopy size={15} /> Copy</button>}
           <button type="button" role="menuitem" onClick={() => { onReply?.(message); setActionsOpen(false); }} className="flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"><FiCornerUpLeft size={15} /> Reply</button>
+          <button type="button" role="menuitem" onClick={() => { setActionsOpen(false); setForwardOpen(true); }} className="flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"><FiShare size={15} /> Forward</button>
           {ownMessage && <button type="button" role="menuitem" onClick={deleteMessage} className="flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"><FiTrash2 size={15} /> Delete</button>}
         </div>,
         document.body
       )}
+
+      {forwardOpen && <ForwardMessageModal message={message} onClose={() => setForwardOpen(false)} />}
 
       {imageOpen && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Shared image" onClick={() => setImageOpen(false)} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 backdrop-blur-sm sm:p-6">

@@ -59,14 +59,24 @@ const ChatPage = () => {
             _id: conversationId,
             mock: false,
             updatedAt: message.createdAt || new Date().toISOString(),
-            lastMessage: { text: message.text, sender: message.sender, seen: false },
+            lastMessage: {
+              text: message.text || (message.audio ? "Voice message" : message.img ? "Photo" : ""),
+              sender: message.sender,
+              type: message.audio ? "audio" : message.img ? "image" : "text",
+              seen: false,
+            },
           };
         });
         if (!found && message.senderProfile) {
           updated.push({
             _id: conversationId,
             updatedAt: message.createdAt || new Date().toISOString(),
-            lastMessage: { text: message.text, sender: message.sender, seen: false },
+            lastMessage: {
+              text: message.text || (message.audio ? "Voice message" : message.img ? "Photo" : ""),
+              sender: message.sender,
+              type: message.audio ? "audio" : message.img ? "image" : "text",
+              seen: false,
+            },
             participants: [message.senderProfile],
           });
         }
