@@ -197,6 +197,11 @@ const MessageContainer = () => {
   useEffect(() => {
     const abortController = new AbortController();
     const getMessages = async () => {
+      if (selectedConversation.unavailable) {
+        setMessages([]);
+        setLoadingMessages(false);
+        return;
+      }
       setLoadingMessages(true);
       setMessages([]);
       try {
@@ -206,6 +211,16 @@ const MessageContainer = () => {
         });
         const data = await res.json();
         if (abortController.signal.aborted) return;
+        if (res.status === 404) {
+          setMessages([]);
+          setConversations((previous) => previous.filter((conversation) =>
+            !(conversation?.participants || []).some((participant) =>
+              String(participant?._id || participant) === String(selectedConversation.userId)
+            )
+          ));
+          setSelectedConversation((current) => ({ ...current, unavailable: true }));
+          return;
+        }
         if (data.error || !Array.isArray(data)) {
           if (data.error) showToast("Error", data.error, "error");
           setMessages([]);
@@ -229,7 +244,9 @@ const MessageContainer = () => {
 
     getMessages();
     return () => abortController.abort();
-  }, [showToast, selectedConversation.userId, selectedConversation.mock]);
+  }, [showToast, selectedConversation.userId, selectedConversation.mock, selectedConversation.unavailable, setConversations, setSelectedConversation]);
+
+  const isUnavailable = Boolean(selectedConversation.unavailable);
 
   return (
     <div className="flex h-full flex-col overflow-hidden pt-[env(safe-area-inset-top)] md:pt-0">
@@ -253,7 +270,7 @@ const MessageContainer = () => {
               alt={selectedConversation.username}
               className="h-10 w-10 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
             />
-            {isPeerOnline && <span aria-label="Online" title="Online" className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 dark:border-zinc-950" />}
+            {!isUnavailable && isPeerOnline && <span aria-label="Online" title="Online" className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 dark:border-zinc-950" />}
           </span>
           <div>
             <div className="flex items-center gap-1">
@@ -263,7 +280,7 @@ const MessageContainer = () => {
               <img src="/verified.png" alt="Verified" className="w-3.5 h-3.5 inline" />
             </div>
             <span className={`text-xs ${remoteTyping ? "font-medium text-emerald-600 dark:text-emerald-400" : "text-zinc-500 dark:text-zinc-400"}`}>
-              {remoteTyping ? "typing…" : isPeerOnline ? "Active now" : "View profile"}
+              {isUnavailable ? "Account unavailable" : remoteTyping ? "typing…" : isPeerOnline ? "Active now" : "View profile"}
             </span>
           </div>
         </Link>
@@ -287,7 +304,17 @@ const MessageContainer = () => {
             </div>
           ))}
 
-        {!loadingMessages && messages.length === 0 && (
+        {!loadingMessages && isUnavailable && (
+          <div className="flex h-full flex-col items-center justify-center py-12 text-center">
+            <span className="mb-3 grid h-12 w-12 place-items-center rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+              <span className="text-lg" aria-hidden="true">⌁</span>
+            </span>
+            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">This account is unavailable</p>
+            <p className="mt-1 max-w-xs text-xs text-zinc-500 dark:text-zinc-400">This conversation will be available again if the account is reactivated.</p>
+          </div>
+        )}
+
+        {!loadingMessages && !isUnavailable && messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center py-12 text-center text-zinc-400">
             <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300">👋</span>
             <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Say hello to @{selectedConversation.username}!</p>
@@ -295,7 +322,7 @@ const MessageContainer = () => {
           </div>
         )}
 
-        {!loadingMessages &&
+        {!loadingMessages && !isUnavailable &&
           messages.map((message) => (
             <div key={message._id || `${message.createdAt}-${message.sender}`}>
               <Message
@@ -308,7 +335,7 @@ const MessageContainer = () => {
             </div>
           ))}
 
-        {!loadingMessages && remoteTyping && (
+        {!loadingMessages && !isUnavailable && remoteTyping && (
           <div className="mb-3 flex items-end gap-2" aria-label={`${selectedConversation.username} is typing`}>
             <img src={selectedConversation.userProfilePic || "/defaultdp.png"} alt="" className="mb-1 h-7 w-7 rounded-full object-cover" />
             <div className="flex h-9 items-center gap-1 rounded-2xl rounded-bl-sm bg-zinc-100 px-3 dark:bg-zinc-800">
@@ -321,9 +348,11 @@ const MessageContainer = () => {
       </div>
 
       {/* Message Input Bar */}
-      <div className="px-2 md:px-0">
-        <MessageInput setMessages={setMessages} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
-      </div>
+      {!isUnavailable && (
+        <div className="px-2 md:px-0">
+          <MessageInput setMessages={setMessages} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
+        </div>
+      )}
     </div>
   );
 };

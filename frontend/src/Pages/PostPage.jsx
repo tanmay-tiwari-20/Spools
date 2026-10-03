@@ -10,6 +10,7 @@ import Actions from "../Components/Actions";
 import Comment from "../Components/Comment";
 import { MdDeleteOutline } from "react-icons/md";
 import { IoSend } from "react-icons/io5";
+import { FiMessageCircle } from "react-icons/fi";
 import { setShareMetadata } from "../utils/shareMetadata";
 
 const PostPage = () => {
@@ -22,6 +23,7 @@ const PostPage = () => {
 
   const [replyText, setReplyText] = useState("");
   const [isReplying, setIsReplying] = useState(false);
+  const [postUnavailable, setPostUnavailable] = useState(false);
 
   const currentPost = posts[0];
   const author = useMemo(
@@ -52,9 +54,14 @@ const PostPage = () => {
   useEffect(() => {
     const getPost = async () => {
       setPosts([]);
+      setPostUnavailable(false);
       try {
         const res = await fetch(`/api/posts/${pid}`);
         const data = await res.json();
+        if (res.status === 404) {
+          setPostUnavailable(true);
+          return;
+        }
         if (data.error) {
           showToast("Error", data.error, "error");
           return;
@@ -66,6 +73,17 @@ const PostPage = () => {
     };
     getPost();
   }, [showToast, pid, setPosts]);
+
+  if (postUnavailable) {
+    return (
+      <main className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center px-6 text-center">
+        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"><FiMessageCircle size={22} /></span>
+        <h1 className="mt-4 text-lg font-bold text-zinc-900 dark:text-white">This Spool isn’t available</h1>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">It may have been removed or its account is unavailable.</p>
+        <Link to="/" className="mt-4 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-zinc-900">Back to home</Link>
+      </main>
+    );
+  }
 
   const handleDeletePost = async () => {
     try {

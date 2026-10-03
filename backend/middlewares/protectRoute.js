@@ -28,6 +28,11 @@ const protectRoute = async (req, res, next) => {
       return res.status(401).json({ error: "Unauthorized", message: "User not found" });
     }
 
+    if (user.isFrozen) {
+      res.cookie("jwt", "", { maxAge: 1, httpOnly: true, sameSite: "strict" });
+      return res.status(401).json({ error: "Unauthorized", message: "This account is frozen. Log in to reactivate it." });
+    }
+
     req.user = user;
     next();
   } catch (err) {

@@ -47,6 +47,10 @@ async function sendMessage(req, res) {
     if (String(recipientId) === String(senderId)) {
       return res.status(400).json({ error: "You cannot message yourself." });
     }
+    const recipient = await User.findById(recipientId).select("_id isFrozen");
+    if (!recipient || recipient.isFrozen) {
+      return res.status(404).json({ error: "This account is unavailable." });
+    }
 
     // Find or create the conversation between the sender and recipient
     let conversation = await Conversation.findOne({
@@ -289,6 +293,11 @@ async function getMessages(req, res) {
   const { otherUserId } = req.params;
   const userId = req.user._id;
   try {
+    const otherUser = await User.findById(otherUserId).select("_id isFrozen");
+    if (!otherUser || otherUser.isFrozen) {
+      return res.status(404).json({ error: "This conversation is unavailable." });
+    }
+
     const conversation = await Conversation.findOne({
       participants: { $all: [userId, otherUserId] },
     });
@@ -310,12 +319,15 @@ async function getMessages(req, res) {
 async function getConversations(req, res) {
   const userId = req.user._id;
   try {
-    const conversations = await Conversation.find({
+    const allConversations = await Conversation.find({
       participants: userId,
     }).populate({
       path: "participants",
-      select: "username profilePic",
+      select: "username profilePic isFrozen",
     });
+    const conversations = allConversations.filter((conversation) =>
+      conversation.participants.every((participant) => participant && !participant.isFrozen)
+    );
 
     const unreadCounts = await Message.aggregate([
       {

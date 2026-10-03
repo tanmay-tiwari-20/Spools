@@ -1,19 +1,19 @@
 import Circle from "../models/circleModel.js";
 import Post from "../models/postModel.js";
-import { canViewPrivateProfile } from "../utils/profilePrivacy.js";
+import { canViewPrivateProfile, removeFrozenReplies } from "../utils/profilePrivacy.js";
 
 const isCreator = (circle, userId) => String(circle.creator) === String(userId);
 const populateCircle = (query) => query.populate("creator", "username profilePic").populate("members", "username profilePic");
-const visibleCirclePosts = (posts, viewerId) => posts
-  .filter((post) => canViewPrivateProfile(post.postedBy, viewerId))
-  .map((post) => {
-    const result = post.toObject();
+const visibleCirclePosts = async (posts, viewerId) => {
+  const visiblePosts = await removeFrozenReplies(posts.filter((post) => canViewPrivateProfile(post.postedBy, viewerId)));
+  return visiblePosts.map((result) => {
     if (result.postedBy) {
       delete result.postedBy.followers;
       delete result.postedBy.isPrivate;
     }
     return result;
   });
+};
 
 export const listCircles = async (_req, res) => {
   try {
@@ -58,7 +58,7 @@ export const getCircle = async (req, res) => {
     const circle = await populateCircle(Circle.findById(req.params.id));
     if (!circle) return res.status(404).json({ error: "Circle not found" });
     const posts = await Post.find({ circle: circle._id }).populate("postedBy", "name username profilePic isFrozen isPrivate followers").sort({ createdAt: -1 });
-    res.json({ circle, posts: visibleCirclePosts(posts, req.user._id) });
+    res.json({ circle, posts: await visibleCirclePosts(posts, req.user._id) });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
@@ -81,7 +81,7 @@ export const updateCircle = async (req, res) => {
       { path: "members", select: "username profilePic" },
     ]);
     const posts = await Post.find({ circle: circle._id }).populate("postedBy", "name username profilePic isFrozen isPrivate followers").sort({ createdAt: -1 });
-    return res.status(200).json({ circle, posts: visibleCirclePosts(posts, req.user._id) });
+    return res.status(200).json({ circle, posts: await visibleCirclePosts(posts, req.user._id) });
   } catch (error) { return res.status(500).json({ error: error.message }); }
 };
 

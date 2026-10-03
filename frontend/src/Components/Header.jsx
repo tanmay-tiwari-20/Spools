@@ -160,6 +160,19 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
             {user ? (
               <>
                 <RouterLink
+                  to={`/${user.username}`}
+                  className="hidden h-10 items-center rounded-xl p-1 transition-opacity hover:opacity-80 md:flex"
+                  title="Your profile"
+                  aria-label="Your profile"
+                  aria-current={isProfile ? "page" : undefined}
+                >
+                  <img
+                    src={user.profilePic || "/defaultdp.png"}
+                    alt=""
+                    className={`h-8 w-8 rounded-full object-cover ${isProfile ? "ring-2 ring-indigo-500 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900" : "ring-1 ring-zinc-200 dark:ring-zinc-700"}`}
+                  />
+                </RouterLink>
+                <RouterLink
                   to="/settings"
                   className={`grid h-10 w-10 place-items-center rounded-xl transition-colors ${isSettings ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"}`}
                   title="Settings"

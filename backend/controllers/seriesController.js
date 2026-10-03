@@ -1,7 +1,7 @@
 import SpoolSeries from "../models/spoolSeriesModel.js";
 import User from "../models/userModel.js";
 import Post from "../models/postModel.js";
-import { canViewPrivateProfile } from "../utils/profilePrivacy.js";
+import { canViewPrivateProfile, removeFrozenReplies } from "../utils/profilePrivacy.js";
 
 const canContribute = (series, userId) => series.creator.toString() === userId.toString() || series.collaborators.some((id) => id.toString() === userId.toString());
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -69,7 +69,7 @@ export const getSeries = async (req, res) => {
     const series = await SpoolSeries.findById(req.params.id).populate("creator", "username profilePic").populate("collaborators", "username profilePic").populate({ path: "parts", populate: { path: "postedBy", select: "name username profilePic isFrozen isPrivate followers" } });
     if (!series) return res.status(404).json({ error: "Series not found" });
     const result = series.toObject();
-    result.parts = result.parts.filter((part) => part && canViewPrivateProfile(part.postedBy, req.user._id));
+    result.parts = await removeFrozenReplies(result.parts.filter((part) => part && canViewPrivateProfile(part.postedBy, req.user._id)));
     result.parts.forEach((part) => {
       if (part.postedBy) {
         delete part.postedBy.followers;

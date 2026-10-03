@@ -3,7 +3,7 @@ import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import Circle from "../models/circleModel.js";
 import { deliverUserNotification } from "../utils/webPush.js";
-import { canViewPost, canViewPrivateProfile } from "../utils/profilePrivacy.js";
+import { canViewPost, canViewPrivateProfile, removeFrozenReplies } from "../utils/profilePrivacy.js";
 
 const createPost = async (req, res) => {
   try {
@@ -24,6 +24,7 @@ const createPost = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    if (user.isFrozen) return res.status(403).json({ error: "Frozen accounts cannot publish Spools." });
 
     if (user._id.toString() !== req.user._id.toString()) {
       return res.status(401).json({ error: "Unauthorized to create post" });
@@ -74,12 +75,13 @@ const getPost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
+    if (post.postedBy?.isFrozen) return res.status(404).json({ error: "Post not found" });
 
     if (!canViewPrivateProfile(post.postedBy, req.user?._id)) {
       return res.status(403).json({ error: "This spool belongs to a private profile." });
     }
 
-    const postData = post.toObject();
+    const [postData] = await removeFrozenReplies([post]);
     if (postData.postedBy) {
       delete postData.postedBy.followers;
       delete postData.postedBy.isPrivate;
@@ -219,17 +221,23 @@ const getFeedPosts = async (req, res) => {
 
     const following = (user.following || []).map((id) => id.toString());
     const feedType = req.query.type === "explore" ? "explore" : "following";
+    const frozenAuthors = await User.find({ isFrozen: true }).distinct("_id");
     const hiddenPrivateAuthors = feedType === "explore"
       ? await User.find({ isPrivate: true, _id: { $ne: userId }, followers: { $ne: userId.toString() } }).distinct("_id")
       : [];
     const authorFilter = feedType === "explore"
-      ? { $nin: [...following, userId.toString(), ...hiddenPrivateAuthors] }
+      ? { $nin: [...following, userId.toString(), ...hiddenPrivateAuthors, ...frozenAuthors] }
       : { $in: [...following, userId] };
-    const feedPosts = await Post.find({ postedBy: authorFilter })
+    const feedPosts = await Post.find({
+      $and: [
+        { postedBy: authorFilter },
+        { postedBy: { $nin: frozenAuthors } },
+      ],
+    })
       .populate("postedBy", "name username profilePic isFrozen")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(feedPosts);
+    res.status(200).json(await removeFrozenReplies(feedPosts));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -242,13 +250,14 @@ const getUserPosts = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    if (user.isFrozen) return res.status(404).json({ error: "Profile unavailable" });
     if (!canViewPrivateProfile(user, req.user?._id)) return res.status(403).json({ error: "This profile is private. Request to follow to see their spools." });
 
     const posts = await Post.find({ postedBy: user._id })
       .populate("postedBy", "name username profilePic isFrozen")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(posts);
+    res.status(200).json(await removeFrozenReplies(posts));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -261,11 +270,13 @@ const getUserReplies = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    if (user.isFrozen) return res.status(404).json({ error: "Profile unavailable" });
     if (!canViewPrivateProfile(user, req.user?._id)) return res.status(403).json({ error: "This profile is private. Request to follow to see their replies." });
 
-    const posts = await Post.find({ "replies.userId": user._id })
+    const candidatePosts = await Post.find({ "replies.userId": user._id })
       .populate("postedBy", "name username profilePic isFrozen")
       .sort({ createdAt: -1 });
+    const posts = await removeFrozenReplies(candidatePosts.filter((post) => canViewPrivateProfile(post.postedBy, req.user?._id)));
 
     res.status(200).json(posts);
   } catch (error) {
@@ -318,7 +329,7 @@ const getSavedPosts = async (req, res) => {
     for (const post of savedPosts) {
       if (await canViewPost(post, req.user._id)) visiblePosts.push(post);
     }
-    res.status(200).json(visiblePosts);
+    res.status(200).json(await removeFrozenReplies(visiblePosts));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

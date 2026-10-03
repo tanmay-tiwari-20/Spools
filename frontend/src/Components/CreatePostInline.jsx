@@ -7,6 +7,7 @@ import { useRecoilValue, useRecoilState } from "recoil";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
 import ReplyPermissionPicker from "./ReplyPermissionPicker";
+import { Link } from "react-router-dom";
 
 const MAX_CHAR = 500;
 
@@ -61,11 +62,18 @@ const CreatePostInline = () => {
   return (
     <div className="w-full mb-6 p-4 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm transition-all">
       <div className="flex gap-3">
-        <img
-          src={user.profilePic || "/defaultdp.png"}
-          alt={user.name}
-          className="w-10 h-10 rounded-full object-cover ring-2 ring-zinc-200/50 dark:ring-zinc-800 flex-shrink-0"
-        />
+        <Link
+          to={`/${user.username}`}
+          title="Go to your profile"
+          aria-label="Go to your profile"
+          className="h-10 w-10 flex-shrink-0 rounded-full transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+        >
+          <img
+            src={user.profilePic || "/defaultdp.png"}
+            alt={user.name || "Your profile"}
+            className="h-10 w-10 rounded-full object-cover ring-2 ring-zinc-200/50 dark:ring-zinc-700"
+          />
+        </Link>
 
         <div className="flex-1 flex flex-col">
           <textarea

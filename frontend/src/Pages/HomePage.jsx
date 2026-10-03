@@ -43,7 +43,9 @@ const HomePage = () => {
         setLoading(false);
       }
     };
+    window.addEventListener("spools:account-restored", getFeedPosts);
     getFeedPosts();
+    return () => window.removeEventListener("spools:account-restored", getFeedPosts);
   }, [showToast, setPosts, feedType]);
 
   return (

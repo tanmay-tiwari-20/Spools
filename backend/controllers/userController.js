@@ -6,6 +6,7 @@ import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import { deliverUserNotification } from "../utils/webPush.js";
 import { canViewPrivateProfile } from "../utils/profilePrivacy.js";
+import { io } from "../socket/socket.js";
 
 const getUserProfile = async (req, res) => {
   // We will fetch user profile either with username or userId
@@ -28,6 +29,7 @@ const getUserProfile = async (req, res) => {
     }
 
     if (!user) return res.status(404).json({ error: "User not found" });
+    if (user.isFrozen) return res.status(404).json({ error: "Profile unavailable" });
 
     const viewerId = req.user?._id;
     const isOwner = String(user._id) === String(viewerId);
@@ -59,6 +61,7 @@ const searchUser = async (req, res) => {
   try {
     // Search users by matching the query against username or name, case-insensitively
     const users = await User.find({
+      isFrozen: { $ne: true },
       $or: [
         { username: { $regex: query, $options: "i" } },
         { name: { $regex: query, $options: "i" } },
@@ -129,9 +132,11 @@ const loginUser = async (req, res) => {
     if (!user || !isPasswordCorrect)
       return res.status(400).json({ error: "Invalid username or password" });
 
-    if (user.isFrozen) {
+    const wasFrozen = user.isFrozen;
+    if (wasFrozen) {
       user.isFrozen = false;
       await user.save();
+      io.emit("accountRestored", { userId: String(user._id), username: user.username });
     }
 
     generateTokenAndSetCookie(user._id, res);
@@ -181,6 +186,7 @@ const followUnFollowUser = async (req, res) => {
 
     if (!userToModify || !currentUser)
       return res.status(400).json({ error: "User not found" });
+    if (userToModify.isFrozen) return res.status(404).json({ error: "User not found" });
 
     const isFollowing = currentUser.following.some((followedId) => String(followedId) === String(id));
     const isRequestPending = userToModify.followRequests.some((requestId) => String(requestId) === String(req.user._id));
@@ -241,8 +247,9 @@ const updatePrivacy = async (req, res) => {
 
 const getRelationshipList = async (req, res) => {
   try {
-    const profile = await User.findById(req.params.id).select("isPrivate followers following");
+    const profile = await User.findById(req.params.id).select("isPrivate isFrozen followers following");
     if (!profile) return res.status(404).json({ error: "User not found" });
+    if (profile.isFrozen) return res.status(404).json({ error: "User not found" });
     if (!canViewPrivateProfile(profile, req.user?._id)) {
       return res.status(403).json({ error: "Follow this private profile to see its people list." });
     }
@@ -361,6 +368,7 @@ const getSuggestedUsers = async (req, res) => {
       {
         $match: {
           _id: { $ne: userId },
+          isFrozen: { $ne: true },
         },
       },
       {
@@ -404,6 +412,7 @@ const freezeAccount = async (req, res) => {
 
     user.isFrozen = true;
     await user.save();
+    io.emit("accountFrozen", { userId: String(user._id), username: user.username });
 
     res.status(200).json({ success: true });
   } catch (error) {
