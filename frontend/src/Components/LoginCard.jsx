@@ -5,6 +5,7 @@ import authScreenAtom from "../atoms/authAtom";
 import useShowToast from "../hooks/useShowToast";
 import { useSetRecoilState } from "recoil";
 import { useTheme } from "../context/ThemeContext";
+import GoogleAuthButton from "./GoogleAuthButton";
 
 const LoginCard = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -74,7 +75,7 @@ const LoginCard = () => {
             </button>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-            Log in with Spools
+            Log in to Spools
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             Join the conversation and see what’s happening
@@ -87,13 +88,13 @@ const LoginCard = () => {
               htmlFor="username"
               className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider mb-1.5"
             >
-              Username
+                Email or username
             </label>
             <input
               id="username"
               className="w-full px-4 py-3 text-sm rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 transition-all"
               type="text"
-              placeholder="Enter your username"
+              placeholder="Enter your email or username"
               required
               value={inputs.username}
               onChange={(e) =>
@@ -148,6 +149,13 @@ const LoginCard = () => {
             )}
           </button>
         </form>
+
+        <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+          or
+          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        </div>
+        <GoogleAuthButton />
 
         <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/80 text-center text-sm text-zinc-600 dark:text-zinc-400">
           <p>

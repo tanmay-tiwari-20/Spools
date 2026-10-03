@@ -5,6 +5,7 @@ import { useSetRecoilState } from "recoil";
 import useShowToast from "../hooks/useShowToast";
 import userAtom from "../atoms/userAtom";
 import { useTheme } from "../context/ThemeContext";
+import GoogleAuthButton from "./GoogleAuthButton";
 
 const SignupCard = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -33,13 +34,10 @@ const SignupCard = () => {
         body: JSON.stringify(inputs),
       });
       const data = await res.json();
-
-      if (data.error) {
-        showToast("Error", data.error, "error");
-        setLoading(false);
+      if (!res.ok || data.error) {
+        showToast("Error", data.error || "Signup failed.", "error");
         return;
       }
-
       localStorage.setItem("user-spools", JSON.stringify(data));
       setUser(data);
       showToast("Success", "Account created successfully!", "success");
@@ -188,6 +186,13 @@ const SignupCard = () => {
             )}
           </button>
         </form>
+
+        <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+          or
+          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        </div>
+        <GoogleAuthButton />
 
         <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/80 text-center text-sm text-zinc-600 dark:text-zinc-400">
           <p>

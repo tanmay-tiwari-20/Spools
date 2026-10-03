@@ -6,6 +6,7 @@ import {
   loginUser,
   logoutUser,
   signupUser,
+  googleAuthUser,
   updateUser,
   getSuggestedUsers,
   freezeAccount,
@@ -29,6 +30,7 @@ router.get("/profile/:query", optionalAuth, getUserProfile);
 router.get("/search/:query", searchUser);
 router.get("/suggested", protectRoute, getSuggestedUsers);
 router.post("/signup", signupUser);
+router.post("/google", googleAuthUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/follow/:id", protectRoute, followUnFollowUser); // Toggle state(follow/unfollow)

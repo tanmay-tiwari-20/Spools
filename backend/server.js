@@ -116,9 +116,10 @@ app.use(
     directives: {
       defaultSrc: ["'self'", "https:"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-      connectSrc: ["'self'", "https://spools.onrender.com"], // Allow API requests from frontend
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "https://accounts.google.com/gsi/client"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:", "https://accounts.google.com/gsi/style"],
+      connectSrc: ["'self'", "https://spools.onrender.com", "https://accounts.google.com/gsi/"], // Allow API requests and Google Identity Services
+      frameSrc: ["'self'", "https://accounts.google.com/gsi/"],
     },
   })
 );

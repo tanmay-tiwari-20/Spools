@@ -7,6 +7,27 @@ import mongoose from "mongoose";
 import { deliverUserNotification } from "../utils/webPush.js";
 import { canViewPrivateProfile } from "../utils/profilePrivacy.js";
 import { io } from "../socket/socket.js";
+import { randomBytes, randomInt } from "crypto";
+
+const exactIgnoreCase = (value) => new RegExp(`^${String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+
+const getAuthUser = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  username: user.username,
+  bio: user.bio,
+  profilePic: user.profilePic,
+  followers: user.followers,
+  following: user.following,
+  isPrivate: user.isPrivate,
+  savedPosts: user.savedPosts || [],
+});
+
+const setAuthCookieAndRespond = (user, res, status = 200) => {
+  generateTokenAndSetCookie(user._id, res);
+  return res.status(status).json(getAuthUser(user));
+};
 
 const getUserProfile = async (req, res) => {
   // We will fetch user profile either with username or userId
@@ -79,51 +100,95 @@ const searchUser = async (req, res) => {
 
 const signupUser = async (req, res) => {
   try {
-    const { name, email, username, password } = req.body;
-    const user = await User.findOne({ $or: [{ email }, { username }] });
-
-    if (user) {
-      return res.status(400).json({ error: "User already exists" });
+    const name = String(req.body.name || "").trim();
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const username = String(req.body.username || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
+    if (!name || !email || !username || password.length < 6) {
+      return res.status(400).json({ error: "Enter your name, email, username, and a password with at least 6 characters." });
     }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Enter a valid email address." });
+    }
+    if (!/^[a-z0-9._]{3,24}$/.test(username)) {
+      return res.status(400).json({ error: "Username must be 3–24 characters and use only letters, numbers, periods, or underscores." });
+    }
 
-    const newUser = new User({
-      name,
-      email,
-      username,
-      password: hashedPassword,
+    const existingUser = await User.findOne({
+      $or: [{ email: exactIgnoreCase(email) }, { username: exactIgnoreCase(username) }],
     });
-    await newUser.save();
-
-    if (newUser) {
-      generateTokenAndSetCookie(newUser._id, res);
-
-      res.status(201).json({
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        username: newUser.username,
-        bio: newUser.bio,
-        profilePic: newUser.profilePic,
-        followers: newUser.followers,
-        following: newUser.following,
-        isPrivate: newUser.isPrivate,
-        savedPosts: newUser.savedPosts || [],
-      });
-    } else {
-      res.status(400).json({ error: "Invalid user data" });
-    }
+    if (existingUser) return res.status(400).json({ error: "An account with that email or username already exists." });
+    const passwordHash = await bcrypt.hash(password, await bcrypt.genSalt(10));
+    const user = await new User({ name, email, username, password: passwordHash }).save();
+    return setAuthCookieAndRespond(user, res, 201);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (err.code === 11000) return res.status(409).json({ error: "That email or username is already registered." });
+    res.status(500).json({ error: "Signup failed. Please try again." });
     console.log("Error in signupUser: ", err.message);
+  }
+};
+
+const googleAuthUser = async (req, res) => {
+  try {
+    const credential = String(req.body.credential || "");
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) return res.status(503).json({ error: "Google sign-in is not configured yet." });
+    if (!credential || credential.length > 6000) return res.status(400).json({ error: "Google sign-in could not be verified." });
+
+    const verificationResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+    if (!verificationResponse.ok) return res.status(401).json({ error: "Google sign-in could not be verified. Please try again." });
+    const identity = await verificationResponse.json();
+    if (
+      identity.aud !== clientId ||
+      !["accounts.google.com", "https://accounts.google.com"].includes(identity.iss) ||
+      identity.email_verified !== "true" ||
+      Number(identity.exp) * 1000 <= Date.now() ||
+      !identity.email
+    ) {
+      return res.status(401).json({ error: "Google sign-in could not be verified. Please try again." });
+    }
+
+    const email = identity.email.trim().toLowerCase();
+    let user = await User.findOne({ email: exactIgnoreCase(email) });
+    if (!user) {
+      const baseUsername = String(identity.name || email.split("@")[0])
+        .toLowerCase()
+        .replace(/[^a-z0-9._]/g, "")
+        .replace(/^[._]+|[._]+$/g, "")
+        .slice(0, 20) || "spoolsuser";
+      let username = baseUsername.length >= 3 ? baseUsername : `${baseUsername}user`;
+      while (await User.exists({ username })) {
+        username = `${baseUsername.slice(0, 16)}${randomInt(1000, 9999)}`;
+      }
+      user = new User({
+        name: identity.name || email.split("@")[0],
+        email,
+        username,
+        password: await bcrypt.hash(randomBytes(32).toString("hex"), 10),
+        profilePic: identity.picture || "",
+      });
+      await user.save();
+    }
+
+    if (user.isFrozen) {
+      user.isFrozen = false;
+      await user.save();
+      io.emit("accountRestored", { userId: String(user._id), username: user.username });
+    }
+    return setAuthCookieAndRespond(user, res);
+  } catch (error) {
+    console.log("Error in googleAuthUser: ", error.message);
+    return res.status(500).json({ error: "Google sign-in failed. Please try again." });
   }
 };
 
 const loginUser = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
+    const login = String(req.body.username || req.body.email || "").trim();
+    const { password } = req.body;
+    const user = await User.findOne({
+      $or: [{ username: exactIgnoreCase(login) }, { email: exactIgnoreCase(login) }],
+    });
     const isPasswordCorrect = await bcrypt.compare(
       password,
       user?.password || "",
@@ -139,20 +204,7 @@ const loginUser = async (req, res) => {
       io.emit("accountRestored", { userId: String(user._id), username: user.username });
     }
 
-    generateTokenAndSetCookie(user._id, res);
-
-    res.status(200).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      bio: user.bio,
-      profilePic: user.profilePic,
-      followers: user.followers,
-      following: user.following,
-      isPrivate: user.isPrivate,
-      savedPosts: user.savedPosts || [],
-    });
+    return setAuthCookieAndRespond(user, res);
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log("Error in loginUser: ", error.message);
@@ -435,6 +487,7 @@ const getMe = async (req, res) => {
 
 export {
   signupUser,
+  googleAuthUser,
   loginUser,
   logoutUser,
   followUnFollowUser,
