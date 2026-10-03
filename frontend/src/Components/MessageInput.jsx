@@ -511,7 +511,7 @@ const MessageInput = ({ setMessages, replyingTo, onCancelReply }) => {
             onChange={handleTextChange}
             onKeyDown={handleComposerKeyDown}
             aria-label="Write a message"
-            className="flex-1 min-w-0 max-h-28 resize-none overflow-y-hidden bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none py-2 leading-5"
+            className="flex-1 min-w-0 max-h-28 resize-none overflow-y-hidden bg-transparent py-2 text-base leading-5 text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100 sm:text-sm"
           />
         )}
 

@@ -13,6 +13,7 @@ import { useSocket } from "../context/SocketContext";
 import { IoSearchOutline } from "react-icons/io5";
 
 const ChatPage = () => {
+  const [mobileViewport, setMobileViewport] = useState(null);
   const [searchingUser, setSearchingUser] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -23,6 +24,28 @@ const ChatPage = () => {
   const currentUser = useRecoilValue(userAtom);
   const showToast = useShowToast();
   const { socket, onlineUsers } = useSocket();
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const syncMobileViewport = () => {
+      if (window.innerWidth >= 768) {
+        setMobileViewport(null);
+        return;
+      }
+      const height = Math.round(viewport?.height || window.innerHeight);
+      const top = Math.round(viewport?.offsetTop || 0);
+      setMobileViewport((current) => current?.height === height && current?.top === top ? current : { height, top });
+    };
+    syncMobileViewport();
+    viewport?.addEventListener("resize", syncMobileViewport);
+    viewport?.addEventListener("scroll", syncMobileViewport);
+    window.addEventListener("resize", syncMobileViewport);
+    return () => {
+      viewport?.removeEventListener("resize", syncMobileViewport);
+      viewport?.removeEventListener("scroll", syncMobileViewport);
+      window.removeEventListener("resize", syncMobileViewport);
+    };
+  }, []);
 
   useEffect(() => {
     const handleMessagesSeen = ({ conversationId, readerId }) => {
@@ -191,20 +214,13 @@ const ChatPage = () => {
   const isConversationActive = Boolean(selectedConversation?._id);
 
   return (
-    <div className="mb-8 flex h-[calc(100dvh-220px)] max-h-[900px] min-h-[360px] w-full min-w-0 gap-2 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-2.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/60 sm:gap-4 sm:rounded-3xl sm:p-4 md:h-[calc(100dvh-150px)] md:min-h-[520px]">
+    <div style={mobileViewport ? { top: `${mobileViewport.top}px`, height: `${mobileViewport.height}px`, maxHeight: `${mobileViewport.height}px` } : undefined} className={`fixed inset-0 z-30 flex h-[100dvh] max-h-[100dvh] min-h-0 w-full min-w-0 gap-0 overflow-hidden bg-white p-0 dark:bg-zinc-950 ${isConversationActive ? "" : "pt-[calc(env(safe-area-inset-top)_+_1.25rem)] pb-[calc(3.5rem_+_max(0.75rem,env(safe-area-inset-bottom)))]"} md:relative md:inset-auto md:z-auto md:mb-8 md:h-[calc(100dvh-150px)] md:max-h-[900px] md:min-h-[520px] md:gap-4 md:rounded-3xl md:border md:border-zinc-200/80 md:bg-white md:p-4 md:shadow-sm md:dark:border-zinc-800 md:dark:bg-zinc-950/60`}>
       {/* Conversation List */}
       <div
-        className={`flex h-full min-w-0 w-full flex-col gap-3 overflow-hidden border-r border-zinc-100 pr-0 dark:border-zinc-800/80 md:w-[320px] md:flex-shrink-0 md:pr-3 lg:w-[360px] ${
+        className={`flex h-full min-w-0 w-full flex-col gap-3 overflow-hidden border-r border-zinc-100 px-4 dark:border-zinc-800/80 md:w-[320px] md:flex-shrink-0 md:px-0 md:pr-3 lg:w-[360px] ${
           isConversationActive ? "hidden md:flex" : "flex"
         }`}
       >
-        <div className="flex items-center justify-between px-1 py-0.5">
-          <div><h2 className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Messages</h2><p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Your conversations</p></div>
-          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-            {conversations.length}
-          </span>
-        </div>
-
         <form onSubmit={handleConversationSearch} className="flex gap-2">
           <div className="relative flex-1">
             <input

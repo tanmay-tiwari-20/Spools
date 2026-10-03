@@ -232,9 +232,9 @@ const MessageContainer = () => {
   }, [showToast, selectedConversation.userId, selectedConversation.mock]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden pt-[env(safe-area-inset-top)] md:pt-0">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-zinc-100 pb-3 dark:border-zinc-800/80">
+      <div className="flex items-center gap-3 border-b border-zinc-100 px-3 pb-3 pt-2 dark:border-zinc-800/80 md:px-0 md:pt-0">
         <button
           onClick={() => setSelectedConversation({})}
           className="grid h-9 w-9 place-items-center rounded-full text-zinc-600 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 md:hidden"
@@ -270,7 +270,7 @@ const MessageContainer = () => {
       </div>
 
       {/* Messages Scroll Area */}
-      <div ref={messageScrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain py-4 px-1 sm:px-2">
+      <div ref={messageScrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-4 sm:px-4 md:px-2">
         {loadingMessages &&
           [...Array(4)].map((_, i) => (
             <div
@@ -321,7 +321,9 @@ const MessageContainer = () => {
       </div>
 
       {/* Message Input Bar */}
-      <MessageInput setMessages={setMessages} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
+      <div className="px-2 md:px-0">
+        <MessageInput setMessages={setMessages} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
+      </div>
     </div>
   );
 };

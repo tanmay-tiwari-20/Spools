@@ -27,6 +27,7 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
   const isHome = location.pathname === "/";
   const isSearch = location.pathname === "/search";
   const isChat = location.pathname === "/chat";
+  const isChatConversationOpen = isChat && Boolean(selectedConversation?._id);
   const isSettings = location.pathname === "/settings";
   const isCircles = location.pathname.startsWith("/circles");
   const isSeries = location.pathname.startsWith("/series");
@@ -106,7 +107,7 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 mb-3 w-full rounded-2xl border border-zinc-200/80 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur-xl transition-colors duration-300 dark:border-zinc-700/80 dark:bg-zinc-900/95 dark:shadow-black/20 sm:mb-4 sm:px-4">
+      <header className={`sticky top-0 z-40 mb-3 w-full rounded-2xl border border-zinc-200/80 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur-xl transition-colors duration-300 dark:border-zinc-700/80 dark:bg-zinc-900/95 dark:shadow-black/20 sm:mb-4 sm:px-4 ${isHome ? "" : "hidden md:block"}`}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
             <button
@@ -181,7 +182,7 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
         </div>
       </header>
 
-      {user && (
+      {user && isHome && (
         <nav aria-label="Community features" className="-mt-1 mb-3 grid grid-cols-2 gap-2 px-0.5 md:hidden">
           <RouterLink to="/circles" aria-current={isCircles ? "page" : undefined} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-colors ${isCircles ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "border-zinc-200/80 bg-white/90 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-800"}`}>
             <FiUsers size={14} /> Circles
@@ -192,8 +193,8 @@ const Header = ({ isDarkMode: propIsDark, toggleColorMode: propToggle }) => {
         </nav>
       )}
 
-      {user && (
-        <nav aria-label="Quick navigation" className="fixed safe-area-bottom bottom-2.5 left-3 right-3 z-50 flex items-center justify-around rounded-2xl border border-zinc-200/90 bg-white/95 px-2 py-2 shadow-xl shadow-zinc-950/10 backdrop-blur-xl dark:border-zinc-700/80 dark:bg-zinc-900/95 dark:shadow-black/30 sm:left-4 sm:right-4 md:hidden">
+      {user && (!isChat || !isChatConversationOpen) && (
+        <nav aria-label="Quick navigation" className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 flex items-center justify-around rounded-2xl border border-zinc-200/90 bg-white/95 px-3 py-2 shadow-xl shadow-zinc-950/10 backdrop-blur-xl dark:border-zinc-700/80 dark:bg-zinc-900/95 dark:shadow-black/30 sm:left-4 sm:right-4 md:hidden">
           <RouterLink to="/" aria-label="Home" aria-current={isHome ? "page" : undefined} className={`grid h-10 w-12 place-items-center rounded-xl transition-colors ${isHome ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-200" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}>
             {isHome ? <AiFillHome size={22} /> : <AiOutlineHome size={22} />}
           </RouterLink>

@@ -21,6 +21,7 @@ const App = () => {
   const { isDarkMode, toggleColorMode } = useTheme();
   const [user, setUser] = useRecoilState(userAtom);
   const location = useLocation();
+  const isChat = location.pathname === "/chat";
 
   // Listen for global unauthorized events (e.g., 401 on expired session)
   useEffect(() => {
@@ -71,9 +72,9 @@ const App = () => {
 
   return (
     <div
-      className="w-full min-h-screen min-h-[100dvh] relative px-2 pt-2 pb-24 sm:px-3 md:pb-2 bg-white dark:bg-ebony transition-colors duration-300"
+      className={`relative min-h-screen min-h-[100dvh] w-full bg-white transition-colors duration-300 dark:bg-ebony ${isChat ? "px-0 pt-0 pb-0 md:px-3 md:pt-2 md:pb-2" : "px-2 pt-2 pb-24 sm:px-3 md:pb-2"}`}
     >
-      <div className={`w-full ${location.pathname === "/chat" ? "max-w-[1280px]" : "max-w-[1000px]"} mx-auto px-1 sm:px-2 md:px-0 text-ebony dark:text-white`}>
+      <div className={`w-full ${isChat ? "max-w-[1280px] px-0 md:px-0" : "max-w-[1000px] px-1 sm:px-2 md:px-0"} mx-auto text-ebony dark:text-white`}>
         <Header isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} />
         {user && <NotificationManager />}
         <Routes>
