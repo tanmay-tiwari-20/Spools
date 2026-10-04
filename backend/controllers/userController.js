@@ -351,6 +351,7 @@ const resolveFollowRequest = async (req, res) => {
 const updateUser = async (req, res) => {
   const { name, email, username, password, bio } = req.body;
   let { profilePic } = req.body;
+  const removeProfilePic = req.body.removeProfilePic === true || req.body.removeProfilePic === "true";
 
   const userId = req.user._id;
   try {
@@ -368,24 +369,34 @@ const updateUser = async (req, res) => {
       user.password = hashedPassword;
     }
 
-    if (profilePic) {
-      if (user.profilePic) {
-        await cloudinary.uploader.destroy(
-          user.profilePic.split("/").pop().split(".")[0],
-        );
-      }
+    const previousProfilePic = user.profilePic;
+    let shouldDeletePreviousProfilePic = false;
 
+    if (removeProfilePic) {
+      shouldDeletePreviousProfilePic = Boolean(previousProfilePic);
+      user.profilePic = "";
+    } else if (profilePic && profilePic !== user.profilePic) {
       const uploadedResponse = await cloudinary.uploader.upload(profilePic);
-      profilePic = uploadedResponse.secure_url;
+      user.profilePic = uploadedResponse.secure_url;
+      shouldDeletePreviousProfilePic = Boolean(previousProfilePic);
     }
 
     user.name = name || user.name;
     user.email = email || user.email;
     user.username = username || user.username;
-    user.profilePic = profilePic || user.profilePic;
     user.bio = bio || user.bio;
 
     user = await user.save();
+
+    if (shouldDeletePreviousProfilePic) {
+      try {
+        await cloudinary.uploader.destroy(
+          previousProfilePic.split("/").pop().split(".")[0],
+        );
+      } catch (cleanupError) {
+        console.warn("Could not remove the old profile image from Cloudinary:", cleanupError.message);
+      }
+    }
 
     // Find all posts that this user replied and update username and userProfilePic fields
     await Post.updateMany(
@@ -406,6 +417,42 @@ const updateUser = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
     console.log("Error in updateUser: ", err.message);
+  }
+};
+
+const removeProfilePicture = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const previousProfilePic = user.profilePic;
+    user.profilePic = "";
+    await user.save();
+
+    try {
+      await Post.updateMany(
+        { "replies.userId": user._id },
+        { $set: { "replies.$[reply].userProfilePic": "" } },
+        { arrayFilters: [{ "reply.userId": user._id }] },
+      );
+    } catch (updateError) {
+      console.warn("Could not update profile photos on replies:", updateError.message);
+    }
+
+    // Database removal succeeds even when the image host is temporarily unavailable.
+    if (previousProfilePic) {
+      try {
+        const publicId = previousProfilePic.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cleanupError) {
+        console.warn("Could not remove the old profile image from Cloudinary:", cleanupError.message);
+      }
+    }
+
+    user.password = null;
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -492,6 +539,7 @@ export {
   logoutUser,
   followUnFollowUser,
   updateUser,
+  removeProfilePicture,
   getUserProfile,
   searchUser,
   getSuggestedUsers,

@@ -5,6 +5,7 @@ import usePreviewImg from "../hooks/usePreviewImg";
 import useShowToast from "../hooks/useShowToast";
 import { useNavigate } from "react-router-dom";
 import { BsCamera } from "react-icons/bs";
+import { FiTrash2 } from "react-icons/fi";
 
 export default function UpdateProfilePage() {
   const [user, setUser] = useRecoilState(userAtom);
@@ -17,10 +18,42 @@ export default function UpdateProfilePage() {
   });
   const fileRef = useRef(null);
   const [updating, setUpdating] = useState(false);
+  const [removingProfilePic, setRemovingProfilePic] = useState(false);
+  const [removeProfilePic, setRemoveProfilePic] = useState(false);
   const navigate = useNavigate();
 
   const showToast = useShowToast();
-  const { handleImageChange, imgUrl } = usePreviewImg();
+  const { handleImageChange, imgUrl, setImgUrl } = usePreviewImg();
+
+  const handleRemoveProfilePic = async () => {
+    if (removingProfilePic) return;
+
+    // If the user only selected a new image in this form, clear that local preview.
+    if (!user?.profilePic) {
+      setImgUrl(null);
+      setRemoveProfilePic(false);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+
+    setRemovingProfilePic(true);
+    try {
+      const res = await fetch("/api/users/profile-picture", { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || "Could not remove profile photo");
+
+      setUser(data);
+      localStorage.setItem("user-spools", JSON.stringify(data));
+      setImgUrl(null);
+      setRemoveProfilePic(false);
+      if (fileRef.current) fileRef.current.value = "";
+      showToast("Success", "Profile photo removed", "success");
+    } catch (error) {
+      showToast("Error", error.message, "error");
+    } finally {
+      setRemovingProfilePic(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +65,11 @@ export default function UpdateProfilePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...inputs, profilePic: imgUrl || user.profilePic }),
+        body: JSON.stringify({
+          ...inputs,
+          profilePic: removeProfilePic ? "" : imgUrl || user.profilePic,
+          removeProfilePic,
+        }),
       });
       const data = await res.json();
       if (data.error) {
@@ -63,7 +100,7 @@ export default function UpdateProfilePage() {
             <div className="relative group cursor-pointer" onClick={() => fileRef.current.click()}>
               <img
                 className="rounded-full object-cover w-24 h-24 sm:w-28 sm:h-28 ring-2 ring-zinc-200 dark:ring-zinc-700 group-hover:opacity-80 transition-opacity"
-                src={imgUrl || user?.profilePic || "/defaultdp.png"}
+                src={imgUrl || (!removeProfilePic && user?.profilePic) || "/defaultdp.png"}
                 alt="Avatar"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-white">
@@ -79,6 +116,16 @@ export default function UpdateProfilePage() {
               >
                 Change Photo
               </button>
+              {(user?.profilePic || imgUrl) && (
+                <button
+                  type="button"
+                  onClick={handleRemoveProfilePic}
+                  disabled={removingProfilePic}
+                  className="ml-2 inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                >
+                  <FiTrash2 size={14} /> {removingProfilePic ? "Removing…" : "Remove photo"}
+                </button>
+              )}
               <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1.5">
                 Recommended square JPG, PNG or WEBP
               </p>
@@ -89,7 +136,10 @@ export default function UpdateProfilePage() {
               hidden
               ref={fileRef}
               accept="image/*"
-              onChange={handleImageChange}
+              onChange={(event) => {
+                handleImageChange(event);
+                if (event.target.files?.[0]) setRemoveProfilePic(false);
+              }}
             />
           </div>
 

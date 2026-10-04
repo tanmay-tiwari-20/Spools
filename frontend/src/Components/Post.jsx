@@ -6,6 +6,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
 import Actions from "./Actions";
+import useFollowUnfollow from "../hooks/useFollowUnfollow";
 import { MdDeleteOutline } from "react-icons/md";
 import { motion } from "framer-motion";
 import { FiAtSign, FiGlobe, FiUsers } from "react-icons/fi";
@@ -16,7 +17,7 @@ const replyPermissionDetails = {
   mentioned: { label: "Mentioned people can reply", Icon: FiAtSign },
 };
 
-const Post = ({ post, postedBy, readOnly = false }) => {
+const Post = ({ post, postedBy, readOnly = false, showFollowButton = false }) => {
   const initialAuthor =
     typeof post?.postedBy === "object" && post?.postedBy !== null
       ? post.postedBy
@@ -26,6 +27,7 @@ const Post = ({ post, postedBy, readOnly = false }) => {
   const currentUser = useRecoilValue(userAtom);
   const [posts, setPosts] = useRecoilState(postsAtom);
   const navigate = useNavigate();
+  const { handleFollowUnfollow, following, requestPending, updating } = useFollowUnfollow(user);
 
   useEffect(() => {
     if (typeof post?.postedBy === "object" && post?.postedBy !== null) {
@@ -123,38 +125,56 @@ const Post = ({ post, postedBy, readOnly = false }) => {
         {/* Right Column: Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header Row */}
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-1.5 truncate">
-              <span
-                className={`truncate text-sm font-bold text-zinc-900 dark:text-zinc-100 ${readOnly ? "" : "cursor-pointer hover:underline"}`}
-                onClick={readOnly ? undefined : (e) => {
-                  e.preventDefault();
-                  navigate(`/${user.username}`);
-                }}
-              >
-                {user.username}
-              </span>
-              <img
-                src="/verified.png"
-                className="w-3.5 h-3.5 object-contain flex-shrink-0"
-                alt="verified"
-              />
-              <span className="text-zinc-400 dark:text-zinc-500 text-xs">·</span>
-              <span className="text-xs text-zinc-400 dark:text-zinc-500 flex-shrink-0">
+          <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <div className="flex min-w-0 items-center gap-1.5 truncate">
+                <span
+                  className={`truncate text-sm font-bold text-zinc-900 dark:text-zinc-100 ${readOnly ? "" : "cursor-pointer hover:underline"}`}
+                  onClick={readOnly ? undefined : (e) => {
+                    e.preventDefault();
+                    navigate(`/${user.username}`);
+                  }}
+                >
+                  {user.username}
+                </span>
+                <img
+                  src="/verified.png"
+                  className="w-3.5 h-3.5 object-contain flex-shrink-0"
+                  alt="verified"
+                />
+              </div>
+              {showFollowButton && currentUser?._id !== user._id && (
+                <button
+                  type="button"
+                  onClick={handleFollowUnfollow}
+                  disabled={updating}
+                  aria-label={following ? `Following ${user.username}` : requestPending ? `Follow request sent to ${user.username}` : `Follow ${user.username}`}
+                  className={`inline-flex h-7 shrink-0 items-center justify-center rounded-full px-3 text-xs font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 ${
+                    following || requestPending
+                      ? "border border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                      : "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  }`}
+                >
+                  {updating ? "…" : following ? "Following" : requestPending ? "Requested" : "Follow"}
+                </button>
+              )}
+            </div>
+
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+              {currentUser?._id === user._id && (
+                <button
+                  onClick={handleDeletePost}
+                  aria-label="Delete post"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 dark:hover:bg-red-950/30 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                  title="Delete post"
+                >
+                  <MdDeleteOutline size={18} />
+                </button>
+              )}
+              <span className="whitespace-nowrap text-xs text-zinc-400 dark:text-zinc-500">
                 {formatDistanceToNow(new Date(post.createdAt))} ago
               </span>
             </div>
-
-            {currentUser?._id === user._id && (
-              <button
-                onClick={handleDeletePost}
-                aria-label="Delete post"
-                className="ml-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 dark:hover:bg-red-950/30 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-                title="Delete post"
-              >
-                <MdDeleteOutline size={18} />
-              </button>
-            )}
           </div>
 
           <div className="mb-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-2.5 py-1 text-[10px] font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-400">

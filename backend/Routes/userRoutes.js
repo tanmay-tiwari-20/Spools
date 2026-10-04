@@ -8,6 +8,7 @@ import {
   signupUser,
   googleAuthUser,
   updateUser,
+  removeProfilePicture,
   getSuggestedUsers,
   freezeAccount,
   getMe,
@@ -35,6 +36,7 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/follow/:id", protectRoute, followUnFollowUser); // Toggle state(follow/unfollow)
 router.put("/update/:id", protectRoute, updateUser);
+router.delete("/profile-picture", protectRoute, removeProfilePicture);
 router.put("/freeze", protectRoute, freezeAccount);
 
 export default router;

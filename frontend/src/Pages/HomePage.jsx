@@ -131,7 +131,13 @@ const HomePage = () => {
             ) : (
               <div className="space-y-1">
                 {posts.map((post) => (
-                  <Post key={post._id} post={post} postedBy={post.postedBy} readOnly={!user} />
+                  <Post
+                    key={post._id}
+                    post={post}
+                    postedBy={post.postedBy}
+                    readOnly={!user}
+                    showFollowButton={Boolean(user && feedType === "explore")}
+                  />
                 ))}
               </div>
             )}

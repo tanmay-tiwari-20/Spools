@@ -13,8 +13,7 @@ const ShareProfileModal = ({ isOpen, onClose, user }) => {
     ? `${window.location.origin}/${user.username}`
     : `https://spools.net/${user.username}`;
 
-  const hasProfilePicture = Boolean(user.profilePic);
-  const profileLabel = hasProfilePicture && user.name ? `${user.name} (@${user.username})` : `@${user.username}`;
+  const profileLabel = user.name ? `${user.name} (@${user.username})` : `@${user.username}`;
   const shareText = `Check out ${profileLabel} on Spools:`;
 
   const handleCopyLink = () => {
@@ -65,19 +64,17 @@ const ShareProfileModal = ({ isOpen, onClose, user }) => {
 
         {/* Profile Preview Card */}
         <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 flex items-center gap-3.5">
-          {user.profilePic && (
-            <img
-              src={user.profilePic}
-              alt={user.name || user.username}
-              className="w-12 h-12 rounded-full object-cover ring-2 ring-zinc-200 dark:ring-zinc-700 shrink-0"
-            />
-          )}
+          <img
+            src={user.profilePic || "/defaultdp.png"}
+            alt={user.name || user.username}
+            className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-zinc-200 dark:ring-zinc-700"
+          />
           <div className="min-w-0 flex-1">
-            {hasProfilePicture && user.name && <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{user.name}</p>}
+            {user.name && <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{user.name}</p>}
             <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
               @{user.username}
             </p>
-            {hasProfilePicture && user.bio && (
+            {user.bio && (
               <p className="text-[11px] text-zinc-600 dark:text-zinc-300 line-clamp-1 mt-0.5">
                 {user.bio}
               </p>
