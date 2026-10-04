@@ -213,6 +213,20 @@ const replyToPost = async (req, res) => {
 
 const getFeedPosts = async (req, res) => {
   try {
+    if (!req.user) {
+      const hiddenAuthors = await User.find({ $or: [{ isPrivate: true }, { isFrozen: true }] }).distinct("_id");
+      const suggestedPosts = await Post.find({
+        postedBy: { $nin: hiddenAuthors },
+        circle: null,
+        series: null,
+      })
+        .populate("postedBy", "name username profilePic isFrozen isPrivate")
+        .sort({ createdAt: -1 })
+        .limit(3);
+
+      return res.status(200).json(await removeFrozenReplies(suggestedPosts));
+    }
+
     const userId = req.user._id;
     const user = await User.findById(userId);
     if (!user) {

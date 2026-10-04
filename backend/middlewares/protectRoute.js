@@ -46,7 +46,8 @@ export const optionalAuth = async (req, _res, next) => {
     const token = req.cookies?.jwt;
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.userId).select("_id username");
+      const user = await User.findById(decoded.userId).select("_id username isFrozen");
+      req.user = user && !user.isFrozen ? user : null;
     }
   } catch {
     req.user = null;

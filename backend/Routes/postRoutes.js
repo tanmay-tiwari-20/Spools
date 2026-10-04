@@ -16,7 +16,7 @@ import protectRoute, { optionalAuth } from "../middlewares/protectRoute.js";
 
 const router = express.Router();
 
-router.get("/feed", protectRoute, getFeedPosts);
+router.get("/feed", optionalAuth, getFeedPosts);
 router.get("/saved", protectRoute, getSavedPosts);
 router.get("/user/:username", optionalAuth, getUserPosts);
 router.get("/replies/:username", optionalAuth, getUserReplies);

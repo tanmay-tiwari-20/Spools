@@ -137,7 +137,7 @@ const App = () => {
         <Routes>
           <Route
             path="/"
-            element={user ? <HomePage /> : <Navigate to="/auth" />}
+            element={<HomePage />}
           />
           <Route
             path="/auth"
@@ -145,27 +145,28 @@ const App = () => {
           />
           <Route
             path="/update"
-            element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />}
+            element={user ? <UpdateProfilePage /> : <Navigate to="/" replace />}
           />
 
-          <Route path="/:username" element={<UserPage />} />
-          <Route path="/:username/post/:pid" element={<PostPage />} />
+          <Route path="/:username" element={user ? <UserPage /> : <Navigate to="/" replace />} />
+          <Route path="/:username/post/:pid" element={user ? <PostPage /> : <Navigate to="/" replace />} />
           <Route
             path="/chat"
-            element={user ? <ChatPage /> : <Navigate to={"/auth"} />}
+            element={user ? <ChatPage /> : <Navigate to="/" replace />}
           />
           <Route
             path="/search"
-            element={user ? <SearchPage /> : <Navigate to={"/auth"} />}
+            element={user ? <SearchPage /> : <Navigate to="/" replace />}
           />
           <Route
             path="/settings"
-            element={user ? <SettingsPage isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} /> : <Navigate to={"/auth"} />}
+            element={user ? <SettingsPage isDarkMode={isDarkMode} toggleColorMode={toggleColorMode} /> : <Navigate to="/" replace />}
           />
-          <Route path="/circles" element={user ? <CirclesPage /> : <Navigate to="/auth" />} />
-          <Route path="/circles/:id" element={user ? <CirclesPage /> : <Navigate to="/auth" />} />
-          <Route path="/series" element={user ? <SeriesPage /> : <Navigate to="/auth" />} />
-          <Route path="/series/:id" element={user ? <SeriesPage /> : <Navigate to="/auth" />} />
+          <Route path="/circles" element={user ? <CirclesPage /> : <Navigate to="/" replace />} />
+          <Route path="/circles/:id" element={user ? <CirclesPage /> : <Navigate to="/" replace />} />
+          <Route path="/series" element={user ? <SeriesPage /> : <Navigate to="/" replace />} />
+          <Route path="/series/:id" element={user ? <SeriesPage /> : <Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         {user && location.pathname !== "/chat" && <CreatePost />}
       </div>

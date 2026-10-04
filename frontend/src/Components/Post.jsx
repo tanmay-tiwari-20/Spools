@@ -16,7 +16,7 @@ const replyPermissionDetails = {
   mentioned: { label: "Mentioned people can reply", Icon: FiAtSign },
 };
 
-const Post = ({ post, postedBy }) => {
+const Post = ({ post, postedBy, readOnly = false }) => {
   const initialAuthor =
     typeof post?.postedBy === "object" && post?.postedBy !== null
       ? post.postedBy
@@ -73,6 +73,8 @@ const Post = ({ post, postedBy }) => {
   if (!user) return null;
   const replyPermission = replyPermissionDetails[post.replyPermission] || replyPermissionDetails.everyone;
   const ReplyIcon = replyPermission.Icon;
+  const PostContent = readOnly ? "div" : Link;
+  const postContentProps = readOnly ? {} : { to: `/${user.username}/post/${post?._id}` };
 
   return (
     <motion.div
@@ -85,10 +87,10 @@ const Post = ({ post, postedBy }) => {
         {/* Left Column: Avatar & Thread Line */}
         <div className="flex flex-col items-center">
           <img
-            className="w-10 h-10 rounded-full object-cover cursor-pointer ring-1 ring-zinc-200 dark:ring-zinc-800 transition-transform hover:scale-105"
+            className={`h-10 w-10 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-800 ${readOnly ? "" : "cursor-pointer transition-transform hover:scale-105"}`}
             src={user.profilePic || "/defaultdp.png"}
             alt={user.name}
-            onClick={(e) => {
+            onClick={readOnly ? undefined : (e) => {
               e.preventDefault();
               navigate(`/${user.username}`);
             }}
@@ -124,8 +126,8 @@ const Post = ({ post, postedBy }) => {
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-1.5 truncate">
               <span
-                className="font-bold text-sm text-zinc-900 dark:text-zinc-100 hover:underline cursor-pointer truncate"
-                onClick={(e) => {
+                className={`truncate text-sm font-bold text-zinc-900 dark:text-zinc-100 ${readOnly ? "" : "cursor-pointer hover:underline"}`}
+                onClick={readOnly ? undefined : (e) => {
                   e.preventDefault();
                   navigate(`/${user.username}`);
                 }}
@@ -161,7 +163,7 @@ const Post = ({ post, postedBy }) => {
           </div>
 
           {/* Post Text */}
-          <Link to={`/${user.username}/post/${post?._id}`} className="block">
+          <PostContent {...postContentProps} className="block">
             <p className="break-words text-sm md:text-base text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed mb-2">
               {post.text}
             </p>
@@ -177,10 +179,10 @@ const Post = ({ post, postedBy }) => {
                 />
               </div>
             )}
-          </Link>
+          </PostContent>
 
           {/* Actions Bar */}
-          <Actions post={post} />
+          {!readOnly && <Actions post={post} />}
         </div>
       </div>
     </motion.div>
