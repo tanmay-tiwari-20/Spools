@@ -86,15 +86,8 @@ const GoogleAuthButton = () => {
 
   if (clientId) {
     return (
-      <div className="group relative mt-4 min-h-11 w-full cursor-pointer overflow-hidden rounded-full">
-        <div
-          ref={buttonRef}
-          className="absolute inset-0 z-10 h-11 w-full opacity-0 [&>div]:mx-auto [&>div]:w-full"
-        />
-        <div aria-hidden="true" className="pointer-events-none flex h-11 w-full items-center justify-center gap-2.5 rounded-full border border-[#dadce0] bg-white px-4 text-sm font-medium text-[#3c4043] transition-colors duration-150 group-hover:bg-[#f8f9fa] dark:border-zinc-700 dark:bg-[#131314] dark:text-zinc-100 dark:group-hover:bg-[#1c1c1e]">
-          <GoogleMark />
-          <span>Continue with Google</span>
-        </div>
+      <div className="relative mt-4 flex min-h-11 w-full justify-center">
+        <div ref={buttonRef} className="min-h-11 w-full [&>div]:mx-auto" />
         {loading && <div className="absolute inset-0 z-20 grid place-items-center rounded-full bg-white/85 text-xs font-semibold text-zinc-700 dark:bg-zinc-900/85 dark:text-zinc-200">Signing in…</div>}
       </div>
     );
