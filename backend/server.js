@@ -110,7 +110,11 @@ app.use(
 );
 
 // Helmet Security Headers with relaxed CSP for API and Cloudinary
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  })
+);
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
